@@ -1,0 +1,61 @@
+{
+  "name": "yuan-ui",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "一套精致的 React UI 组件库 — Apple 风格极简设计",
+  "main": "./dist/yuan-ui.umd.js",
+  "module": "./dist/yuan-ui.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/yuan-ui.es.js",
+      "require": "./dist/yuan-ui.umd.js",
+      "default": "./dist/yuan-ui.es.js"
+    },
+    "./style.css": "./dist/style.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && cp src/components/Loading/Loading.d.ts dist/index.d.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "react",
+    "ui",
+    "loading",
+    "component",
+    "apple-style",
+    "infinity",
+    "animation"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/neoyuan/yuan-ui"
+  }
+}

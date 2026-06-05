@@ -1,0 +1,141 @@
+/* ============================================================
+   yuan-ui · Loading 组件样式
+   Apple 风格 ♾️ 伯努利双纽线动画加载指示器
+   ============================================================ */
+
+/* ---------- Design Tokens (CSS Custom Properties) ---------- */
+.yuan-loading {
+  --yuan-accent: #6c63ff;
+  --yuan-text-color: #64748b;
+  --yuan-track-opacity: 0.04;
+  --yuan-bg: transparent;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  transition: background-color 0.25s ease;
+}
+
+/* ---------- 全屏遮罩模式 ---------- */
+.yuan-loading--fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--yuan-bg);
+}
+
+/* ---------- 局部自适应模式 ---------- */
+.yuan-loading--inline {
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  background-color: transparent;
+}
+
+/* ---------- 内容容器 ---------- */
+.yuan-loading__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+/* ---------- SVG 旋转容器 ---------- */
+.yuan-loading__spinner {
+  width: 96px;
+  height: 58px;
+  overflow: visible;
+  transform-origin: center;
+  animation: yuan-spinner-breathe 3s ease-in-out infinite;
+}
+
+/* ---------- 轨迹辅助线 ---------- */
+.yuan-loading__track {
+  stroke: currentColor;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: var(--yuan-track-opacity);
+  transition: stroke 0.25s ease;
+}
+
+/* ---------- 流光路径 ---------- */
+.yuan-loading__path {
+  stroke: var(--yuan-accent);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  opacity: 0.85;
+  transition: stroke 0.25s ease;
+  animation: yuan-cosine-dash 1.8s linear infinite;
+}
+
+/* ---------- 提示文本 ---------- */
+.yuan-loading__text {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.25em;
+  color: var(--yuan-text-color);
+  margin: 0;
+  text-transform: uppercase;
+  padding-left: 0.25em;
+  transition: color 0.25s ease;
+  animation: yuan-text-pulse 3s ease-in-out infinite;
+}
+
+/* ============================================================
+   @keyframes 动画定义
+   ============================================================ */
+
+/*
+   利用简谐运动余弦公式对光束长度进行周期控制：
+   L(d) = 28 + 12 * cos(4 * pi * d / 100)
+   - 当滑行到两侧大圆弧时 (0% 和 50%)，线段拉伸至最长 40
+   - 当滑行到中间交叉切点时 (25% 和 75%)，线段收缩至最短 16
+   - 配合双倍长度路径 (pathLength=200)，空白段宽度设为 200 保证尾部消隐
+*/
+@keyframes yuan-cosine-dash {
+  0% {
+    stroke-dasharray: 40, 200;
+    stroke-dashoffset: 0;
+  }
+  25% {
+    stroke-dasharray: 16, 200;
+    stroke-dashoffset: -25;
+  }
+  50% {
+    stroke-dasharray: 40, 200;
+    stroke-dashoffset: -50;
+  }
+  75% {
+    stroke-dasharray: 16, 200;
+    stroke-dashoffset: -75;
+  }
+  100% {
+    stroke-dasharray: 40, 200;
+    stroke-dashoffset: -100;
+  }
+}
+
+/* 整体呼吸缩放 */
+@keyframes yuan-spinner-breathe {
+  0%, 100% {
+    transform: scale(0.96);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.98;
+  }
+}
+
+/* 文本透明度呼吸 */
+@keyframes yuan-text-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.9; }
+}
