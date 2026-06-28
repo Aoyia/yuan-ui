@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
 <template>
   <div class="yuan-agent-trace-list">
     <template v-for="node in nodes" :key="node.id">
-      <ReasoningTraceNode v-slot v-if="node.kind === 'reasoning'" :node="node" />
+      <ReasoningTraceNode v-if="node.kind === 'reasoning'" :node="node" />
       
       <template v-else-if="node.kind === 'tool'">
         <slot :name="`tool:${node.toolName}`" :node="node">

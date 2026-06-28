@@ -276,7 +276,7 @@ const legacyOpen = ref(true)
           >
             <ChainOfThoughtHeader>
               <span v-if="legacyParser.isThinking.value">正在深度调研并执行多轮工具...</span>
-              <span v-slot v-else-if="legacyParser.totalDuration.value > 0">智能体执行完毕 (用时 {{ legacyParser.totalDuration.value }} 秒)</span>
+              <span v-else-if="legacyParser.totalDuration.value > 0">智能体执行完毕 (用时 {{ legacyParser.totalDuration.value }} 秒)</span>
               <span v-else>多轮执行状态 (Agent CoT)</span>
             </ChainOfThoughtHeader>
             <ChainOfThoughtContent>
@@ -285,7 +285,7 @@ const legacyOpen = ref(true)
             </ChainOfThoughtContent>
           </ChainOfThought>
 
-          <div v-slot v-if="legacyParser.content.value" class="answer-content">
+          <div v-if="legacyParser.content.value" class="answer-content">
             <div class="markdown-body">{{ legacyParser.content.value }}</div>
           </div>
         </template>
