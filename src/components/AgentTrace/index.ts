@@ -8,3 +8,4 @@ export { default as ReasoningTraceNode } from './renderers/ReasoningTraceNode.vu
 export { default as ToolTraceNode } from './renderers/ToolTraceNode.vue'
 export { default as ArtifactTraceNode } from './renderers/ArtifactTraceNode.vue'
 export { default as TextTraceNode } from './renderers/TextTraceNode.vue'
+export * from './useAgentTraceStream'
