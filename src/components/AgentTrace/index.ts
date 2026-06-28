@@ -1,1 +1,5 @@
 export * from './types'
+export { default as AgentTrace } from './AgentTrace.vue'
+export { default as AgentTraceTrigger } from './AgentTraceTrigger.vue'
+export { default as AgentTraceContent } from './AgentTraceContent.vue'
+export * from './context'
