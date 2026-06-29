@@ -13,12 +13,13 @@ export type AgentTraceVisibility = 'summary' | 'details' | 'redacted'
 
 export interface AgentTraceBaseNode {
   id: string
-  kind: 'reasoning' | 'tool' | 'artifact' | 'text'
+  kind: 'reasoning' | 'tool' | 'artifact' | 'text' | 'group'
   title: string
   status: TraceStatus
   startedAt: number
   endedAt?: number
   duration?: number
+  parentId?: string // 父节点/组的 id，用于层级归属
 }
 
 export interface ReasoningTraceNode extends AgentTraceBaseNode {
@@ -49,18 +50,30 @@ export interface TextTraceNode extends AgentTraceBaseNode {
   content: string
 }
 
+export interface GroupTraceNode extends AgentTraceBaseNode {
+  kind: 'group'
+  isCollapsed: boolean // 控制在 UI 上的展开折叠状态
+}
+
 export type AgentTraceNode =
   | ReasoningTraceNode
   | ToolTraceNode
   | ArtifactTraceNode
   | TextTraceNode
+  | GroupTraceNode
 
 export type AgentTraceEvent =
-  | { type: 'reasoning-delta'; id?: string; delta: string; title?: string }
-  | { type: 'tool-input-start'; id: string; toolName: string; input?: unknown; title?: string }
+  | { type: 'reasoning-delta'; id?: string; delta: string; title?: string; parentId?: string }
+  | { type: 'tool-input-start'; id: string; toolName: string; input?: unknown; title?: string; parentId?: string }
   | { type: 'tool-input-delta'; id: string; inputDelta: unknown }
+  | { type: 'tool-approval-request'; id: string }
+  | { type: 'tool-approval-response'; id: string; approved: boolean; reason?: string }
   | { type: 'tool-output'; id: string; output?: unknown; errorText?: string }
-  | { type: 'artifact'; id?: string; artifactType: 'image' | 'file' | 'link'; title: string; url?: string; caption?: string }
+  | { type: 'artifact'; id?: string; artifactType: 'image' | 'file' | 'link'; title: string; url?: string; caption?: string; parentId?: string }
   | { type: 'text-delta'; id?: string; delta: string; title?: string }
+  | { type: 'group-start'; id: string; title: string; parentId?: string }
+  | { type: 'group-end'; id: string }
+  | { type: 'toggle-collapse'; id: string; isCollapsed?: boolean }
   | { type: 'finish' }
   | { type: 'reset' }
+  | { type: 'collapse-all-groups' }

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { MessageSquare } from '@lucide/vue'
-import type { TextTraceNode } from '../types'
+import type { TraceStatus } from '../types'
 
 interface Props {
-  node: TextTraceNode
+  title: string
+  content: string
+  status?: TraceStatus
 }
 
 const props = defineProps<Props>()
@@ -19,19 +21,18 @@ const props = defineProps<Props>()
           </div>
         </slot>
       </div>
-      <div class="vertical-line" />
     </div>
 
     <div class="step-details">
       <div class="step-header">
         <span class="step-label">
-          {{ props.node.title }}
+          {{ props.title }}
         </span>
       </div>
 
       <div class="step-body">
         <div class="text-content">
-          {{ props.node.content }}
+          {{ props.content }}
         </div>
       </div>
     </div>
@@ -95,14 +96,7 @@ const props = defineProps<Props>()
   height: 0.65rem;
 }
 
-.vertical-line {
-  position: absolute;
-  top: 1.25rem;
-  bottom: 0;
-  width: 1px;
-  background-color: #e2e8f0;
-  z-index: 1;
-}
+
 
 .step-details {
   flex: 1;

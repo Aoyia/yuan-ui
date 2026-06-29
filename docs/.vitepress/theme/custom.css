@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Fira+Code&display=swap');
+
+:root {
+  /* 优雅的靛蓝-紫色渐变主题 */
+  --vp-c-brand-1: #3b82f6;
+  --vp-c-brand-2: #6366f1;
+  --vp-c-brand-3: #8b5cf6;
+  --vp-c-brand-next: #a78bfa;
+  
+  --vp-font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --vp-font-family-mono: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+}
+
+/* 标题采用极富表现力的 Outfit 字体 */
+.vp-doc h1, .vp-doc h2, .vp-doc h3, .vp-doc h4, .vp-doc h5, .vp-doc h6, .name, .tagline {
+  font-family: 'Outfit', var(--vp-font-family) !important;
+  letter-spacing: -0.02em;
+}
+
+/* 渐变首页大标题 */
+.name {
+  background: linear-gradient(135deg, var(--vp-c-brand-1) 0%, var(--vp-c-brand-3) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800 !important;
+}
+
+/* 毛玻璃质感的导航栏与侧边栏 */
+.VPNav, .VPSidebar {
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  background-color: rgba(255, 255, 255, 0.72) !important;
+  transition: background-color 0.3s ease;
+}
+
+.dark .VPNav, .dark .VPSidebar {
+  background-color: rgba(24, 24, 37, 0.72) !important;
+}
+
+/* 顶部霓虹渐变装饰导线 */
+.VPNav {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 1px 15px rgba(59, 130, 246, 0.04);
+}
+
+.dark .VPNav {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+}
+
+/* 首页功能卡片 Bento 悬浮阴影与圆角 */
+.VPFeature {
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-radius: 14px !important;
+  background-color: rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.dark .VPFeature {
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  background-color: rgba(30, 30, 46, 0.4) !important;
+}
+
+.VPFeature:hover {
+  border-color: var(--vp-c-brand-1) !important;
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.08);
+}
+
+/* 斑马纹与圆角卡片化 API 表格 */
+.vp-doc table {
+  display: table;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01);
+}
+
+.dark .vp-doc table {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.vp-doc th {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1rem !important;
+}
+
+.dark .vp-doc th {
+  background-color: #181825 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #cdd6f4;
+}
+
+.vp-doc td {
+  padding: 0.75rem 1rem !important;
+  font-size: 0.8125rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+  color: #475569;
+}
+
+.dark .vp-doc td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  color: #a6adc8;
+}
+
+.vp-doc tr:last-child td {
+  border-bottom: none !important;
+}
+
+.vp-doc tr:nth-child(even) td {
+  background-color: rgba(248, 250, 252, 0.4);
+}
+
+.dark .vp-doc tr:nth-child(even) td {
+  background-color: rgba(30, 30, 46, 0.2);
+}
+
+/* 按钮精致质感 */
+.VPButton.brand {
+  background: linear-gradient(135deg, var(--vp-c-brand-1) 0%, var(--vp-c-brand-2) 100%) !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s ease;
+}
+
+.VPButton.brand:hover {
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+  transform: scale(1.02);
+}

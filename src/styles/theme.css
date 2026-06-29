@@ -1,0 +1,33 @@
+:root {
+  /* 极简冷灰与克制科技蓝 */
+  --yuan-primary: #0071e3;
+  --yuan-primary-hover: #0077ed;
+  --yuan-primary-light: #f4f9ff;
+  
+  --yuan-success: #1d9bf0; /* 柔和的天蓝色/绿蓝色 */
+  --yuan-success-hover: #0c8bd9;
+  --yuan-success-light: #f0f9ff;
+  
+  --yuan-error: #e02424;
+  --yuan-error-hover: #c81e1e;
+  --yuan-error-light: #fdf2f2;
+  
+  --yuan-warning: #f59e0b;
+  --yuan-warning-hover: #d97706;
+  --yuan-warning-light: #fffbeb;
+  
+  /* 更加纤细浅薄的边界色 */
+  --yuan-border: #f1f5f9;
+  --yuan-border-light: #f8fafc;
+  --yuan-bg: #ffffff;
+  --yuan-bg-muted: #fafafa;
+  
+  /* 现代字体系统 */
+  --yuan-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --yuan-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  
+  /* 像素级克制圆角 */
+  --yuan-radius: 6px;
+  --yuan-radius-sm: 4px;
+  --yuan-radius-lg: 10px;
+}

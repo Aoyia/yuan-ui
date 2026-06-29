@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { Image, FileText, ExternalLink } from '@lucide/vue'
-import type { ArtifactTraceNode } from '../types'
+import type { TraceStatus } from '../types'
 
 interface Props {
-  node: ArtifactTraceNode
+  title: string
+  artifactType: 'image' | 'file' | 'link'
+  url?: string
+  caption?: string
+  status?: TraceStatus
 }
 
 const props = defineProps<Props>()
@@ -15,46 +19,45 @@ const props = defineProps<Props>()
       <div class="icon-bubble">
         <slot name="icon">
           <div class="bubble-complete">
-            <Image v-if="props.node.artifactType === 'image'" class="icon-artifact" />
-            <FileText v-else-if="props.node.artifactType === 'file'" class="icon-artifact" />
+            <Image v-if="props.artifactType === 'image'" class="icon-artifact" />
+            <FileText v-else-if="props.artifactType === 'file'" class="icon-artifact" />
             <ExternalLink v-else class="icon-artifact" />
           </div>
         </slot>
       </div>
-      <div class="vertical-line" />
     </div>
 
     <div class="step-details">
       <div class="step-header">
         <span class="step-label">
-          {{ props.node.title }}
+          {{ props.title }}
         </span>
       </div>
 
       <div class="step-body">
         <!-- Image display -->
-        <template v-if="props.node.artifactType === 'image'">
+        <template v-if="props.artifactType === 'image'">
           <div class="image-wrapper">
-            <img :src="props.node.url" :alt="props.node.caption || 'Generated image'" class="artifact-image" />
-            <p v-if="props.node.caption" class="caption-text">
-              {{ props.node.caption }}
+            <img :src="props.url" :alt="props.caption || 'Generated image'" class="artifact-image" />
+            <p v-if="props.caption" class="caption-text">
+              {{ props.caption }}
             </p>
           </div>
         </template>
 
         <!-- File download/preview link -->
-        <template v-else-if="props.node.artifactType === 'file'">
-          <a :href="props.node.url || '#'" class="file-link" target="_blank" rel="noopener noreferrer">
+        <template v-else-if="props.artifactType === 'file'">
+          <a :href="props.url || '#'" class="file-link" target="_blank" rel="noopener noreferrer">
             <FileText class="icon-file" />
-            <span class="file-name">{{ props.node.caption || '查看文件' }}</span>
+            <span class="file-name">{{ props.caption || '查看文件' }}</span>
             <ExternalLink class="icon-ext" />
           </a>
         </template>
 
         <!-- External link -->
         <template v-else>
-          <a :href="props.node.url || '#'" class="external-link" target="_blank" rel="noopener noreferrer">
-            <span class="link-text">{{ props.node.caption || props.node.url }}</span>
+          <a :href="props.url || '#'" class="external-link" target="_blank" rel="noopener noreferrer">
+            <span class="link-text">{{ props.caption || props.url }}</span>
             <ExternalLink class="icon-ext" />
           </a>
         </template>
@@ -120,14 +123,7 @@ const props = defineProps<Props>()
   height: 0.65rem;
 }
 
-.vertical-line {
-  position: absolute;
-  top: 1.25rem;
-  bottom: 0;
-  width: 1px;
-  background-color: #e2e8f0;
-  z-index: 1;
-}
+
 
 .step-details {
   flex: 1;

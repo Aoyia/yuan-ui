@@ -1,59 +1,65 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Check, Loader2, Circle, EyeOff } from '@lucide/vue'
-import type { ReasoningTraceNode } from '../types'
+import type { TraceStatus, AgentTraceVisibility } from '../types'
 
 interface Props {
-  node: ReasoningTraceNode
+  title: string
+  status?: TraceStatus
+  duration?: number
+  visibility?: AgentTraceVisibility
+  summary?: string
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  status: 'pending',
+  visibility: 'details',
+})
 
 const statusClass = computed(() => {
   return {
-    'status-complete': props.node.status === 'complete',
-    'status-active': props.node.status === 'active',
-    'status-pending': props.node.status === 'pending',
-    'status-error': props.node.status === 'error',
-    'status-cancelled': props.node.status === 'cancelled',
+    'status-complete': props.status === 'complete',
+    'status-active': props.status === 'active',
+    'status-pending': props.status === 'pending',
+    'status-error': props.status === 'error',
+    'status-cancelled': props.status === 'cancelled',
   }
 })
 </script>
 
 <template>
-  <div class="yuan-trace-node reasoning-node" :class="statusClass">
+  <div class="yuan-trace-node reasoning-node" :class="[statusClass, { 'is-active-reasoning': props.status === 'active' }]">
     <div class="timeline-container">
       <div class="icon-bubble">
         <slot name="icon">
-          <div v-if="props.node.status === 'complete'" class="bubble-complete">
+          <div v-if="props.status === 'complete'" class="bubble-complete">
             <Check class="icon-check" />
           </div>
-          <Loader2 v-else-if="props.node.status === 'active'" class="icon-active spin" />
-          <Circle v-else-if="props.node.status === 'pending'" class="icon-pending" />
+          <Loader2 v-else-if="props.status === 'active'" class="icon-active spin" />
+          <Circle v-else-if="props.status === 'pending'" class="icon-pending" />
           <div v-else class="bubble-cancelled">
             <span class="icon-cancel-line">-</span>
           </div>
         </slot>
       </div>
-      <div class="vertical-line" />
     </div>
 
     <div class="step-details">
       <div class="step-header">
-        <span class="step-label">{{ props.node.title }}</span>
-        <span v-if="props.node.duration !== undefined" class="step-duration">
-          ({{ props.node.duration }}秒)
+        <span class="step-label">{{ props.title }}</span>
+        <span v-if="props.duration !== undefined" class="step-duration">
+          ({{ props.duration }}秒)
         </span>
       </div>
       <div class="step-body">
-        <template v-if="props.node.visibility === 'redacted'">
+        <template v-if="props.visibility === 'redacted'">
           <div class="redacted-content">
             <EyeOff class="icon-redacted" />
             <span>推理内容已隐藏</span>
           </div>
         </template>
         <template v-else>
-          <div class="reasoning-summary">{{ props.node.summary }}</div>
+          <div class="reasoning-summary">{{ props.summary }}</div>
         </template>
       </div>
     </div>
@@ -67,6 +73,7 @@ const statusClass = computed(() => {
   width: 100%;
   font-size: 0.875rem;
   animation: yuan-slide-in 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.125rem 0;
 }
 
 @keyframes yuan-slide-in {
@@ -79,6 +86,8 @@ const statusClass = computed(() => {
     transform: translateY(0);
   }
 }
+
+
 
 .timeline-container {
   display: flex;
@@ -105,8 +114,8 @@ const statusClass = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1rem;
-  height: 1rem;
+  width: 1.125rem;
+  height: 1.125rem;
   border-radius: 50%;
   background-color: #e2e8f0;
   color: #64748b;
@@ -119,8 +128,8 @@ const statusClass = computed(() => {
 }
 
 .icon-active {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 0.95rem;
+  height: 0.95rem;
   color: #3b82f6;
 }
 
@@ -134,8 +143,8 @@ const statusClass = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1rem;
-  height: 1rem;
+  width: 1.125rem;
+  height: 1.125rem;
   border-radius: 50%;
   background-color: #f1f5f9;
   color: #94a3b8;
@@ -146,14 +155,7 @@ const statusClass = computed(() => {
   font-weight: bold;
 }
 
-.vertical-line {
-  position: absolute;
-  top: 1.25rem;
-  bottom: 0;
-  width: 1px;
-  background-color: #e2e8f0;
-  z-index: 1;
-}
+
 
 .step-details {
   flex: 1;

@@ -6,6 +6,9 @@ export interface AgentTraceContextValue {
   isStreaming: Ref<boolean>
   duration: Ref<number | undefined>
   setIsOpen: (value: boolean) => void
+  onApprove?: (nodeId: string) => void
+  onReject?: (nodeId: string, reason?: string) => void
+  toggleCollapse?: (nodeId: string) => void
 }
 
 export const AgentTraceKey: InjectionKey<AgentTraceContextValue> = Symbol('AgentTraceContext')

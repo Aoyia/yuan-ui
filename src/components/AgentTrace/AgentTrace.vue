@@ -21,6 +21,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void
+  (e: 'approve', nodeId: string): void
+  (e: 'reject', payload: { nodeId: string; reason?: string }): void
+  (e: 'toggle-collapse', nodeId: string): void
 }>()
 
 const isOpen = useVModel(props, 'open', emit, {
@@ -43,7 +46,16 @@ provide(AgentTraceKey, {
   isOpen,
   isStreaming: toRef(props, 'isStreaming'),
   duration: toRef(props, 'duration'),
-  setIsOpen: (val: boolean) => { isOpen.value = val }
+  setIsOpen: (val: boolean) => { isOpen.value = val },
+  onApprove: (nodeId: string) => {
+    emit('approve', nodeId)
+  },
+  onReject: (nodeId: string, reason?: string) => {
+    emit('reject', { nodeId, reason })
+  },
+  toggleCollapse: (nodeId: string) => {
+    emit('toggle-collapse', nodeId)
+  }
 })
 </script>
 

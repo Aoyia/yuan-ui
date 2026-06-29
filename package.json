@@ -2,7 +2,7 @@
   "name": "yuan-ui",
   "version": "0.1.0",
   "type": "module",
-  "description": "一套精致的 Vue 3 UI 组件库",
+  "description": "一套对标大厂品质的 Vue 3 智能体思维链/执行轨迹 UI 组件库",
   "main": "./dist/yuan-ui.umd.js",
   "module": "./dist/yuan-ui.es.js",
   "types": "./dist/index.d.ts",
@@ -36,21 +36,30 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
+    "@vue/language-core": "^3.3.5",
+    "typescript": "^6.0.3",
     "vite": "^5.4.2",
+    "vite-plugin-dts": "^5.0.3",
+    "vitepress": "^1.2.0",
     "vitest": "^1.6.0"
   },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "test": "vitest run src",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "keywords": [
     "vue",
     "ui",
     "reasoning",
     "component",
-    "chain-of-thought"
+    "chain-of-thought",
+    "agent",
+    "trace"
   ],
   "license": "MIT",
   "repository": {

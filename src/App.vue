@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import {
   ChainOfThought,
   ChainOfThoughtHeader,
@@ -17,6 +17,7 @@ import {
 import { Play, RotateCcw, Activity, ShieldCheck } from '@lucide/vue'
 
 const activeTab = ref<'trace' | 'legacy'>('trace')
+const currentScenario = ref<'basic' | 'intermediate' | 'advanced'>('advanced')
 const isStreaming = ref(false)
 
 // 1. 初始化旧版 CoT 解析器
@@ -26,15 +27,16 @@ const legacyParser = useAgentStreamParser()
 const traceParser = useAgentTraceStream()
 
 const chatViewportRef = ref<HTMLElement | null>(null)
+const documentViewportRef = ref<HTMLElement | null>(null)
 
 // 自动滚动锚底逻辑
 function scrollToBottom() {
   nextTick(() => {
     if (chatViewportRef.value) {
-      chatViewportRef.value.scrollTo({
-        top: chatViewportRef.value.scrollHeight,
-        behavior: 'smooth'
-      })
+      chatViewportRef.value.scrollTop = chatViewportRef.value.scrollHeight
+    }
+    if (documentViewportRef.value) {
+      documentViewportRef.value.scrollTop = documentViewportRef.value.scrollHeight
     }
   })
 }
@@ -95,58 +97,173 @@ dist/yuan-ui.es.js   8.52 kB │ gzip: 2.94 kB
   { content: "1. **原子节点数据结构 (types.ts)**：所有的思考、工具调用（入参/执行中/已完成/返回网页）、终端输出、图像生成均被抽象为响应式的 `AgentStepNode` 原子。无论工具链路多么错综复杂，前端都只需要维护一个扁平的节点列表，由列表状态实时驱动 UI 渲染。\n" },
   { content: "2. **混合渲染引擎 (ChainOfThoughtRenderer)**：通过动态模板分发，在一个 Timeline 节点内智能匹配不同的工具调用详情，无需在页面编写繁琐的条件分支。\n" },
   { content: "3. **高阶视觉与物理效果**：\n" },
-  { content: "   - 处于历史状态 of 节点文字与勾图标自动平滑暗淡，降低视觉杂噪，聚焦 active 步骤。\n" },
+  { content: "   - 处于历史状态的节点文字与勾标图标会自动平滑暗淡，降低视觉噪点，聚焦当前活跃步骤。\n" },
   { content: "   - 超长 Timeline 在 `ChainOfThoughtContent` 中具有 `max-height` 限制与隐藏极窄滑动条，支持局部滚动，防止页面爆表。\n" },
   { content: "   - 思考链整体具有自动延时收折动效，正文开始输出后 1.2 秒自动滑出淡出闭合。\n\n" },
   { content: "这套架构不仅在体验上极具 Apple 的物理质感，而且在代码设计上面向未来的复杂智能体交互，具有强大的拓展性！" }
 ]
 
-// 新版数据流模拟
-const mockTraceFlow: any[] = [
-  { type: 'reasoning-delta', delta: "正在分析用户的问题，以确认 Vue 3 对话式组件库的升级与流式渲染设计。我需要查阅现有的 chain-of-thought 开源实现..." },
-  { type: 'tool-input-start', id: 'search-1', toolName: 'google_search', title: '执行 Google 搜索' },
-  { type: 'tool-output', id: 'search-1', output: [
-    { title: "Vue 3 组合式 API 指南", url: "https://vuejs.org" },
-    { title: "Collapsible 展开动画最佳实践", url: "https://reka-ui.com" },
-    { title: "高性能 Markdown 渲染算法", url: "https://markstream.vue" }
-  ]},
-  { type: 'reasoning-delta', delta: '\n\n已经定位到了 Collapsible 和流式 markdown 的渲染标准。为了进行打包适配，我需要进一步调研本地项目的编译器配置以确认其能够兼容 Vue 3 SFC...' },
-  { type: 'tool-input-start', id: 'file-1', toolName: 'read_file', title: '读取本地配置文件', input: { path: 'vite.config.js' } },
-  { type: 'tool-output', id: 'file-1', output: '文件读取成功。' },
-  { type: 'reasoning-delta', delta: '\n\nVite 配置确认完毕。在重构入口文件前，我必须在本地终端执行构建命令，以验证打包后的打包物体积及样式表无语法错误...' },
-  { type: 'tool-input-start', id: 'cmd-1', toolName: 'execute_command', title: '执行编译命令' },
-  { type: 'tool-input-delta', id: 'cmd-1', inputDelta: 'npm run build' },
-  { type: 'tool-output', id: 'cmd-1', output: `vite v5.4.21 building for production...\ntransforming...\n✓ 28 modules transformed.\ndist/style.css       4.48 kB │ gzip: 1.37 kB\ndist/yuan-ui.es.js   8.52 kB │ gzip: 2.94 kB\n✓ built in 215ms` },
-  { type: 'reasoning-delta', delta: '\n\n系统构建完成且无报错。为了让用户更清晰地了解本套 Agent 架构的数据流，我设计了一张架构流程配图...' },
-  { type: 'artifact', id: 'art-1', artifactType: 'image', title: '生成多模态配图', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80', caption: '图 1: 数据驱动型 Agent 状态流与 Timeline 渲染架构' },
-  { type: 'reasoning-delta', delta: '\n\n所有调研和编译测试已完成，逻辑闭环，现在输出正式的系统改造指南。' },
-  { type: 'text-delta', delta: "# 智能体多轮调研与思考渲染架构\n\n" },
-  { type: 'text-delta', delta: "我们已成功实现了一套完全由数据驱动的、能够承载 **Agent 多轮工具调用与思考链交织**的 Timeline 混合渲染器。\n\n" },
-  { type: 'text-delta', delta: "## 本套数据驱动设计的核心点\n\n" },
-  { type: 'text-delta', delta: "1. **原子节点数据结构 (types.ts)**：所有的思考、工具调用（入参/执行中/已完成/返回网页）、终端输出、图像生成均被抽象为响应式的 `AgentStepNode` 原子。无论工具链路多么错综复杂，前端都只需要维护一个扁平的节点列表，由列表状态实时驱动 UI 渲染。\n" },
-  { type: 'text-delta', delta: "2. **混合渲染引擎 (AgentTrace)**：通过动态模板分发，在一个 Timeline 节点内智能匹配不同的工具调用详情，无需在页面编写繁琐的条件分支。\n" },
-  { type: 'text-delta', delta: "3. **高阶视觉与物理效果**：\n" },
-  { type: 'text-delta', delta: "   - 处于历史状态的节点文字与勾图标自动平滑暗淡，降低视觉杂噪，聚焦 active 步骤。\n" },
-  { type: 'text-delta', delta: "   - 超长 Timeline 在 `AgentTraceContent` 中具有 `max-height` 限制与极窄滚动条，支持局部滚动，防止页面爆表。\n" },
-  { type: 'text-delta', delta: "   - 思考链整体具有自动延时收折动效，当 `isStreaming` 结束后会自动延迟折叠，顺滑视线。\n\n" },
-  { type: 'text-delta', delta: "这套架构不仅在体验上极具 Apple 的物理质感，而且在代码设计上面向未来的复杂智能体交互，具有强大的拓展性！" },
+// 1. 基础版本演示数据：纯推理思维链
+const mockBasicFlow = [
+  { type: 'reasoning-delta', delta: '正在接收并分析用户提出的工程化重构诉求：对标大厂品质开源组件库...' },
+  { type: 'reasoning-delta', delta: '\n\n经过对 Vue 3 社区的横向比对，优秀开源组件库的工程骨架一般包含：自动声明文件编译（vite-plugin-dts）、全局 CSS 变量主题底座、Husky 提交校验。' },
+  { type: 'reasoning-delta', delta: '\n\n为了保障文档站的极速响应与良好的 Live 演示交互，使用 VitePress 是性价比最高的策略。我们只需要在其基础上对其进行 Layout 换头，即可获得 Arco 级别的颜值。' },
+  { type: 'reasoning-delta', delta: '\n\n分析完毕，下面给出基本的重构核心路线说明。' },
+  { type: 'text-delta', delta: "# 基础思维链演示完成\n\n通过该基础流，你可以看到 `AgentTrace` 能够完美实现流式 Reasoning Deltas 的打字机追加以及思考完成状态的过渡。" },
   { type: 'finish' }
 ]
+
+// 2. 中级版本演示数据：包含基本工具调用（回退到 JSON 折叠渲染）
+const mockIntermediateFlow = [
+  { type: 'reasoning-delta', delta: '正在为您扫描当前项目依赖包情况，我需要读取本地包描述文件 package.json...' },
+  { type: 'tool-input-start', id: 'file-package', toolName: 'read_package_json', title: '读取 package.json 文件', input: { path: 'package.json' } },
+  { type: 'tool-output', id: 'file-package', output: { name: 'yuan-ui', version: '0.1.0', dependencies: { vue: '^3.4.0', '@vueuse/core': '^10.9.0' } } },
+  { type: 'reasoning-delta', delta: '\n\n读取包配置成功。Vue 版本为 3.4.0。为了保障组件库强类型支持，我需要进一步确认本地的打包输出路径...' },
+  { type: 'tool-input-start', id: 'dist-check', toolName: 'check_dist_dir', title: '检查 dist 目标目录', input: { mode: 'check-exist' } },
+  { type: 'tool-output', id: 'dist-check', output: { exists: true, filesCount: 3, totalBytes: 11860 } },
+  { type: 'reasoning-delta', delta: '\n\n环境检测全部通过，我已将项目状态整理就绪。' },
+  { type: 'text-delta', delta: "## 中阶工具链演示总结\n\n在中阶演示中，我们成功调用了两个自定义工具。因为这两个工具不属于组件库默认的高频特化工具，`AgentTrace` 自动启用 **JSON Fallback 折叠渲染器**。你可以点击组件上方的 `输入参数` 与 `输出结果` 查看折叠缓动。" },
+  { type: 'finish' }
+]
+
+// 3. 高阶版本演示数据：包含 Group 嵌套、同级渐进收缩、文件 Diff、敏感操作审批确权拦截、暗黑 Terminal 显色
+const mockAdvancedFlow: any[] = [
+  // --- 第一阶段：大 Group 1 ---
+  { type: 'group-start', id: 'g-env', title: '第一阶段：环境调研与扫描' },
+  
+  { type: 'reasoning-delta', id: 'r-1', delta: '为了重构出具有 CodeX 和 Cursor 级别的嵌套思维链，我需要先对多级树形 Timeline 和滚动渐进折叠策略做可行性调研。', parentId: 'g-env' },
+  
+  // 1-1 子 Group
+  { type: 'group-start', id: 'g-search', title: '流式折叠技术规范调研', parentId: 'g-env' },
+  { type: 'tool-input-start', id: 'search-1', toolName: 'google_search', title: '调研 Web 树形 Timeline 设计', parentId: 'g-search' },
+  { type: 'tool-output', id: 'search-1', output: [
+    { title: "Vue 3 组合式 API 高阶用法与实践", url: "https://vuejs.org", snippet: "本指南介绍如何利用 inject/provide 及递归挂载，优雅开发具有树形层级连接线的 Timeline 混合折叠组件。" },
+    { title: "ChatGPT o1 思维链折叠机制解析", url: "https://openai.com", snippet: "o1 在流式生成步骤时，会把已完成的大步骤自动折叠，仅保留当前的活跃大组展开，降低大量日志对屏幕空间占用的负担。" }
+  ]},
+  { type: 'group-end', id: 'g-search' },
+  
+  // 1-2 子 Group 开启（此时同属于 g-env 的前一个子 Group g-search 应当自动渐进式收纳折叠！）
+  { type: 'group-start', id: 'g-read-conf', title: '验证本地打包器环境', parentId: 'g-env' },
+  { type: 'tool-input-start', id: 'file-1', toolName: 'read_file', title: '读取本地配置文件 vite.config.js', input: { path: 'vite.config.js' }, parentId: 'g-read-conf' },
+  { type: 'tool-output', id: 'file-1', output: `import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+export default defineConfig({
+  plugins: [vue()]
+})` },
+  { type: 'group-end', id: 'g-read-conf' },
+  
+  { type: 'group-end', id: 'g-env' }, // 第一阶段大 Group 结束
+  
+  // --- 第二阶段：大 Group 2 开启（此时顶级层级中，前一个大 Group g-env 会自动整组收缩隐藏，完美移动焦点！）
+  { type: 'group-start', id: 'g-refactor', title: '第二阶段：智能体组件重构' },
+  
+  // 2-1 子 Group
+  { type: 'group-start', id: 'g-patch', title: '重构库组件入口导出', parentId: 'g-refactor' },
+  { type: 'tool-input-start', id: 'diff-1', toolName: 'replace_file_content', title: '追加组件树导出', parentId: 'g-patch' },
+  { type: 'tool-output', id: 'diff-1', output: `@@ -1,3 +1,5 @@
+ export * from './components/ChainOfThought'
++export { default as AgentTrace } from './components/AgentTrace/AgentTrace.vue'
++export { default as GroupTraceNode } from './components/AgentTrace/renderers/GroupTraceNode.vue'
+` },
+  { type: 'group-end', id: 'g-patch' },
+  
+  // 2-2 子 Group（高危清理操作，包含审批拦截）
+  { type: 'group-start', id: 'g-approve', title: '敏感构建目录清理', parentId: 'g-refactor' },
+  { type: 'tool-input-start', id: 'approve-demo', toolName: 'execute_command', title: '清空编译输出目录 dist/', input: { command: 'rm -rf dist/' }, parentId: 'g-approve' },
+  { type: 'tool-approval-request', id: 'approve-demo' },
+  { type: 'tool-output', id: 'approve-demo', output: '\x1b[32m[SUCCESS] 成功清除构建缓存目录: dist/\x1b[0m' },
+  { type: 'group-end', id: 'g-approve' },
+
+  // 2-3 子 Group（打包测试，暗黑终端渲染，带 ANSI 颜色）
+  { type: 'group-start', id: 'g-build', title: '编译器打包构建与校验', parentId: 'g-refactor' },
+  { type: 'tool-input-start', id: 'cmd-build-new', toolName: 'execute_command', title: '执行打包构建', input: { command: 'npm run build' }, parentId: 'g-build' },
+  { type: 'tool-output', id: 'cmd-build-new', output: `\x1B[90mvite v5.4.21 building for production...\x1B[0m
+\x1B[32m✓ 34 modules transformed.\x1B[0m
+\x1B[36mdist/yuan-ui.es.js   12.45 kB │ gzip: 4.12 kB\x1B[0m
+\x1B[32;1m[SUCCESS] 打包库编译完成，无任何警告。\x1B[0m` },
+  { type: 'group-end', id: 'g-build' },
+  
+  { type: 'group-end', id: 'g-refactor' }, // 第二阶段大 Group 结束
+  
+  // 最终 Markdown 文本输出
+  { type: 'text-delta', delta: "# 智能体多级 Grouping 与渐进收缩折叠报告\n\n" },
+  { type: 'text-delta', delta: "我们已经在优化后，让 `AgentTrace` 成功具备了类似 **ChatGPT (o1) 与 CodeX 级别**的思维链特质，包含两大革命性提升：\n\n" },
+  { type: 'text-delta', delta: "1. **递归树形多级嵌套 Group 机制**：支持无限级树形结构（如大分组嵌套子分组，子分组包含工具或推理）。子级在视觉上缩进排列，左侧配有极细的代码引导折叠虚线（Dashed Guideline），层级感犹如现代 IDE，赏心悦目。\n" },
+  { type: 'text-delta', delta: "2. **滚动渐进式折叠策略 (Progressive Collapse)**：采用同级注意力坍缩算法。当任意层级下有新的活跃节点开启时，该层级内所有已完成（Complete）的兄弟大步骤/子步骤会被自动平滑收纳折叠，时刻保证页面高度在视口黄金阅读区内，彻底解决多轮工具调用带来的页面撑爆问题。\n\n" },
+  { type: 'text-delta', delta: "这项升级真正突破了 MVP 的限制，使交互体验完美迈入顶级工业级生产力 AI产品序列！" },
+  { type: 'finish' }
+]
+
+// 阻塞并等待用户审批的 Promise 控制器
+const pendingApproval = ref<{ resolve: (approved: boolean) => void; id: string } | null>(null)
+
+function onUserApprove(nodeId: string) {
+  if (pendingApproval.value && pendingApproval.value.id === nodeId) {
+    traceParser.handleTraceEvent({ type: 'tool-approval-response', id: nodeId, approved: true })
+    pendingApproval.value.resolve(true)
+    pendingApproval.value = null
+  }
+}
+
+function onUserReject(payload: { nodeId: string; reason?: string }) {
+  if (pendingApproval.value && pendingApproval.value.id === payload.nodeId) {
+    traceParser.handleTraceEvent({ type: 'tool-approval-response', id: payload.nodeId, approved: false, reason: payload.reason })
+    pendingApproval.value.resolve(false)
+    pendingApproval.value = null
+  }
+}
+
+function onUserToggleCollapse(nodeId: string) {
+  traceParser.handleTraceEvent({ type: 'toggle-collapse', id: nodeId })
+}
 
 async function startSimulation() {
   if (isStreaming.value) return
   isStreaming.value = true
+  pendingApproval.value = null
 
   if (activeTab.value === 'trace') {
     traceParser.reset()
-    for (const chunk of mockTraceFlow) {
+    
+    // 根据渐进式场景选择对应的数据流
+    let targetFlow = mockAdvancedFlow
+    if (currentScenario.value === 'basic') {
+      targetFlow = mockBasicFlow
+    } else if (currentScenario.value === 'intermediate') {
+      targetFlow = mockIntermediateFlow
+    }
+
+    for (let i = 0; i < targetFlow.length; i++) {
+      if (!isStreaming.value) break // 支持中途打断
+      
+      const chunk = targetFlow[i]
+      
+      if (chunk.type === 'tool-approval-request') {
+        traceParser.handleTraceEvent(chunk)
+        
+        // 阻塞循环：等待用户审批
+        const approved = await new Promise<boolean>((resolve) => {
+          pendingApproval.value = { resolve, id: chunk.id }
+        })
+        
+        if (!approved) {
+          // 如果被用户拒绝：我们跳过下一个 chunk (代表工具执行成功的输出)，模拟拒绝分支
+          i++
+          await new Promise(resolve => setTimeout(resolve, 500))
+          continue
+        }
+        await new Promise(resolve => setTimeout(resolve, 500))
+        continue
+      }
+      
       traceParser.handleTraceEvent(chunk)
-      // 模拟事件的流式输出延迟
+      
+      // 模拟流式事件输出延迟
       if (chunk.type === 'reasoning-delta' || chunk.type === 'text-delta') {
         await new Promise(resolve => setTimeout(resolve, 15))
-      } else if (chunk.type === 'tool-input-start') {
+      } else if (chunk.type === 'tool-input-start' || chunk.type === 'group-start') {
         await new Promise(resolve => setTimeout(resolve, 600))
-      } else if (chunk.type === 'tool-output') {
+      } else if (chunk.type === 'tool-output' || chunk.type === 'group-end') {
         await new Promise(resolve => setTimeout(resolve, 800))
       } else if (chunk.type === 'artifact') {
         await new Promise(resolve => setTimeout(resolve, 500))
@@ -155,6 +272,8 @@ async function startSimulation() {
   } else {
     legacyParser.reset()
     for (const chunk of mockLegacyFlow) {
+      if (!isStreaming.value) break
+      
       if (chunk.type) {
         const type = chunk.type as any
         if (type === 'tool_call') {
@@ -178,7 +297,7 @@ async function startSimulation() {
         const text = chunk.content
         const chars = text.split('')
         for (const char of chars) {
-          legacyParser.handleAgentChunk({ type: 'content', delta: char })
+          legacyParser.handleAgentChunk({ type: 'thought', delta: char })
           await new Promise(resolve => setTimeout(resolve, 10))
         }
       }
@@ -189,18 +308,358 @@ async function startSimulation() {
 
 function handleReset() {
   isStreaming.value = false
+  pendingApproval.value = null
   traceParser.reset()
   legacyParser.reset()
 }
 
 const traceOpen = ref(true)
 const legacyOpen = ref(true)
+
+watch(traceOpen, (newVal) => {
+  if (newVal === true) {
+    // 仅在非流式运行时重新手动展开，才重置所有内部子组为折叠状态，提供极简的点击钻取交互
+    if (!isStreaming.value) {
+      traceParser.handleTraceEvent({ type: 'collapse-all-groups' })
+    }
+  } else {
+    // 自动或手动收拢折叠：启动 requestAnimationFrame 跟随器，在 350ms 动画周期内逐帧将滚动条锁死在底部，防止高度骤缩与滚动跳闪
+    const startTime = Date.now()
+    const duration = 350
+    
+    const trackScroll = () => {
+      if (documentViewportRef.value) {
+        documentViewportRef.value.scrollTop = documentViewportRef.value.scrollHeight
+      }
+      if (Date.now() - startTime < duration) {
+        requestAnimationFrame(trackScroll)
+      }
+    }
+    requestAnimationFrame(trackScroll)
+  }
+})
+// 静态预置的四大演示场景全量、带通义千问 (Qwen) 生产级 API 接入定义的调用源码
+const staticSnippets = {
+  basic: {
+    fileName: 'QwenBasicReasoning.vue',
+    code: `[TEMPLATE_START]
+  <!-- 新版极简 AgentTrace 思维链 (对接通义千问推理流) -->
+  <AgentTrace :is-streaming="isStreaming">
+    <AgentTraceTrigger />
+    <AgentTraceContent>
+      <AgentTraceList :nodes="nodes" />
+    </AgentTraceContent>
+  </AgentTrace>
+
+  <!-- 生成的 Markdown 正文结果 -->
+  <div v-if="content" class="answer-content">
+    <div class="markdown-body">\\{\\{ content \\}\}</div>
+  </div>
+[TEMPLATE_END]
+
+[SCRIPT_SETUP]
+import { ref } from 'vue'
+import { AgentTrace, AgentTraceTrigger, AgentTraceContent, AgentTraceList, useQwenAgentStream } from 'yuan-ui'
+
+const isStreaming = ref(false)
+
+// 1. 初始化通义千问大模型 SSE 适配器
+const { handleQwenChunk, nodes, content } = useQwenAgentStream()
+
+// 2. 真实千问大模型流式调用与组件接入示例
+async function runQwenSimulation() {
+  isStreaming.value = true
+  
+  // 发送请求对接千问 API (以标准 OpenAI/Qwen SSE 流式返回为例)
+  const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer YOUR_API_KEY' },
+    body: JSON.stringify({
+      model: 'qwen-max',
+      messages: [{ role: 'user', content: '重构 Vue 3 组件库...' }],
+      stream: true,
+      incremental_output: true // 开启增量流式输出
+    })
+  })
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    
+    // 解析 SSE 数据行
+    const chunkText = decoder.decode(value)
+    const lines = chunkText.split('\\n').filter(l => l.startsWith('data: '))
+    
+    for (const line of lines) {
+      const dataStr = line.slice(6)
+      if (dataStr === '[DONE]') continue
+      
+      const chunk = JSON.parse(dataStr)
+      // 3. 将千问流式 Chunk 帧塞入适配器，组件会自动渲染思维链和正文
+      handleQwenChunk(chunk)
+      
+      /**
+       * 千问推理流 (choices[0].delta.reasoning_content) 的真实数据结构示例：
+       * {
+       *   "choices": [{
+       *     "delta": {
+       *       "reasoning_content": "正在分析 Vue 3 组合式 API 组件设计...",
+       *       "content": ""
+       *     }
+       *   }]
+       * }
+       */
+    }
+  }
+  isStreaming.value = false
+}
+[SCRIPT_END]`
+  },
+  intermediate: {
+    fileName: 'QwenIntermediateTool.vue',
+    code: `[TEMPLATE_START]
+  <!-- 新版极简 AgentTrace 工作台 (对接千问工具调用) -->
+  <AgentTrace :is-streaming="isStreaming">
+    <AgentTraceTrigger />
+    <AgentTraceContent>
+      <!-- 渲染包含参数/返回值的工具节点 -->
+      <!-- 自动 Fallback 为输入参数与输出结果折叠面板 -->
+      <AgentTraceList :nodes="nodes" />
+    </AgentTraceContent>
+  </AgentTrace>
+
+  <!-- 生成的 Markdown 正文结果 -->
+  <div v-if="content" class="answer-content">
+    <div class="markdown-body">\\{\\{ content \\}\}</div>
+  </div>
+[TEMPLATE_END]
+
+[SCRIPT_SETUP]
+import { ref } from 'vue'
+import { AgentTrace, AgentTraceList, useQwenAgentStream } from 'yuan-ui'
+
+const isStreaming = ref(false)
+
+// 1. 初始化千问大模型 SSE 适配器
+const { handleQwenChunk, nodes, content } = useQwenAgentStream()
+
+// 2. 真实千问工具调用流式 Chunk 数据接收示例
+async function runQwenToolSimulation() {
+  isStreaming.value = true
+  
+  // 模拟从千问 API (qwen-max) 接收到的 SSE 流数据
+  // 每一个 SSE chunk 都可以通过 handleQwenChunk 实时处理
+  const mockChunks = [
+    // 首帧：开始调用工具，包含函数名与 tool_call id
+    {
+      choices: [{
+        delta: {
+          tool_calls: [{
+            index: 0,
+            id: "call_file_123",
+            type: "function",
+            function: { name: "read_package_json", arguments: "" }
+          }]
+        }
+      }]
+    },
+    // 中间帧：流式输出参数的 JSON 片段
+    {
+      choices: [{
+        delta: {
+          tool_calls: [{
+            index: 0,
+            function: { arguments: "{\\"path\\": " }
+          }]
+        }
+      }]
+    },
+    // 尾帧：参数输出完毕
+    {
+      choices: [{
+        delta: {
+          tool_calls: [{
+            index: 0,
+            function: { arguments: "\\"package.json\\"}" }
+          }]
+        }
+      }]
+    }
+  ]
+
+  for (const chunk of mockChunks) {
+    // 将千问工具调用参数流喂入适配器，左侧即可看到 [输入参数] 随着流式追加自动还原并格式化
+    handleQwenChunk(chunk)
+  }
+  
+  isStreaming.value = false
+}
+[SCRIPT_END]`
+  },
+  advanced: {
+    fileName: 'QwenAdvancedAgent.vue',
+    code: `[TEMPLATE_START]
+  <!-- 新版极简 AgentTrace 工作台 (对接千问高阶树形嵌套与审批拦截) -->
+  <AgentTrace 
+    v-model:open="isOpen"
+    :is-streaming="isStreaming"
+    @approve="onUserApprove"
+    @reject="onUserReject"
+  >
+    <AgentTraceTrigger />
+    <AgentTraceContent>
+      <!-- 1. 递归多级嵌套树形 Group 分组 -->
+      <!-- 2. 同级已完成步骤自动渐进折叠 (Progressive) -->
+      <!-- 3. 高危敏感命令审批拦截确权 (tool-approval) -->
+      <AgentTraceList :nodes="nodes" />
+    </AgentTraceContent>
+  </AgentTrace>
+
+  <!-- 生成的 Markdown 正文结果 -->
+  <div v-if="content" class="answer-content">
+    <div class="markdown-body">\\{\\{ content \\}\}</div>
+  </div>
+[TEMPLATE_END]
+
+[SCRIPT_SETUP]
+import { ref } from 'vue'
+import { AgentTrace, AgentTraceList, useQwenAgentStream } from 'yuan-ui'
+
+const isOpen = ref(true)
+const isStreaming = ref(false)
+
+// 1. 初始化千问大模型 SSE 适配器，配置敏感工具列表以启用拦截审批闸
+const { handleQwenChunk, nodes, content, handleTraceEvent } = useQwenAgentStream({
+  sensitiveTools: ['execute_command'] // 清理、修改等系统终端高危命令强制审批
+})
+
+// 2. 模拟从千问接收到高危工具调用并拦截
+function handleQwenAdvancedSSE() {
+  // 当千问流输出 tool_calls[i].function.name === 'execute_command' 完毕
+  // 并且大模型流开始输出 delta.content 时：
+  // 适配器会在内部自动拦下一闸，触发 'tool-approval-request' 并向 UI 弹出审批卡片
+  
+  /**
+   * 千问工具调用真实 SSE 结构示例（含敏感操作拦截）：
+   * {
+   *   "choices": [{
+   *     "delta": {
+   *       "tool_calls": [{
+   *         "index": 0,
+   *         "id": "call_cmd_456",
+   *         "function": {
+   *           "name": "execute_command",
+   *           "arguments": "{\\"command\\":\\"rm -rf dist/\\"}"
+   *         }
+   *       }]
+   *     }
+   *   }]
+   * }
+   */
+}
+
+// 3. 处理用户在前端的确认/拒绝审批动作
+function onUserApprove(nodeId) {
+  // 向适配器派发已授权事件，适配器将状态流标记为 [已授权]
+  handleTraceEvent({ type: 'tool-approval-response', id: nodeId, approved: true })
+  
+  // 模拟应用端执行本地脚本并回传结果给千问 API
+  const toolResult = "[SUCCESS] 成功清理编译缓存目录: dist/"
+  
+  // 回传工具结果给千问 API 的格式规范：
+  const toolResultMessageSpec = {
+    role: "tool",
+    name: "execute_command",
+    tool_call_id: nodeId,
+    content: toolResult
+  }
+}
+
+function onUserReject(payload) {
+  // 派发拒绝授权，终止工具运行，向千问回传拒绝原因
+  handleTraceEvent({ 
+    type: 'tool-approval-response', 
+    id: payload.nodeId, 
+    approved: false, 
+    reason: '用户拒绝了执行授权' 
+  })
+}
+[SCRIPT_END]`
+  },
+  legacy: {
+    fileName: 'LegacyCompatible.vue',
+    code: `[TEMPLATE_START]
+  <!-- 旧版 API 兼容包装器 -->
+  <ChainOfThought 
+    v-model:open="isOpen"
+    :is-thinking="isThinking"
+  >
+    <ChainOfThoughtHeader>
+      <span>多轮执行状态 (CoT)</span>
+    </ChainOfThoughtHeader>
+    <ChainOfThoughtContent>
+      <ChainOfThoughtRenderer :nodes="nodes" />
+    </ChainOfThoughtContent>
+  </ChainOfThought>
+
+  <!-- 生成的 Markdown 正文结果 -->
+  <div v-if="content" class="answer-content">
+    <div class="markdown-body">\\{\\{ content \\}\}</div>
+  </div>
+[TEMPLATE_END]
+
+[SCRIPT_SETUP]
+import { ref } from 'vue'
+import { ChainOfThought, ChainOfThoughtRenderer, useAgentStreamParser } from 'yuan-ui'
+
+// 旧版对话式 Chat 节点格式渲染 (兼容历史版本)
+const isThinking = ref(false)
+const legacyParser = useAgentStreamParser()
+
+// 接收老格式数据流：
+function handleLegacyEvent(event) {
+  // legacyParser 会自动解析 thought/tool_call 类型的事件流数据并驱动 UI
+}
+[SCRIPT_END]`
+  }
+}
+
+const activeFileName = computed(() => {
+  if (activeTab.value === 'legacy') {
+    return staticSnippets.legacy.fileName
+  }
+  return staticSnippets[currentScenario.value].fileName
+})
+
+const activeCode = computed(() => {
+  const rawCode = activeTab.value === 'legacy' ? staticSnippets.legacy.code : staticSnippets[currentScenario.value].code
+  return rawCode
+    .replace(/\\{\\{/g, '{{')
+    .replace(/\\}\\}/g, '}}')
+})
+
+// 运行时翻译占位符，安全避开预编译扫描
+const activeCodeTransformed = computed(() => {
+  return activeCode.value
+    .replace(/\[TEMPLATE_START\]/g, '<' + 'template>')
+    .replace(/\[TEMPLATE_END\]/g, '<' + '/template>')
+    .replace(/\[SCRIPT_SETUP\]/g, '<' + 'script setup>')
+    .replace(/\[SCRIPT_END\]/g, '<' + '/script>')
+})
 </script>
 
 <template>
-  <div class="demo-container">
-    <!-- Tab 导航 & 控制面板 -->
-    <header class="demo-control-panel">
+  <div class="demo-workbench">
+    <!-- 全局顶栏 Header -->
+    <header class="demo-header">
+      <div class="header-brand">
+        <span class="brand-dot" />
+        <span class="brand-text">Yuan UI 智能体工作台</span>
+      </div>
+      
       <div class="nav-tabs">
         <button
           type="button"
@@ -220,173 +679,370 @@ const legacyOpen = ref(true)
           :disabled="isStreaming"
         >
           <Activity class="tab-icon" />
-          <span>旧版 CoT 兼容</span>
+          <span>旧版 CoT (兼容)</span>
         </button>
       </div>
 
-      <h1 class="panel-title">Yuan UI 智能体执行轨迹 (Agent CoT) 调试</h1>
-      
-      <div class="button-group">
-        <button 
-          class="btn-primary" 
-          :disabled="isStreaming" 
-          @click="startSimulation"
-        >
-          <Play class="btn-icon" />
-          <span>开始模拟流式执行</span>
-        </button>
-        <button 
-          class="btn-secondary" 
-          @click="handleReset"
-        >
-          <RotateCcw class="btn-icon" />
-          <span>重置</span>
-        </button>
+      <div class="header-actions">
+        <!-- 渐进式场景选择器（仅在新版 AgentTrace 下展示） -->
+        <div v-if="activeTab === 'trace'" class="scenario-selector">
+          <span class="selector-label">演示场景:</span>
+          <div class="selector-options">
+            <button 
+              type="button" 
+              class="selector-opt-btn" 
+              :class="{ active: currentScenario === 'basic' }"
+              @click="currentScenario = 'basic'"
+              :disabled="isStreaming"
+            >
+              基础思维链
+            </button>
+            <button 
+              type="button" 
+              class="selector-opt-btn" 
+              :class="{ active: currentScenario === 'intermediate' }"
+              @click="currentScenario = 'intermediate'"
+              :disabled="isStreaming"
+            >
+              中阶工具调用
+            </button>
+            <button 
+              type="button" 
+              class="selector-opt-btn" 
+              :class="{ active: currentScenario === 'advanced' }"
+              @click="currentScenario = 'advanced'"
+              :disabled="isStreaming"
+            >
+              高阶智能体 (Cursor)
+            </button>
+          </div>
+        </div>
+        
+        <div class="button-group">
+          <button 
+            type="button"
+            class="btn-primary" 
+            :disabled="isStreaming" 
+            @click="startSimulation"
+          >
+            <Play class="btn-icon" />
+            <span>运行模拟</span>
+          </button>
+          <button 
+            type="button"
+            class="btn-secondary" 
+            @click="handleReset"
+          >
+            <RotateCcw class="btn-icon" />
+            <span>重置</span>
+          </button>
+        </div>
       </div>
     </header>
 
-    <!-- 主对话渲染区 (支持滚动) -->
-    <main class="chat-viewport" ref="chatViewportRef">
-      <div class="chat-bubble assistant-bubble">
-        
-        <!-- 方案 1: 新版 AgentTrace 组件 -->
-        <template v-if="activeTab === 'trace'">
-          <AgentTrace
-            v-model:open="traceOpen"
-            :is-streaming="traceParser.isStreaming.value"
-            :duration="traceParser.duration.value"
-          >
-            <AgentTraceTrigger />
-            <AgentTraceContent>
-              <AgentTraceList :nodes="traceParser.nodes.value" />
-            </AgentTraceContent>
-          </AgentTrace>
+    <!-- 主体双栏 Workspace -->
+    <div class="workspace">
+      <!-- 左栏: 对应模式下的代码演示看板 -->
+      <aside class="code-panel">
+        <div class="code-tab-header">
+          <div class="code-tab-active">
+            <span class="file-icon">📄</span>
+            <span class="file-name">{{ activeFileName }}</span>
+          </div>
+        </div>
+        <div class="code-viewer-body">
+          <pre class="code-editor-pre"><code>{{ activeCodeTransformed }}</code></pre>
+        </div>
+      </aside>
 
-          <div v-if="traceParser.content.value" class="answer-content">
+      <!-- 右栏: Document 预览面板，一体化承载思维链和最终正文 -->
+      <main class="preview-panel" ref="documentViewportRef">
+        <div class="document-container">
+          
+          <!-- 1. 新版 AgentTrace 演示（移至右侧大视口上方） -->
+          <template v-if="activeTab === 'trace' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
+            <AgentTrace
+              v-model:open="traceOpen"
+              :is-streaming="traceParser.isStreaming.value"
+              :duration="traceParser.duration.value"
+              @approve="onUserApprove"
+              @reject="onUserReject"
+              @toggle-collapse="onUserToggleCollapse"
+            >
+              <AgentTraceTrigger />
+              <AgentTraceContent>
+                <AgentTraceList :nodes="traceParser.nodes.value" />
+              </AgentTraceContent>
+            </AgentTrace>
+          </template>
+
+          <!-- 2. 旧版 CoT 演示（移至右侧大视口上方） -->
+          <template v-else-if="activeTab === 'legacy' && (legacyParser.nodes.value.length > 0 || legacyParser.isThinking.value)">
+            <ChainOfThought 
+              v-model:open="legacyOpen"
+              :is-thinking="legacyParser.isThinking.value"
+              :auto-close="true"
+            >
+              <ChainOfThoughtHeader>
+                <span v-if="legacyParser.isThinking.value">正在深度调研并执行多轮工具...</span>
+                <span v-else-if="legacyParser.totalDuration.value > 0">执行完毕 (用时 {{ legacyParser.totalDuration.value }}秒)</span>
+                <span v-else>多轮执行状态 (CoT)</span>
+              </ChainOfThoughtHeader>
+              <ChainOfThoughtContent>
+                <ChainOfThoughtRenderer :nodes="legacyParser.nodes.value" />
+              </ChainOfThoughtContent>
+            </ChainOfThought>
+          </template>
+
+          <!-- 3. 空白就绪占位（无数据且未执行时呈现） -->
+          <div v-else class="empty-preview">
+            <div class="empty-icon-box">
+              <Activity class="empty-icon" />
+            </div>
+            <p class="empty-title">等待模拟运行</p>
+            <p class="empty-desc">点击顶部的“运行模拟”按钮，即可在此查看流式思维轨迹与生成的文档正文。</p>
+          </div>
+
+          <!-- 4. Markdown 正文结果（始终呈现在思维链正下方） -->
+          <div v-if="activeTab === 'trace' && traceParser.content.value" class="answer-content">
             <div class="markdown-body">{{ traceParser.content.value }}</div>
           </div>
-        </template>
-
-        <!-- 方案 2: 旧版 ChainOfThought 兼容模式 -->
-        <template v-else>
-          <ChainOfThought 
-            v-model:open="legacyOpen"
-            :is-thinking="legacyParser.isThinking.value"
-            :auto-close="true"
-          >
-            <ChainOfThoughtHeader>
-              <span v-if="legacyParser.isThinking.value">正在深度调研并执行多轮工具...</span>
-              <span v-else-if="legacyParser.totalDuration.value > 0">智能体执行完毕 (用时 {{ legacyParser.totalDuration.value }} 秒)</span>
-              <span v-else>多轮执行状态 (Agent CoT)</span>
-            </ChainOfThoughtHeader>
-            <ChainOfThoughtContent>
-              <!-- 兼容包装器，内部调用 AgentTraceList -->
-              <ChainOfThoughtRenderer :nodes="legacyParser.nodes.value" />
-            </ChainOfThoughtContent>
-          </ChainOfThought>
-
-          <div v-if="legacyParser.content.value" class="answer-content">
+          <div v-else-if="activeTab === 'legacy' && legacyParser.content.value" class="answer-content">
             <div class="markdown-body">{{ legacyParser.content.value }}</div>
           </div>
-        </template>
 
-      </div>
-    </main>
+        </div>
+      </main>
+    </div>
   </div>
 </template>
 
 <style>
-/* 全局页面美化 */
+/* 极简冷灰全屏 Workbench 美学 */
 body {
-  background-color: #f5f5f7;
+  background-color: #fafafa;
   color: #1d1d1f;
   margin: 0;
   padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-}
-
-.demo-container {
-  width: 90%;
-  max-width: 760px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-  border: 1px solid rgba(255,255,255,0.4);
+  height: 100vh;
+  width: 100vw;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow: hidden;
 }
 
-/* 控制面板样式 */
-.demo-control-panel {
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.5);
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+.dark body {
+  background-color: #09090b;
+  color: #f4f4f5;
 }
 
+.demo-workbench {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  background-color: #ffffff;
+  overflow: hidden;
+}
+
+.dark .demo-workbench {
+  background-color: #09090b;
+}
+
+/* 顶栏精致 Header */
+.demo-header {
+  height: 52px;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
+  z-index: 100;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.dark .demo-header {
+  border-bottom-color: #27272a;
+  background-color: #09090b;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brand-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0071e3 0%, #6366f1 100%);
+}
+
+.brand-text {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1d1d1f;
+}
+
+.dark .brand-text {
+  color: #f4f4f5;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* 纯文字滑动 Tab */
 .nav-tabs {
   display: flex;
-  background-color: #e3e3e7;
-  padding: 2px;
-  border-radius: 9px;
-  width: fit-content;
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  gap: 1.5rem;
+  height: 100%;
+  align-items: center;
 }
 
 .tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
+  gap: 0.35rem;
+  height: 100%;
   border: none;
   background: transparent;
-  border-radius: 7px;
-  font-size: 0.8125rem;
+  border-radius: 0;
+  font-size: 0.78rem;
   font-weight: 500;
-  color: #636366;
+  color: #86868b;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.15s ease;
+  position: relative;
+}
+
+.dark .tab-btn {
+  color: #a1a1aa;
 }
 
 .tab-btn.active {
-  background: #fff;
-  color: #1c1c1e;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  background: transparent;
+  color: #1d1d1f;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.dark .tab-btn.active {
+  color: #f4f4f5;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #0071e3;
 }
 
 .tab-icon {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 0.8rem;
+  height: 0.8rem;
 }
 
-.panel-title {
-  margin: 0;
-  font-size: 1.125rem;
+/* 场景选择器 */
+.scenario-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.selector-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #86868b;
+  margin-right: 0.15rem;
+}
+
+.dark .selector-label {
+  color: #71717a;
+}
+
+.selector-options {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.selector-opt-btn {
+  padding: 0.18rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: #86868b;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.dark .selector-opt-btn {
+  color: #a1a1aa;
+}
+
+.selector-opt-btn.active {
+  background-color: #f1f5f9;
+  color: #0071e3;
+  box-shadow: none;
   font-weight: 600;
+}
+
+.dark .selector-opt-btn.active {
+  background-color: #27272a;
+  color: #2997ff;
+}
+
+.selector-opt-btn:hover:not(.active):not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.03);
   color: #1d1d1f;
 }
 
+.dark .selector-opt-btn:hover:not(.active):not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.03);
+  color: #f4f4f5;
+}
+
+.selector-opt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 控制按钮组 */
 .button-group {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.4rem;
 }
 
 button {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
+  gap: 0.35rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   outline: none;
 }
 
@@ -401,71 +1057,238 @@ button {
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .btn-secondary {
-  background: #fff;
-  color: #1d1d1f;
-  border: 1px solid #d2d2d7;
+  background: transparent;
+  color: #86868b;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dark .btn-secondary {
+  color: #a1a1aa;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .btn-secondary:hover {
-  background: #f5f5f7;
+  background: rgba(0, 0, 0, 0.02);
+  color: #1d1d1f;
+}
+
+.dark .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.02);
+  color: #f4f4f5;
 }
 
 .btn-icon {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 0.75rem;
+  height: 0.75rem;
 }
 
-/* 对话区样式 */
-.chat-viewport {
-  padding: 2rem;
-  height: 480px;
-  overflow-y: auto;
-  background-color: rgba(250,250,252,0.3);
+/* 双栏布局主体 */
+.workspace {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
+
+/* 左侧代码演示看板 (Code Panel) */
+.code-panel {
+  width: 420px; /* 拓宽左侧代码阅读空间 */
+  border-right: 1px solid #f1f5f9;
+  background-color: #0b0f19; /* 采用与终端一致的极客夜色暗黑底 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.dark .code-panel {
+  border-right-color: #27272a;
+  background-color: #09090b;
+}
+
+/* 页签栏 */
+.code-tab-header {
+  height: 34px;
+  background-color: #070a12;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.code-tab-active {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 100%;
+  border-bottom: 2px solid #0071e3;
+  padding: 0 0.25rem;
+}
+
+.file-icon {
+  font-size: 0.72rem;
+}
+
+.file-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  font-family: ui-monospace, monospace;
+}
+
+/* 代码主体区域 */
+.code-viewer-body {
+  flex: 1;
+  overflow: auto;
+  padding: 1.25rem 1rem;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.08) transparent;
-  -webkit-overflow-scrolling: touch;
+  scrollbar-color: rgba(255, 255, 255, 0.05) transparent;
 }
 
-.chat-viewport::-webkit-scrollbar {
-  width: 5px;
+.code-viewer-body::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
 }
 
-.chat-viewport::-webkit-scrollbar-track {
+.code-viewer-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
+}
+
+.code-editor-pre {
+  margin: 0;
+  padding: 0;
   background: transparent;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: #e2e8f0; /* 白亮字 */
+  white-space: pre;
+  animation: code-fade-in 0.25s ease;
 }
 
-.chat-viewport::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 9999px;
+@keyframes code-fade-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.chat-viewport:hover::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+/* 右侧预览主面板 */
+.preview-panel {
+  flex: 1;
+  background-color: #fafafa;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.04) transparent;
 }
 
-.chat-bubble {
-  background: #fff;
-  border-radius: 16px;
-  padding: 1.25rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-  border: 1px solid rgba(0,0,0,0.03);
+.dark .preview-panel {
+  background-color: #09090b;
 }
 
-/* 正文部分 */
+.preview-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.preview-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 99px;
+}
+
+.dark .preview-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.document-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 空白占位 */
+.empty-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: auto 0;
+  text-align: center;
+  color: #86868b;
+  animation: yuan-fade-in 0.35s ease;
+}
+
+.empty-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px dashed rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+  color: #86868b;
+}
+
+.dark .empty-icon-box {
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #71717a;
+}
+
+.empty-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.empty-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 0.2rem 0;
+}
+
+.dark .empty-title {
+  color: #f4f4f5;
+}
+
+.empty-desc {
+  font-size: 0.7rem;
+  color: #86868b;
+  max-width: 280px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.dark .empty-desc {
+  color: #71717a;
+}
+
+/* 自然文字流渐入 */
 .answer-content {
-  margin-top: 1.25rem;
-  padding-top: 1.25rem;
-  border-top: 1px dashed #e5e7eb;
+  animation: yuan-fade-in 0.28s ease;
+  width: 100%;
+}
+
+@keyframes yuan-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .markdown-body {
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  white-space: pre-wrap;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #1d1d1f;
+}
+
+.dark .markdown-body {
+  color: #e4e4e7;
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Activity, ChevronDown } from '@lucide/vue'
+import { ChevronDown } from '@lucide/vue'
 import { useAgentTraceContext } from './context'
 
 const { isOpen, isStreaming, duration, setIsOpen } = useAgentTraceContext()
@@ -16,14 +16,18 @@ function toggleOpen() {
     @click="toggleOpen"
   >
     <div class="header-left">
-      <slot name="icon">
-        <Activity class="icon-activity" :class="{ 'is-streaming': isStreaming }" />
-      </slot>
+      <div 
+        class="status-dot" 
+        :class="{ 
+          'is-streaming': isStreaming, 
+          'is-complete': !isStreaming && duration !== undefined 
+        }" 
+      />
       <span class="status-text">
         <slot>
-          <template v-if="isStreaming">正在处理...</template>
-          <template v-else-if="duration !== undefined">已完成，用时 {{ duration }} 秒</template>
-          <template v-else>执行轨迹</template>
+          <template v-if="isStreaming">Thinking...</template>
+          <template v-else-if="duration !== undefined">Completed in {{ duration }}s</template>
+          <template v-else>Agent Trace</template>
         </slot>
       </span>
     </div>
@@ -33,59 +37,89 @@ function toggleOpen() {
 
 <style scoped>
 .yuan-agent-trace-header {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  color: #6b7280; /* 浅灰色文字，不干扰正文 */
+  padding: 0.35rem 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #86868b;
   background: transparent;
   border: none;
+  border-bottom: 1px solid #f1f5f9;
   cursor: pointer;
   outline: none;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
   user-select: none;
+  margin-bottom: 0.5rem;
+}
+
+.dark .yuan-agent-trace-header {
+  color: #a1a1aa;
+  border-bottom-color: #27272a;
 }
 
 .yuan-agent-trace-header:hover {
-  color: #111827;
+  color: #1d1d1f;
+}
+
+.dark .yuan-agent-trace-header:hover {
+  color: #f4f4f5;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
-.icon-activity {
-  width: 1rem;
-  height: 1rem;
-  color: #10b981; /* 绿色 */
+.status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #86868b;
+  transition: background-color 0.3s ease;
 }
 
-.icon-activity.is-streaming {
-  animation: yuan-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  color: #3b82f6; /* streaming时用蓝色 */
+.dark .status-dot {
+  background-color: #52525b;
 }
 
-@keyframes yuan-pulse {
+.status-dot.is-streaming {
+  background-color: #0071e3;
+  animation: yuan-pulse-dot 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.status-dot.is-complete {
+  background-color: #34c759;
+}
+
+@keyframes yuan-pulse-dot {
   0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: .5;
+    opacity: 0.35;
+    transform: scale(0.8);
   }
 }
 
 .status-text {
   font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 .icon-chevron {
-  width: 1rem;
-  height: 1rem;
-  transition: transform 0.2s ease;
+  width: 0.8rem;
+  height: 0.8rem;
+  color: #86868b;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .icon-chevron {
+  color: #71717a;
 }
 
 .icon-chevron.is-open {
