@@ -7,10 +7,10 @@ import {
   AgentTraceList,
   useAgentTraceStream
 } from './components/AgentTrace'
-import { AgentTraceDAG } from './components/AgentTraceV2'
+import { AgentTraceDAG } from './components/AgentTraceDAG'
 import { Play, RotateCcw, Activity, ShieldCheck } from '@lucide/vue'
 
-const activeTab = ref<'trace' | 'traceV2'>('trace')
+const activeTab = ref<'trace' | 'traceDAG'>('trace')
 const currentScenario = ref<'basic' | 'intermediate' | 'advanced'>('advanced')
 const isStreaming = ref(false)
 
@@ -611,12 +611,12 @@ const activeCodeTransformed = computed(() => {
         <button
           type="button"
           class="tab-btn"
-          :class="{ active: activeTab === 'traceV2' }"
-          @click="activeTab = 'traceV2'"
+          :class="{ active: activeTab === 'traceDAG' }"
+          @click="activeTab = 'traceDAG'"
           :disabled="isStreaming"
         >
           <ShieldCheck class="tab-icon" />
-          <span>新版 AgentTraceV2 (DAG拓扑)</span>
+          <span>新版 AgentTraceDAG (DAG拓扑)</span>
         </button>
       </div>
 
@@ -713,8 +713,8 @@ const activeCodeTransformed = computed(() => {
             </AgentTrace>
           </template>
 
-          <!-- 1.5 新版 AgentTraceV2 (DAG 拓扑) 演示 -->
-          <template v-else-if="activeTab === 'traceV2' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
+          <!-- 1.5 新版 AgentTraceDAG (DAG 拓扑) 演示 -->
+          <template v-else-if="activeTab === 'traceDAG' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
             <div class="dag-playground-wrapper">
               <AgentTraceDAG
                 :nodes="traceParser.nodes.value"
