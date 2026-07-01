@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { 
   MessageSquare, Image, FileText, ExternalLink, Check, Loader2, 
-  Circle, AlertCircle, Wrench, Terminal, FileCode, Globe, File,
-  GitFork, ChevronDown, ChevronUp
+  Circle, AlertCircle, Wrench, Terminal, FileCode, Globe, File
 } from '@lucide/vue'
 import type { DAGTraceStatus, ToolTraceState, AgentTraceVisibility } from './types'
 
@@ -12,27 +11,21 @@ interface Props {
   kind: 'reasoning' | 'tool' | 'artifact' | 'text'
   title: string
   status?: DAGTraceStatus
+  duration?: number
+  isSelected?: boolean
   
-  // reasoning
+  // 保留可选属性，防止父组件 v-bind 传入时在 DOM 元素上落入无用 attribute 节点
   summary?: string
   visibility?: AgentTraceVisibility
-  
-  // tool
   toolName?: string
   state?: ToolTraceState
   input?: unknown
   output?: unknown
   errorText?: string
-  
-  // artifact
   artifactType?: 'image' | 'file' | 'link'
   url?: string
   caption?: string
-  
-  // text
   content?: string
-  
-  duration?: number
   maxOutputLength?: number
 }
 
@@ -40,14 +33,13 @@ const props = withDefaults(defineProps<Props>(), {
   status: 'pending',
   visibility: 'details',
   maxOutputLength: 600,
+  isSelected: false,
 })
 
 const emit = defineEmits<{
   (e: 'click', id: string): void
   (e: 'fork', id: string): void
 }>()
-
-const isExpanded = ref(false)
 
 const statusClass = computed(() => {
   return {
@@ -85,179 +77,42 @@ const nodeIcon = computed(() => {
   return Circle
 })
 
-const isTerminal = computed(() => {
-  return props.kind === 'tool' && ['execute_command', 'run_command'].includes(props.toolName || '')
-})
-
-const commandText = computed(() => {
-  if (typeof props.input === 'string') return props.input
-  if (props.input && typeof props.input === 'object') {
-    return (props.input as any).CommandLine || (props.input as any).command || ''
-  }
-  return ''
-})
-
-const formattedInput = computed(() => {
-  if (props.input === undefined || props.input === null) return ''
-  if (typeof props.input === 'object') {
-    try {
-      return JSON.stringify(props.input, null, 2)
-    } catch {
-      return String(props.input)
-    }
-  }
-  return String(props.input)
-})
-
-const formattedOutput = computed(() => {
-  if (props.output === undefined || props.output === null) return ''
-  if (typeof props.output === 'object') {
-    try {
-      return JSON.stringify(props.output, null, 2)
-    } catch {
-      return String(props.output)
-    }
-  }
-  const str = String(props.output)
-  if (str.length > props.maxOutputLength) {
-    return str.slice(0, props.maxOutputLength) + '\n... [truncated]'
-  }
-  return str
-})
-
 function handleNodeClick() {
   emit('click', props.id)
-}
-
-function handleFork(event: Event) {
-  event.stopPropagation()
-  emit('fork', props.id)
-}
-
-function toggleExpand(event: Event) {
-  event.stopPropagation()
-  isExpanded.value = !isExpanded.value
 }
 </script>
 
 <template>
   <div 
     class="yuan-dag-node-wrapper"
-    :class="[statusClass, `kind-${props.kind}`]"
+    :class="[
+      statusClass, 
+      `kind-${props.kind}`, 
+      { 'is-selected': props.isSelected }
+    ]"
     @click="handleNodeClick"
   >
-    <!-- 节点主体气泡 -->
-    <div class="dag-node-bubble">
-      <!-- 头部状态指示呼吸灯和图标 -->
-      <div class="node-header">
-        <div class="node-icon-wrapper">
-          <component 
-            :is="nodeIcon" 
-            class="node-icon"
-            :class="{ 'spin': props.status === 'active' && props.kind === 'reasoning' }"
-          />
-        </div>
-        <span class="node-title">{{ props.title }}</span>
-        
-        <div class="node-actions-area">
-          <span v-if="props.duration !== undefined" class="node-duration">{{ props.duration }}s</span>
-          <!-- Fork 干预按钮 -->
-          <button 
-            type="button" 
-            class="action-btn fork-btn" 
-            title="从此步骤分叉调整" 
-            @click="handleFork"
-          >
-            <GitFork class="btn-icon" />
-          </button>
-          <!-- 展开详情按钮 -->
-          <button 
-            v-if="props.kind !== 'text' || props.content" 
-            type="button" 
-            class="action-btn expand-btn" 
-            @click="toggleExpand"
-          >
-            <component :is="isExpanded ? ChevronUp : ChevronDown" class="btn-icon" />
-          </button>
-        </div>
+    <div class="node-content">
+      <!-- 1. 图标栏 -->
+      <div class="node-icon-wrapper">
+        <component 
+          :is="nodeIcon" 
+          class="node-icon"
+          :class="{ 'spin': props.status === 'active' && props.kind === 'reasoning' }"
+        />
       </div>
-
-      <!-- 节点简短内容 (摘要) -->
-      <div class="node-summary-area" v-if="props.kind === 'reasoning' && props.summary">
-        <div class="summary-text" v-if="props.visibility !== 'redacted'">
-          {{ props.summary }}
-        </div>
-        <div class="redacted-text" v-else>
-          推理内容已隐藏
-        </div>
-      </div>
-
-      <!-- 纯文本节点展示 -->
-      <div class="node-summary-area" v-else-if="props.kind === 'text' && props.content && !isExpanded">
-        <div class="summary-text text-truncate">{{ props.content }}</div>
-      </div>
-
-      <!-- 语义化展开详情区域 -->
-      <div class="grid-transition" :class="{ 'is-expanded': isExpanded }">
-        <div class="grid-transition-inner">
-          <div class="node-detail-content">
-            <!-- Reasoning detail -->
-            <div v-if="props.kind === 'reasoning' && props.summary" class="detail-section">
-              <div class="detail-label">核心思考记录</div>
-              <div class="detail-body pre-wrap">{{ props.summary }}</div>
-            </div>
-
-            <!-- Text detail -->
-            <div v-else-if="props.kind === 'text' && props.content" class="detail-section">
-              <div class="detail-body pre-wrap">{{ props.content }}</div>
-            </div>
-
-            <!-- Artifact detail -->
-            <div v-else-if="props.kind === 'artifact'" class="detail-section">
-              <div v-if="props.artifactType === 'image'" class="artifact-image-container">
-                <img :src="props.url" :alt="props.caption || '生成图像'" class="artifact-img" />
-                <p v-if="props.caption" class="artifact-caption">{{ props.caption }}</p>
-              </div>
-              <div v-else-if="props.artifactType === 'file'" class="artifact-link-container">
-                <a :href="props.url || '#'" target="_blank" class="artifact-link">
-                  <FileText class="link-icon" />
-                  <span>{{ props.caption || '查看文件' }}</span>
-                  <ExternalLink class="ext-icon" />
-                </a>
-              </div>
-              <div v-else class="artifact-link-container">
-                <a :href="props.url || '#'" target="_blank" class="artifact-link">
-                  <span>{{ props.caption || props.url }}</span>
-                  <ExternalLink class="ext-icon" />
-                </a>
-              </div>
-            </div>
-
-            <!-- Tool detail -->
-            <div v-else-if="props.kind === 'tool'" class="detail-section">
-              <!-- Command -->
-              <div v-if="isTerminal && commandText" class="tool-io-block">
-                <div class="detail-label">执行命令</div>
-                <pre class="code-pre"><code>{{ commandText }}</code></pre>
-              </div>
-              <!-- Input -->
-              <div v-if="!isTerminal && formattedInput" class="tool-io-block">
-                <div class="detail-label">输入参数</div>
-                <pre class="code-pre"><code>{{ formattedInput }}</code></pre>
-              </div>
-              <!-- Error -->
-              <div v-if="props.errorText" class="tool-error-block">
-                <div class="detail-label error-label">错误输出</div>
-                <pre class="code-pre error-pre"><code>{{ props.errorText }}</code></pre>
-              </div>
-              <!-- Output -->
-              <div v-if="formattedOutput" class="tool-io-block">
-                <div class="detail-label">执行结果</div>
-                <pre class="code-pre"><code>{{ formattedOutput }}</code></pre>
-              </div>
-            </div>
-          </div>
-        </div>
+      
+      <!-- 2. 标题栏 -->
+      <span class="node-title" :title="props.title">{{ props.title }}</span>
+      
+      <!-- 3. 执行时长 -->
+      <span v-if="props.duration !== undefined" class="node-duration">
+        {{ props.duration }}s
+      </span>
+      
+      <!-- 4. 右侧状态指示灯 -->
+      <div class="status-dot-indicator">
+        <span class="dot"></span>
       </div>
     </div>
   </div>
@@ -265,108 +120,95 @@ function toggleExpand(event: Event) {
 
 <style scoped>
 .yuan-dag-node-wrapper {
-  width: 280px;
+  height: 42px;
+  width: 200px;
   position: relative;
-  border-radius: 12px;
-  padding: 1px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   user-select: none;
-}
-
-/* 玻璃拟态设计（Glassmorphism） */
-.dag-node-bubble {
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-radius: 11px;
-  padding: 0.75rem;
-  box-sizing: border-box;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05),
-              0 0 1px 1px rgba(0, 0, 0, 0.02);
-  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-.dark .dag-node-bubble {
-  background: rgba(30, 30, 35, 0.75);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3),
-              0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
-/* 气泡边框渐变 */
-.yuan-dag-node-wrapper {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.15) 100%);
-}
 .dark .yuan-dag-node-wrapper {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  background: rgba(30, 30, 35, 0.75);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* 悬停微动效 */
+/* 悬停动效 */
 .yuan-dag-node-wrapper:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 .dark .yuan-dag-node-wrapper:hover {
-  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* 状态修饰 */
-/* 1. Active 呼吸灯 */
-.status-active {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(59, 130, 246, 0.2) 100%);
+/* 选中高亮样式 (isSelected) */
+.yuan-dag-node-wrapper.is-selected {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0.02) 100%);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15), 0 4px 12px -2px rgba(59, 130, 246, 0.15);
+}
+.dark .yuan-dag-node-wrapper.is-selected {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.03) 100%);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25), 0 4px 12px -2px rgba(59, 130, 246, 0.3);
+}
+
+/* Active 状态呼吸边框 */
+.status-active:not(.is-selected) {
+  border-color: rgba(59, 130, 246, 0.5);
   animation: border-breath 2s infinite ease-in-out;
 }
-.status-active .dag-node-bubble {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
-}
-
 @keyframes border-breath {
-  0%, 100% { opacity: 0.85; }
-  50% { opacity: 0.5; }
+  0%, 100% { border-color: rgba(59, 130, 246, 0.4); }
+  50% { border-color: rgba(59, 130, 246, 0.8); }
 }
 
-/* 2. Error 报错 */
-.status-error {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.8) 0%, rgba(239, 68, 68, 0.2) 100%);
-}
-
-/* 3. Pruned 剪裁变灰置弱 */
+/* Pruned 剪裁变灰置弱 */
 .status-pruned {
   opacity: 0.45;
-  background: dotted 1px rgba(0, 0, 0, 0.2);
-}
-.dark .status-pruned {
-  background: dotted 1px rgba(255, 255, 255, 0.05);
 }
 .status-pruned:hover {
   opacity: 0.85;
 }
 
-/* Header Area */
-.node-header {
+/* 内容布局 */
+.node-content {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  width: 100%;
+  height: 100%;
+  padding: 0 8px;
+  gap: 6px;
 }
 
+/* 左侧图标 */
 .node-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
   background: rgba(0, 0, 0, 0.03);
   color: #475569;
+  flex-shrink: 0;
 }
 .dark .node-icon-wrapper {
   background: rgba(255, 255, 255, 0.05);
   color: #94a3b8;
 }
 
-/* 不同类型图标背景差异 */
+/* 不同类型图标背景颜色差异 */
 .kind-reasoning .node-icon-wrapper {
   color: #3b82f6;
   background: rgba(59, 130, 246, 0.08);
@@ -381,13 +223,14 @@ function toggleExpand(event: Event) {
 }
 
 .node-icon {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 13px;
+  height: 13px;
 }
 
+/* 标题 */
 .node-title {
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 550;
   color: #1e293b;
   flex: 1;
   white-space: nowrap;
@@ -398,207 +241,49 @@ function toggleExpand(event: Event) {
   color: #f1f5f9;
 }
 
-.node-actions-area {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
+/* 执行时间 */
 .node-duration {
-  font-size: 0.6875rem;
+  font-size: 10px;
   color: #94a3b8;
+  flex-shrink: 0;
 }
 
-.action-btn {
+/* 右侧指示灯 */
+.status-dot-indicator {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 4px;
-  border: none;
-  background: transparent;
-  color: #94a3b8;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+.status-dot-indicator .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #94a3b8; /* 默认 pending 灰色 */
+  transition: all 0.25s ease;
 }
 
-.action-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: #475569;
+/* 状态对应的颜色 */
+.status-complete .status-dot-indicator .dot {
+  background-color: #10b981; /* 绿色 */
 }
-.dark .action-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+.status-active .status-dot-indicator .dot {
+  background-color: #3b82f6; /* 蓝色 */
+  animation: dot-breath 1.5s infinite ease-in-out;
 }
-
-.fork-btn:hover {
-  color: #3b82f6;
+.status-error .status-dot-indicator .dot {
+  background-color: #ef4444; /* 红色 */
 }
-
-.btn-icon {
-  width: 0.75rem;
-  height: 0.75rem;
+.status-cancelled .status-dot-indicator .dot,
+.status-pruned .status-dot-indicator .dot {
+  background-color: #64748b; /* 灰色 */
 }
 
-/* Summary Area */
-.node-summary-area {
-  margin-top: 0.5rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.03);
-  padding-top: 0.5rem;
-}
-.dark .node-summary-area {
-  border-top-color: rgba(255, 255, 255, 0.03);
-}
-
-.summary-text {
-  font-size: 0.75rem;
-  color: #475569;
-  line-height: 1.4;
-}
-.dark .summary-text {
-  color: #cbd5e1;
-}
-
-.text-truncate {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.redacted-text {
-  font-size: 0.75rem;
-  color: #94a3b8;
-  font-style: italic;
-}
-
-/* Details transition */
-.grid-transition {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.grid-transition.is-expanded {
-  grid-template-rows: 1fr;
-}
-.grid-transition-inner {
-  overflow: hidden;
-}
-
-.node-detail-content {
-  margin-top: 0.5rem;
-  border-top: 1px dashed rgba(0, 0, 0, 0.06);
-  padding-top: 0.5rem;
-}
-.dark .node-detail-content {
-  border-top-color: rgba(255, 255, 255, 0.06);
-}
-
-.detail-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.detail-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-.dark .detail-label {
-  color: #94a3b8;
-}
-
-.detail-body {
-  font-size: 0.75rem;
-  color: #334155;
-  line-height: 1.4;
-}
-.dark .detail-body {
-  color: #e2e8f0;
-}
-
-.pre-wrap {
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-/* Code block */
-.code-pre {
-  margin: 0.25rem 0;
-  padding: 0.375rem;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  font-family: monospace;
-  font-size: 0.6875rem;
-  max-height: 120px;
-  overflow-y: auto;
-  color: #334155;
-  scrollbar-width: thin;
-}
-.dark .code-pre {
-  background: rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.05);
-  color: #cbd5e1;
-}
-
-.error-label {
-  color: #ef4444;
-}
-.error-pre {
-  background: rgba(239, 68, 68, 0.03);
-  border-color: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-.dark .error-pre {
-  background: rgba(239, 68, 68, 0.05);
-  color: #f87171;
-}
-
-/* Artifact image */
-.artifact-image-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-.artifact-img {
-  max-width: 100%;
-  max-height: 140px;
-  object-fit: contain;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-}
-.dark .artifact-img {
-  border-color: rgba(255, 255, 255, 0.08);
-}
-.artifact-caption {
-  font-size: 0.6875rem;
-  color: #64748b;
-  margin: 0;
-}
-
-/* Artifact link */
-.artifact-link-container {
-  display: flex;
-}
-.artifact-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  color: #3b82f6;
-  text-decoration: none;
-}
-.artifact-link:hover {
-  text-decoration: underline;
-}
-.link-icon, .ext-icon {
-  width: 0.75rem;
-  height: 0.75rem;
+@keyframes dot-breath {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
 }
 
 .spin {
