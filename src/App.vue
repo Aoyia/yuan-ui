@@ -24,74 +24,7 @@ function handleNodeClick(id: string) {
   console.log('Node clicked:', id)
 }
 
-function handleNodeFork(id: string, instruction: string) {
-  if (isStreaming.value) return
-  isStreaming.value = true
-  
-  // 查找在 id 之后生成的子孙节点，把它们的状态置为 'pruned'
-  const descendants = new Set<string>()
-  const queue = [id]
-  while (queue.length > 0) {
-    const currId = queue.shift()!
-    traceParser.state.value.nodes.forEach(n => {
-      if (n.parentId === currId && !descendants.has(n.id)) {
-        descendants.add(n.id)
-        queue.push(n.id)
-      }
-    })
-  }
 
-  // 1. 把所有子孙节点状态强置为 'pruned'
-  traceParser.state.value.nodes.forEach(n => {
-    if (descendants.has(n.id)) {
-      n.status = 'pruned'
-    }
-  })
-
-  // 2. 向分叉节点派发一个新的分支推理
-  const newForkId = 'fork-' + Math.random().toString(36).substring(2, 9)
-  traceParser.handleTraceEvent({
-    type: 'reasoning-delta',
-    id: newForkId,
-    parentId: id,
-    title: '调整决策分支...',
-    delta: `[时空分叉指令]: ${instruction}\n正在重定向逻辑，尝试使用新的测试脚本...`
-  })
-
-  // 模拟一段时间后，分支思考完成并开启了新的 tool 任务
-  setTimeout(() => {
-    traceParser.handleTraceEvent({
-      type: 'reasoning-delta',
-      id: newForkId,
-      delta: '\n\n重定向成功。开始执行新方案的测试。'
-    })
-    
-    // 派发一个新 tool 节点
-    const newToolId = 'tool-' + Math.random().toString(36).substring(2, 9)
-    traceParser.handleTraceEvent({
-      type: 'tool-input-start',
-      id: newToolId,
-      parentId: newForkId,
-      toolName: 'execute_command',
-      title: '执行新测试脚本',
-      input: { command: 'npm run test:fast' }
-    })
-    
-    // 审批拦截... 或者直接执行成功
-    setTimeout(() => {
-      traceParser.handleTraceEvent({
-        type: 'tool-output',
-        id: newToolId,
-        output: '[SUCCESS] 新分支测试全部通过。任务成功回滚闭环。'
-      })
-      // 结束流
-      traceParser.handleTraceEvent({
-        type: 'finish'
-      })
-      isStreaming.value = false
-    }, 1200)
-  }, 1500)
-}
 
 // 自动滚动锚底逻辑
 function scrollToBottom() {
@@ -719,7 +652,6 @@ const activeCodeTransformed = computed(() => {
               <AgentTraceDAG
                 :nodes="traceParser.nodes.value"
                 @node-click="handleNodeClick"
-                @node-fork="handleNodeFork"
               />
             </div>
           </template>
