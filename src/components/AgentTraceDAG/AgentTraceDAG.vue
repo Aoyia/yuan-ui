@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
-import { GitBranch, CornerDownRight, Play } from '@lucide/vue'
+import { X, ExternalLink, FileText, Info } from '@lucide/vue'
 import type { DAGNode, DAGEdge, DAGTraceStatus } from './types'
 import DAGTraceNode from './DAGTraceNode.vue'
+
+// 导入内置的四个 Renderer
+import TerminalRenderer from '../AgentTrace/renderers/TerminalRenderer.vue'
+import DiffRenderer from '../AgentTrace/renderers/DiffRenderer.vue'
+import SearchRenderer from '../AgentTrace/renderers/SearchRenderer.vue'
+import FileRenderer from '../AgentTrace/renderers/FileRenderer.vue'
 
 interface Props {
   nodes: DAGNode[]
@@ -15,16 +21,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'node-click', id: string): void
-  (e: 'node-fork', id: string, newInstruction: string): void
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
 const nodeElements = ref<Record<string, HTMLElement>>({})
 
-const showForkModal = ref(false)
-const forkingNodeId = ref('')
-const forkingNodeTitle = ref('')
-const forkInstruction = ref('')
+const selectedNodeId = ref<string>('')
+const selectedNode = computed(() => props.nodes.find(node => node.id === selectedNodeId.value))
 
 const links = ref<Array<{
   id: string
@@ -233,132 +236,326 @@ onBeforeUnmount(() => {
   }
 })
 
-// 5. Fork 逻辑处理
-function openForkModal(id: string) {
-  const node = props.nodes.find(n => n.id === id)
-  if (node) {
-    forkingNodeId.value = id
-    forkingNodeTitle.value = node.title
-    forkInstruction.value = ''
-    showForkModal.value = true
-  }
-}
-
-function submitFork() {
-  if (forkInstruction.value.trim()) {
-    emit('node-fork', forkingNodeId.value, forkInstruction.value.trim())
-    showForkModal.value = false
-  }
-}
-
 function handleNodeClick(id: string) {
+  selectedNodeId.value = id
   emit('node-click', id)
+}
+
+// Inspector 中 tool 节点的解析与折叠状态逻辑
+const selectedToolName = computed(() => {
+  const node = selectedNode.value
+  return (node && node.kind === 'tool') ? node.toolName : ''
+})
+
+const isTerminalTool = computed(() => ['execute_command', 'run_command'].includes(selectedToolName.value))
+const isDiffTool = computed(() => ['write_file', 'replace_file_content', 'multi_replace_file_content', 'apply_patch'].includes(selectedToolName.value))
+const isFileTool = computed(() => ['read_file', 'view_file'].includes(selectedToolName.value))
+const isSearchTool = computed(() => ['google_search', 'web_search'].includes(selectedToolName.value))
+
+// 提取 Terminal 命令行
+const terminalCommand = computed(() => {
+  const node = selectedNode.value
+  if (!node || node.kind !== 'tool') return ''
+  const input = node.input
+  if (typeof input === 'string') return input
+  if (input && typeof input === 'object') {
+    return (input as any).CommandLine || (input as any).command || ''
+  }
+  return ''
+})
+
+// 提取文件读取信息
+const fileInfo = computed(() => {
+  const node = selectedNode.value
+  if (!node || node.kind !== 'tool') return { filePath: '', fileContent: '' }
+  const input = node.input as any
+  let filePath = ''
+  if (input && typeof input === 'object') {
+    filePath = input.path || input.TargetFile || input.AbsolutePath || ''
+  }
+  let fileContent = ''
+  const output = node.output
+  if (typeof output === 'string') {
+    fileContent = output
+  } else if (output && typeof output === 'object') {
+    fileContent = (output as any).content || JSON.stringify(output)
+  }
+  return { filePath, fileContent }
+})
+
+// 提取 Diff 内容和路径
+const diffInfo = computed(() => {
+  const node = selectedNode.value
+  if (!node || node.kind !== 'tool') return { filePath: '', diffText: '' }
+  const input = node.input as any
+  const output = node.output as any
+  
+  let filePath = ''
+  if (input && typeof input === 'object') {
+    filePath = input.TargetFile || input.path || input.AbsolutePath || ''
+  }
+  
+  let diffText = ''
+  if (typeof output === 'string' && (output.includes('+++') || output.includes('@@') || output.startsWith('-') || output.startsWith('+'))) {
+    diffText = output
+  } else if (output && typeof output === 'object' && typeof output.diff === 'string') {
+    diffText = output.diff
+  } else if (input && typeof input === 'object') {
+    if (typeof input.patch === 'string') diffText = input.patch
+    if (typeof input.diff === 'string') diffText = input.diff
+    if (typeof input.ReplacementContent === 'string') {
+      diffText = `@@ -1,1 +1,1 @@\n- ${input.TargetContent || ''}\n+ ${input.ReplacementContent}`
+    }
+  }
+  
+  return { filePath, diffText }
+})
+
+// 格式化输出 ( fallback 时使用 )
+const formattedInput = computed(() => {
+  const node = selectedNode.value
+  if (!node || node.kind !== 'tool') return ''
+  const input = node.input
+  if (input === undefined || input === null) return ''
+  if (typeof input === 'object') {
+    try {
+      return JSON.stringify(input, null, 2)
+    } catch {
+      return String(input)
+    }
+  }
+  return String(input)
+})
+
+const formattedOutput = computed(() => {
+  const node = selectedNode.value
+  if (!node || node.kind !== 'tool') return ''
+  const output = node.output
+  if (output === undefined || output === null) return ''
+  if (typeof output === 'object') {
+    try {
+      return JSON.stringify(output, null, 2)
+    } catch {
+      return String(output)
+    }
+  }
+  const str = String(output)
+  if (str.length > props.maxOutputLength) {
+    return str.slice(0, props.maxOutputLength) + '\n... [truncated]'
+  }
+  return str
+})
+
+const isInputCollapsed = ref(true)
+const isOutputCollapsed = ref(false)
+
+function toggleInput() {
+  if (formattedInput.value) {
+    isInputCollapsed.value = !isInputCollapsed.value
+  }
+}
+
+function toggleOutput() {
+  const node = selectedNode.value
+  if (!node || node.kind !== 'tool') return
+  if (formattedOutput.value || node.errorText) {
+    isOutputCollapsed.value = !isOutputCollapsed.value
+  }
 }
 </script>
 
 <template>
-  <div class="yuan-dag-container" ref="containerRef">
-    <!-- 背景极简科技感的网格/渐变 -->
-    <div class="dag-grid-bg"></div>
+  <div class="dag-flex-layout">
+    <!-- 左栏拓扑画布 -->
+    <div class="yuan-dag-container" ref="containerRef">
+      <!-- 背景极简科技感的网格/渐变 -->
+      <div class="dag-grid-bg"></div>
 
-    <!-- 拓扑连接层 (SVG 画布) -->
-    <svg class="dag-svg-canvas" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <!-- 激活连线的光亮点动画渐变 -->
-        <linearGradient id="glow-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="rgba(59, 130, 246, 0.1)" />
-          <stop offset="50%" stop-color="rgba(59, 130, 246, 1)" />
-          <stop offset="100%" stop-color="rgba(59, 130, 246, 0.1)" />
-        </linearGradient>
-      </defs>
+      <!-- 拓扑连接层 (SVG 画布) -->
+      <svg class="dag-svg-canvas" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- 激活连线的光亮点动画渐变 -->
+          <linearGradient id="glow-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="rgba(59, 130, 246, 0.1)" />
+            <stop offset="50%" stop-color="rgba(59, 130, 246, 1)" />
+            <stop offset="100%" stop-color="rgba(59, 130, 246, 0.1)" />
+          </linearGradient>
+        </defs>
 
-      <g v-for="link in links" :key="link.id">
-        <!-- 底层虚化发光通道 (仅 active) -->
-        <path 
-          v-if="link.status === 'active'"
-          :d="getBezierPath(link.x1, link.y1, link.x2, link.y2)"
-          class="link-glow-underlay"
-        />
-        
-        <!-- 基础实线/虚线 -->
-        <path 
-          :d="getBezierPath(link.x1, link.y1, link.x2, link.y2)"
-          class="link-path"
-          :class="getLinkClass(link.status)"
-        />
-
-        <!-- 顶层流光动画 (仅 active) -->
-        <path 
-          v-if="link.status === 'active'"
-          :d="getBezierPath(link.x1, link.y1, link.x2, link.y2)"
-          class="link-flow-overlay"
-        />
-      </g>
-    </svg>
-
-    <!-- 节点容器层 (分列布局) -->
-    <div class="dag-columns-wrapper">
-      <div 
-        v-for="col in columns" 
-        :key="col.level" 
-        class="dag-column"
-      >
-        <div class="column-level-header">
-          <span class="level-indicator">STEP {{ col.level + 1 }}</span>
-        </div>
-        
-        <div class="column-nodes-list">
-          <DAGTraceNode
-            v-for="node in col.nodes"
-            :key="node.id"
-            :ref="(el) => registerNodeEl(node.id, el)"
-            v-bind="node"
-            :max-output-length="maxOutputLength"
-            @click="handleNodeClick"
-            @fork="openForkModal"
+        <g v-for="link in links" :key="link.id">
+          <!-- 底层虚化发光通道 (仅 active) -->
+          <path 
+            v-if="link.status === 'active'"
+            :d="getBezierPath(link.x1, link.y1, link.x2, link.y2)"
+            class="link-glow-underlay"
           />
+          
+          <!-- 基础实线/虚线 -->
+          <path 
+            :d="getBezierPath(link.x1, link.y1, link.x2, link.y2)"
+            class="link-path"
+            :class="getLinkClass(link.status)"
+          />
+
+          <!-- 顶层流光动画 (仅 active) -->
+          <path 
+            v-if="link.status === 'active'"
+            :d="getBezierPath(link.x1, link.y1, link.x2, link.y2)"
+            class="link-flow-overlay"
+          />
+        </g>
+      </svg>
+
+      <!-- 节点容器层 (分列布局) -->
+      <div class="dag-columns-wrapper">
+        <div 
+          v-for="col in columns" 
+          :key="col.level" 
+          class="dag-column"
+        >
+          <div class="column-level-header">
+            <span class="level-indicator">STEP {{ col.level + 1 }}</span>
+          </div>
+          
+          <div class="column-nodes-list">
+            <DAGTraceNode
+              v-for="node in col.nodes"
+              :key="node.id"
+              :ref="(el) => registerNodeEl(node.id, el)"
+              v-bind="node"
+              :max-output-length="maxOutputLength"
+              :is-selected="node.id === selectedNodeId"
+              @click="handleNodeClick"
+            />
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Fork 干预模态弹窗 -->
-    <Transition name="fade">
-      <div v-if="showForkModal" class="fork-modal-backdrop" @click="showForkModal = false">
-        <div class="fork-modal-card" @click.stopPropagation>
-          <div class="modal-header">
-            <GitBranch class="modal-title-icon" />
-            <div class="modal-title-desc">
-              <span class="modal-title">时空分叉调整</span>
-              <span class="modal-subtitle">在步骤 "{{ forkingNodeTitle }}" 处插入新指令并分叉</span>
-            </div>
+    <!-- 右栏详情抽屉面板 (Inspector) -->
+    <Transition name="slide">
+      <div v-if="selectedNode" class="dag-inspector-panel">
+        <div class="inspector-header">
+          <div class="inspector-title-area">
+            <span class="inspector-kind-badge" :class="`badge-${selectedNode.kind}`">
+              {{ selectedNode.kind.toUpperCase() }}
+            </span>
+            <h3 class="inspector-title" :title="selectedNode.title">{{ selectedNode.title }}</h3>
           </div>
-          
-          <div class="modal-body">
-            <div class="warning-alert">
-              <CornerDownRight class="alert-icon" />
-              <span>注：提交后，系统将废弃此节点之后的思考，并在该步骤后生成平行思路。</span>
+          <button type="button" class="close-inspector-btn" @click="selectedNodeId = ''" title="Close Panel">
+            <X class="close-icon" />
+          </button>
+        </div>
+
+        <div class="inspector-body">
+          <!-- 1. reasoning -->
+          <div v-if="selectedNode.kind === 'reasoning'" class="inspector-reasoning">
+            <div class="reasoning-summary-card">
+              <div class="card-header">
+                <Info class="card-icon" />
+                <span>推理概述</span>
+              </div>
+              <p class="reasoning-summary-text">{{ (selectedNode as any).summary || '无推理内容' }}</p>
             </div>
-            
-            <textarea
-              v-model="forkInstruction"
-              class="fork-textarea"
-              placeholder="请输入您的调整意见或在此节点的新指令...（例如：不要读取这个文件了，尝试改用 analyze 脚本工具进行探索）"
-              rows="4"
-              @keydown.enter.meta="submitFork"
-            ></textarea>
           </div>
 
-          <div class="modal-footer">
-            <button type="button" class="modal-btn cancel-btn" @click="showForkModal = false">取消</button>
-            <button 
-              type="button" 
-              class="modal-btn confirm-btn" 
-              :disabled="!forkInstruction.trim()"
-              @click="submitFork"
-            >
-              <Play class="btn-confirm-icon" />
-              <span>确认分叉执行</span>
-            </button>
+          <!-- 2. tool -->
+          <div v-else-if="selectedNode.kind === 'tool'" class="inspector-tool">
+            <!-- 1. 终端渲染器 -->
+            <TerminalRenderer 
+              v-if="isTerminalTool && (terminalCommand || selectedNode.output || selectedNode.errorText)"
+              :command="terminalCommand"
+              :output="selectedNode.output as string"
+              :error-text="selectedNode.errorText"
+            />
+
+            <!-- 2. Diff 差异渲染器 -->
+            <DiffRenderer
+              v-else-if="isDiffTool && diffInfo.diffText"
+              :file-path="diffInfo.filePath"
+              :diff="diffInfo.diffText"
+            />
+
+            <!-- 3. 文件展示渲染器 -->
+            <FileRenderer
+              v-else-if="isFileTool && fileInfo.filePath"
+              :file-path="fileInfo.filePath"
+              :content="fileInfo.fileContent"
+            />
+
+            <!-- 4. 搜索卡片渲染器 -->
+            <SearchRenderer
+              v-else-if="isSearchTool && selectedNode.output"
+              :results="selectedNode.output"
+            />
+
+            <!-- 5. 兜底 JSON 折叠块渲染 -->
+            <template v-else>
+              <!-- Input Block -->
+              <div v-if="formattedInput" class="panel-section input-section">
+                <button type="button" class="section-toggle" @click="toggleInput">
+                  <span class="section-title">输入参数</span>
+                </button>
+                <div class="grid-transition" :class="{ 'is-expanded': !isInputCollapsed }">
+                  <div class="grid-transition-inner">
+                    <div class="section-content">
+                      <pre class="code-block"><code>{{ formattedInput }}</code></pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Output Block -->
+              <div v-if="formattedOutput || selectedNode.errorText" class="panel-section output-section">
+                <button type="button" class="section-toggle" @click="toggleOutput">
+                  <span class="section-title">输出结果</span>
+                </button>
+                <div class="grid-transition" :class="{ 'is-expanded': !isOutputCollapsed }">
+                  <div class="grid-transition-inner">
+                    <div class="section-content">
+                      <div v-if="selectedNode.errorText" class="error-panel">
+                        <pre class="error-text"><code>{{ selectedNode.errorText }}</code></pre>
+                      </div>
+                      <pre v-if="formattedOutput" class="code-block"><code>{{ formattedOutput }}</code></pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- 3. artifact -->
+          <div v-else-if="selectedNode.kind === 'artifact'" class="inspector-artifact">
+            <div class="artifact-card">
+              <!-- image -->
+              <div v-if="(selectedNode as any).artifactType === 'image'" class="artifact-image-wrapper">
+                <img :src="(selectedNode as any).url" :alt="(selectedNode as any).caption" class="artifact-image" />
+                <p v-if="(selectedNode as any).caption" class="artifact-caption">{{ (selectedNode as any).caption }}</p>
+              </div>
+              <!-- link -->
+              <div v-else-if="(selectedNode as any).artifactType === 'link'" class="artifact-link-wrapper">
+                <a :href="(selectedNode as any).url" target="_blank" class="artifact-link">
+                  <ExternalLink class="link-icon" />
+                  <span>{{ selectedNode.title || '查看链接' }}</span>
+                </a>
+                <p v-if="(selectedNode as any).caption" class="artifact-caption">{{ (selectedNode as any).caption }}</p>
+              </div>
+              <!-- file -->
+              <div v-else-if="(selectedNode as any).artifactType === 'file'" class="artifact-file-wrapper">
+                <div class="artifact-file-info">
+                  <FileText class="file-icon" />
+                  <span class="file-path">{{ (selectedNode as any).url || selectedNode.title || '查看文件' }}</span>
+                </div>
+                <p v-if="(selectedNode as any).caption" class="artifact-caption">{{ (selectedNode as any).caption }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. text -->
+          <div v-else-if="selectedNode.kind === 'text'" class="inspector-text">
+            <div class="text-content-card">
+              <p class="text-content-body">{{ (selectedNode as any).content || '无文本内容' }}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -367,13 +564,20 @@ function handleNodeClick(id: string) {
 </template>
 
 <style scoped>
-.yuan-dag-container {
-  display: block;
-  position: relative;
+.dag-flex-layout {
+  display: flex;
   width: 100%;
+  height: 100%;
   min-height: 500px;
+  overflow: hidden;
+  position: relative;
+}
+
+.yuan-dag-container {
+  flex: 1;
+  position: relative;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
   box-sizing: border-box;
   padding: 1.5rem;
   scrollbar-width: thin;
@@ -454,7 +658,7 @@ function handleNodeClick(id: string) {
   fill: none;
   stroke: #cbd5e1;
   stroke-width: 1.5px;
-  transition: all 0.3s ease;
+  transition: d 0.3s cubic-bezier(0.25, 1, 0.5, 1), stroke 0.3s ease;
 }
 .dark .link-path {
   stroke: #334155;
@@ -510,183 +714,355 @@ function handleNodeClick(id: string) {
   }
 }
 
-/* Fork Modal Backdrop */
-.fork-modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
+/* Inspector Panel styles */
+.dag-inspector-panel {
+  width: 380px;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 10;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.04);
+}
+.dark .dag-inspector-panel {
+  background: #181825;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
+}
+
+.inspector-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 999;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+}
+.dark .inspector-header {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  background: rgba(24, 24, 37, 0.6);
 }
 
-.fork-modal-card {
-  background: #ffffff;
-  border-radius: 12px;
-  width: 480px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-              0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  padding: 1.25rem;
-  box-sizing: border-box;
+.inspector-title-area {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
-.dark .fork-modal-card {
-  background: #1e1e24;
-  border-color: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+  gap: 0.25rem;
+  min-width: 0;
 }
 
-.modal-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.modal-title-icon {
-  width: 1.75rem;
-  height: 1.75rem;
-  color: #3b82f6;
-  padding: 0.25rem;
-  border-radius: 6px;
-  background: rgba(59, 130, 246, 0.08);
-}
-
-.modal-title-desc {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.modal-title {
-  font-size: 0.9375rem;
+.inspector-kind-badge {
+  font-size: 0.625rem;
   font-weight: 700;
-  color: #1e293b;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  width: max-content;
+  letter-spacing: 0.05em;
 }
-.dark .modal-title {
-  color: #f1f5f9;
+.badge-reasoning {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
 }
-
-.modal-subtitle {
-  font-size: 0.75rem;
+.badge-tool {
+  background: rgba(13, 148, 136, 0.1);
+  color: #0d9488;
+}
+.badge-artifact {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+.badge-text {
+  background: rgba(100, 116, 139, 0.1);
   color: #64748b;
 }
 
-.warning-alert {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(245, 158, 11, 0.06);
-  border: 1px solid rgba(245, 158, 11, 0.1);
-  padding: 0.5rem;
-  border-radius: 6px;
-  font-size: 0.7188rem;
-  color: #d97706;
-  margin-bottom: 0.75rem;
-  line-height: 1.4;
+.inspector-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dark .inspector-title {
+  color: #f1f5f9;
 }
 
-.alert-icon {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
-}
-
-.fork-textarea {
-  width: 100%;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  padding: 0.5rem;
-  box-sizing: border-box;
-  font-family: inherit;
-  font-size: 0.8125rem;
-  outline: none;
-  resize: vertical;
-  color: #334155;
-  transition: border-color 0.15s ease;
-}
-.dark .fork-textarea {
-  background: rgba(0, 0, 0, 0.15);
-  border-color: #334155;
-  color: #cbd5e1;
-}
-
-.fork-textarea:focus {
-  border-color: #3b82f6;
-  background: #ffffff;
-}
-.dark .fork-textarea:focus {
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.modal-btn {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  padding: 0.35rem 0.75rem;
-  border-radius: 6px;
-  cursor: pointer;
+.close-inspector-btn {
+  background: transparent;
   border: none;
-  transition: all 0.15s ease;
-}
-
-.cancel-btn {
-  background: #f1f5f9;
-  color: #475569;
-}
-.dark .cancel-btn {
-  background: #334155;
-  color: #cbd5e1;
-}
-.cancel-btn:hover {
-  background: #e2e8f0;
-}
-.dark .cancel-btn:hover {
-  background: #475569;
-}
-
-.confirm-btn {
-  background: #3b82f6;
-  color: #ffffff;
-  display: inline-flex;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
 }
-.confirm-btn:hover {
-  background: #2563eb;
+.close-inspector-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1e293b;
 }
-.confirm-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.dark .close-inspector-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+.close-icon {
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
-.btn-confirm-icon {
+.inspector-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Reasoning panel styles */
+.reasoning-summary-card {
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  background: rgba(59, 130, 246, 0.02);
+  border-radius: 8px;
+  padding: 0.875rem;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: #3b82f6;
+  margin-bottom: 0.5rem;
+}
+.card-icon {
   width: 0.875rem;
   height: 0.875rem;
-  fill: currentColor;
+}
+.reasoning-summary-text {
+  font-size: 0.8125rem;
+  color: #334155;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+}
+.dark .reasoning-summary-text {
+  color: #cbd5e1;
+}
+
+/* Artifact panel styles */
+.artifact-card {
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  background: rgba(139, 92, 246, 0.02);
+  border-radius: 8px;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.artifact-image-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.artifact-image {
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 6px;
+  object-fit: contain;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: #f8fafc;
+}
+.dark .artifact-image {
+  border-color: rgba(255, 255, 255, 0.05);
+  background: #0b0f19;
+}
+.artifact-caption {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+.dark .artifact-caption {
+  color: #94a3b8;
+}
+.artifact-link-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.artifact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 550;
+  color: #8b5cf6;
+  text-decoration: none;
+  background: rgba(139, 92, 246, 0.05);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px dashed rgba(139, 92, 246, 0.2);
+  transition: all 0.2s;
+}
+.artifact-link:hover {
+  background: rgba(139, 92, 246, 0.1);
+  transform: translateY(-1px);
+}
+.link-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.artifact-file-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.artifact-file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  color: #475569;
+  background: rgba(0, 0, 0, 0.02);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+.dark .artifact-file-info {
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+.file-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: #64748b;
+}
+
+/* Text panel styles */
+.text-content-card {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.875rem;
+}
+.dark .text-content-card {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.01);
+}
+.text-content-body {
+  font-size: 0.8125rem;
+  color: #334155;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+}
+.dark .text-content-body {
+  color: #cbd5e1;
+}
+
+/* Tool Fallback JSON Panel styles */
+.panel-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+.dark .panel-section {
+  border-color: #334155;
+}
+.section-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  background-color: #f1f5f9;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  text-align: left;
+}
+.dark .section-toggle {
+  background-color: #1e293b;
+}
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+}
+.dark .section-title {
+  color: #cbd5e1;
+}
+.section-content {
+  padding: 0.5rem;
+  background-color: #ffffff;
+  border-top: 1px solid #e2e8f0;
+}
+.dark .section-content {
+  background-color: #0f172a;
+  border-top-color: #334155;
+}
+.grid-transition {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.grid-transition.is-expanded {
+  grid-template-rows: 1fr;
+}
+.grid-transition-inner {
+  overflow: hidden;
+}
+.code-block {
+  margin: 0;
+  padding: 0.5rem;
+  background-color: #f8fafc;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #334155;
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.dark .code-block {
+  background-color: #0f172a;
+  color: #cbd5e1;
+}
+.error-panel {
+  padding: 0.5rem;
+  background-color: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+.error-text {
+  margin: 0;
+  font-family: monospace;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #ef4444;
 }
 
 /* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.fade-enter-from,
-.fade-leave-to {
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(100%);
   opacity: 0;
 }
 </style>
+

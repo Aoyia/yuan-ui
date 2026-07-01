@@ -6,4 +6,11 @@ describe('AgentTraceDAG Component', () => {
     expect(AgentTraceDAG).toBeDefined()
     expect(AgentTraceDAG.__name).toBe('AgentTraceDAG')
   })
+
+  it('should define correct props', () => {
+    expect(AgentTraceDAG.props).toBeDefined()
+    expect(AgentTraceDAG.props.nodes).toBeDefined()
+    expect(AgentTraceDAG.props.maxOutputLength).toBeDefined()
+  })
 })
+
