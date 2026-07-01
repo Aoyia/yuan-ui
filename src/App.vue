@@ -1,33 +1,97 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, computed } from 'vue'
 import {
-  ChainOfThought,
-  ChainOfThoughtHeader,
-  ChainOfThoughtContent,
-  ChainOfThoughtRenderer,
-  useAgentStreamParser
-} from './components/ChainOfThought'
-import {
   AgentTrace,
   AgentTraceTrigger,
   AgentTraceContent,
   AgentTraceList,
   useAgentTraceStream
 } from './components/AgentTrace'
+import { AgentTraceDAG } from './components/AgentTraceV2'
 import { Play, RotateCcw, Activity, ShieldCheck } from '@lucide/vue'
 
-const activeTab = ref<'trace' | 'legacy'>('trace')
+const activeTab = ref<'trace' | 'traceV2'>('trace')
 const currentScenario = ref<'basic' | 'intermediate' | 'advanced'>('advanced')
 const isStreaming = ref(false)
-
-// 1. 初始化旧版 CoT 解析器
-const legacyParser = useAgentStreamParser()
 
 // 2. 初始化新版 AgentTrace 解析器
 const traceParser = useAgentTraceStream()
 
 const chatViewportRef = ref<HTMLElement | null>(null)
 const documentViewportRef = ref<HTMLElement | null>(null)
+
+function handleNodeClick(id: string) {
+  console.log('Node clicked:', id)
+}
+
+function handleNodeFork(id: string, instruction: string) {
+  if (isStreaming.value) return
+  isStreaming.value = true
+  
+  // 查找在 id 之后生成的子孙节点，把它们的状态置为 'pruned'
+  const descendants = new Set<string>()
+  const queue = [id]
+  while (queue.length > 0) {
+    const currId = queue.shift()!
+    traceParser.state.value.nodes.forEach(n => {
+      if (n.parentId === currId && !descendants.has(n.id)) {
+        descendants.add(n.id)
+        queue.push(n.id)
+      }
+    })
+  }
+
+  // 1. 把所有子孙节点状态强置为 'pruned'
+  traceParser.state.value.nodes.forEach(n => {
+    if (descendants.has(n.id)) {
+      n.status = 'pruned'
+    }
+  })
+
+  // 2. 向分叉节点派发一个新的分支推理
+  const newForkId = 'fork-' + Math.random().toString(36).substring(2, 9)
+  traceParser.handleTraceEvent({
+    type: 'reasoning-delta',
+    id: newForkId,
+    parentId: id,
+    title: '调整决策分支...',
+    delta: `[时空分叉指令]: ${instruction}\n正在重定向逻辑，尝试使用新的测试脚本...`
+  })
+
+  // 模拟一段时间后，分支思考完成并开启了新的 tool 任务
+  setTimeout(() => {
+    traceParser.handleTraceEvent({
+      type: 'reasoning-delta',
+      id: newForkId,
+      delta: '\n\n重定向成功。开始执行新方案的测试。'
+    })
+    
+    // 派发一个新 tool 节点
+    const newToolId = 'tool-' + Math.random().toString(36).substring(2, 9)
+    traceParser.handleTraceEvent({
+      type: 'tool-input-start',
+      id: newToolId,
+      parentId: newForkId,
+      toolName: 'execute_command',
+      title: '执行新测试脚本',
+      input: { command: 'npm run test:fast' }
+    })
+    
+    // 审批拦截... 或者直接执行成功
+    setTimeout(() => {
+      traceParser.handleTraceEvent({
+        type: 'tool-output',
+        id: newToolId,
+        output: '[SUCCESS] 新分支测试全部通过。任务成功回滚闭环。'
+      })
+      // 结束流
+      traceParser.handleTraceEvent({
+        type: 'finish'
+      })
+      isStreaming.value = false
+    }, 1200)
+  }, 1500)
+}
 
 // 自动滚动锚底逻辑
 function scrollToBottom() {
@@ -41,11 +105,6 @@ function scrollToBottom() {
   })
 }
 
-// 监听内容与节点的变化进行滚动
-watch(() => legacyParser.content.value, () => scrollToBottom())
-watch(() => legacyParser.nodes.value.length, () => scrollToBottom())
-watch(() => legacyParser.nodes.value[legacyParser.nodes.value.length - 1]?.content, () => scrollToBottom())
-watch(() => legacyParser.nodes.value[legacyParser.nodes.value.length - 1]?.toolCall?.output, () => scrollToBottom())
 
 watch(() => traceParser.content.value, () => scrollToBottom())
 watch(() => traceParser.nodes.value.length, () => scrollToBottom())
@@ -56,52 +115,6 @@ watch(() => {
   return ''
 }, () => scrollToBottom())
 
-// 旧版数据流模拟
-const mockLegacyFlow = [
-  { type: 'thought', delta: "正在分析用户的问题，以确认 Vue 3 对话式组件库的升级与流式渲染设计。我需要查阅现有的 chain-of-thought 开源实现..." },
-  { type: 'tool_call', toolName: 'google_search' },
-  {
-    type: 'tool_output',
-    delta: '已搜索到相关文档',
-    searchResults: [
-      { title: "Vue 3 组合式 API 指南", url: "https://vuejs.org" },
-      { title: "Collapsible 展开动画最佳实践", url: "https://reka-ui.com" },
-      { title: "高性能 Markdown 渲染算法", url: "https://markstream.vue" }
-    ]
-  },
-  { type: 'thought', delta: "\n\n已经定位到了 Collapsible 和流式 markdown 的渲染标准。为了进行打包适配，我需要进一步调研本地项目的编译器配置以确认其能够兼容 Vue 3 SFC..." },
-  { type: 'tool_call', toolName: 'read_file', filePath: 'vite.config.js' },
-  { type: 'tool_output', delta: '文件读取成功。' },
-  { type: 'thought', delta: "\n\nVite 配置确认完毕。在重构入口文件前，我必须在本地终端执行构建命令，以验证打包后的打包物体积及样式表无语法错误..." },
-  { type: 'tool_call', toolName: 'execute_command', command: 'npm run build', toolId: 'cmd-build' },
-  {
-    type: 'tool_output',
-    toolId: 'cmd-build',
-    delta: `vite v5.4.21 building for production...
-transforming...
-✓ 28 modules transformed.
-dist/style.css       4.48 kB │ gzip: 1.37 kB
-dist/yuan-ui.es.js   8.52 kB │ gzip: 2.94 kB
-✓ built in 215ms`
-  },
-  { type: 'thought', delta: "\n\n系统构建完成且无报错。为了让用户更清晰地了解本套 Agent 架构的数据流，我 design 了一张架构流程配图..." },
-  {
-    type: 'image',
-    imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
-    imageCaption: '图 1: 数据驱动型 Agent 状态流与 Timeline 渲染架构'
-  },
-  { type: 'thought', delta: "\n\n所有调研和编译测试已完成，逻辑闭环，现在输出正式的系统改造指南。" },
-  { content: "# 智能体多轮调研与思考渲染架构\n\n" },
-  { content: "我们已成功实现了一套完全由数据驱动的、能够承载 **Agent 多轮工具调用与思考链交织**的 Timeline 混合渲染器。\n\n" },
-  { content: "## 本套数据驱动设计的核心点\n\n" },
-  { content: "1. **原子节点数据结构 (types.ts)**：所有的思考、工具调用（入参/执行中/已完成/返回网页）、终端输出、图像生成均被抽象为响应式的 `AgentStepNode` 原子。无论工具链路多么错综复杂，前端都只需要维护一个扁平的节点列表，由列表状态实时驱动 UI 渲染。\n" },
-  { content: "2. **混合渲染引擎 (ChainOfThoughtRenderer)**：通过动态模板分发，在一个 Timeline 节点内智能匹配不同的工具调用详情，无需在页面编写繁琐的条件分支。\n" },
-  { content: "3. **高阶视觉与物理效果**：\n" },
-  { content: "   - 处于历史状态的节点文字与勾标图标会自动平滑暗淡，降低视觉噪点，聚焦当前活跃步骤。\n" },
-  { content: "   - 超长 Timeline 在 `ChainOfThoughtContent` 中具有 `max-height` 限制与隐藏极窄滑动条，支持局部滚动，防止页面爆表。\n" },
-  { content: "   - 思考链整体具有自动延时收折动效，正文开始输出后 1.2 秒自动滑出淡出闭合。\n\n" },
-  { content: "这套架构不仅在体验上极具 Apple 的物理质感，而且在代码设计上面向未来的复杂智能体交互，具有强大的拓展性！" }
-]
 
 // 1. 基础版本演示数据：纯推理思维链
 const mockBasicFlow = [
@@ -222,85 +235,50 @@ async function startSimulation() {
   isStreaming.value = true
   pendingApproval.value = null
 
-  if (activeTab.value === 'trace') {
-    traceParser.reset()
-    
-    // 根据渐进式场景选择对应的数据流
-    let targetFlow = mockAdvancedFlow
-    if (currentScenario.value === 'basic') {
-      targetFlow = mockBasicFlow
-    } else if (currentScenario.value === 'intermediate') {
-      targetFlow = mockIntermediateFlow
-    }
+  traceParser.reset()
+  
+  // 根据渐进式场景选择对应的数据流
+  let targetFlow = mockAdvancedFlow
+  if (currentScenario.value === 'basic') {
+    targetFlow = mockBasicFlow
+  } else if (currentScenario.value === 'intermediate') {
+    targetFlow = mockIntermediateFlow
+  }
 
-    for (let i = 0; i < targetFlow.length; i++) {
-      if (!isStreaming.value) break // 支持中途打断
+  for (let i = 0; i < targetFlow.length; i++) {
+    if (!isStreaming.value) break // 支持中途打断
+    
+    const chunk = targetFlow[i]
+    
+    if (chunk.type === 'tool-approval-request') {
+      traceParser.handleTraceEvent(chunk)
       
-      const chunk = targetFlow[i]
+      // 阻塞循环：等待用户审批
+      const approved = await new Promise<boolean>((resolve) => {
+        pendingApproval.value = { resolve, id: chunk.id }
+      })
       
-      if (chunk.type === 'tool-approval-request') {
-        traceParser.handleTraceEvent(chunk)
-        
-        // 阻塞循环：等待用户审批
-        const approved = await new Promise<boolean>((resolve) => {
-          pendingApproval.value = { resolve, id: chunk.id }
-        })
-        
-        if (!approved) {
-          // 如果被用户拒绝：我们跳过下一个 chunk (代表工具执行成功的输出)，模拟拒绝分支
-          i++
-          await new Promise(resolve => setTimeout(resolve, 500))
-          continue
-        }
+      if (!approved) {
+        // 如果被用户拒绝：我们跳过下一个 chunk (代表工具执行成功的输出)，模拟拒绝分支
+        i++
         await new Promise(resolve => setTimeout(resolve, 500))
         continue
       }
-      
-      traceParser.handleTraceEvent(chunk)
-      
-      // 模拟流式事件输出延迟
-      if (chunk.type === 'reasoning-delta' || chunk.type === 'text-delta') {
-        await new Promise(resolve => setTimeout(resolve, 15))
-      } else if (chunk.type === 'tool-input-start' || chunk.type === 'group-start') {
-        await new Promise(resolve => setTimeout(resolve, 600))
-      } else if (chunk.type === 'tool-output' || chunk.type === 'group-end') {
-        await new Promise(resolve => setTimeout(resolve, 800))
-      } else if (chunk.type === 'artifact') {
-        await new Promise(resolve => setTimeout(resolve, 500))
-      }
+      await new Promise(resolve => setTimeout(resolve, 500))
+      continue
     }
-  } else {
-    legacyParser.reset()
-    for (const chunk of mockLegacyFlow) {
-      if (!isStreaming.value) break
-      
-      if (chunk.type) {
-        const type = chunk.type as any
-        if (type === 'tool_call') {
-          legacyParser.handleAgentChunk(chunk as any)
-          await new Promise(resolve => setTimeout(resolve, 600))
-        } else if (type === 'tool_output') {
-          legacyParser.handleAgentChunk({ type: 'tool_output', toolId: chunk.toolId, delta: chunk.delta, searchResults: chunk.searchResults })
-          await new Promise(resolve => setTimeout(resolve, 600))
-        } else if (type === 'image') {
-          legacyParser.handleAgentChunk(chunk as any)
-          await new Promise(resolve => setTimeout(resolve, 500))
-        } else {
-          const text = chunk.delta || ''
-          const chars = text.split('')
-          for (const char of chars) {
-            legacyParser.handleAgentChunk({ type: 'thought', delta: char })
-            await new Promise(resolve => setTimeout(resolve, 10))
-          }
-        }
-      } else if (chunk.content) {
-        const text = chunk.content
-        const chars = text.split('')
-        for (const char of chars) {
-          legacyParser.handleAgentChunk({ type: 'thought', delta: char })
-          await new Promise(resolve => setTimeout(resolve, 10))
-        }
-      }
+    
+    traceParser.handleTraceEvent(chunk)
+    
+    // 模拟流式事件输出延迟
+    if (chunk.type === 'reasoning-delta' || chunk.type === 'text-delta') {
+      await new Promise(resolve => setTimeout(resolve, 15))
+    } else if (chunk.type === 'tool-input-start' || chunk.type === 'group-start') {
+      await new Promise(resolve => setTimeout(resolve, 600))
+    } else if (chunk.type === 'tool-output' || chunk.type === 'group-end') {
+      await new Promise(resolve => setTimeout(resolve, 800))
+    } else if (chunk.type === 'artifact') {
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
   }
   isStreaming.value = false
@@ -310,11 +288,9 @@ function handleReset() {
   isStreaming.value = false
   pendingApproval.value = null
   traceParser.reset()
-  legacyParser.reset()
 }
 
 const traceOpen = ref(true)
-const legacyOpen = ref(true)
 
 watch(traceOpen, (newVal) => {
   if (newVal === true) {
@@ -588,54 +564,15 @@ function onUserReject(payload) {
   })
 }
 [SCRIPT_END]`
-  },
-  legacy: {
-    fileName: 'LegacyCompatible.vue',
-    code: `[TEMPLATE_START]
-  <!-- 旧版 API 兼容包装器 -->
-  <ChainOfThought 
-    v-model:open="isOpen"
-    :is-thinking="isThinking"
-  >
-    <ChainOfThoughtHeader>
-      <span>多轮执行状态 (CoT)</span>
-    </ChainOfThoughtHeader>
-    <ChainOfThoughtContent>
-      <ChainOfThoughtRenderer :nodes="nodes" />
-    </ChainOfThoughtContent>
-  </ChainOfThought>
-
-  <!-- 生成的 Markdown 正文结果 -->
-  <div v-if="content" class="answer-content">
-    <div class="markdown-body">\\{\\{ content \\}\}</div>
-  </div>
-[TEMPLATE_END]
-
-[SCRIPT_SETUP]
-import { ref } from 'vue'
-import { ChainOfThought, ChainOfThoughtRenderer, useAgentStreamParser } from 'yuan-ui'
-
-// 旧版对话式 Chat 节点格式渲染 (兼容历史版本)
-const isThinking = ref(false)
-const legacyParser = useAgentStreamParser()
-
-// 接收老格式数据流：
-function handleLegacyEvent(event) {
-  // legacyParser 会自动解析 thought/tool_call 类型的事件流数据并驱动 UI
-}
-[SCRIPT_END]`
   }
 }
 
 const activeFileName = computed(() => {
-  if (activeTab.value === 'legacy') {
-    return staticSnippets.legacy.fileName
-  }
   return staticSnippets[currentScenario.value].fileName
 })
 
 const activeCode = computed(() => {
-  const rawCode = activeTab.value === 'legacy' ? staticSnippets.legacy.code : staticSnippets[currentScenario.value].code
+  const rawCode = staticSnippets[currentScenario.value].code
   return rawCode
     .replace(/\\{\\{/g, '{{')
     .replace(/\\}\\}/g, '}}')
@@ -669,17 +606,17 @@ const activeCodeTransformed = computed(() => {
           :disabled="isStreaming"
         >
           <ShieldCheck class="tab-icon" />
-          <span>新版 AgentTrace</span>
+          <span>新版 AgentTrace (List)</span>
         </button>
         <button
           type="button"
           class="tab-btn"
-          :class="{ active: activeTab === 'legacy' }"
-          @click="activeTab = 'legacy'"
+          :class="{ active: activeTab === 'traceV2' }"
+          @click="activeTab = 'traceV2'"
           :disabled="isStreaming"
         >
-          <Activity class="tab-icon" />
-          <span>旧版 CoT (兼容)</span>
+          <ShieldCheck class="tab-icon" />
+          <span>新版 AgentTraceV2 (DAG拓扑)</span>
         </button>
       </div>
 
@@ -776,23 +713,17 @@ const activeCodeTransformed = computed(() => {
             </AgentTrace>
           </template>
 
-          <!-- 2. 旧版 CoT 演示（移至右侧大视口上方） -->
-          <template v-else-if="activeTab === 'legacy' && (legacyParser.nodes.value.length > 0 || legacyParser.isThinking.value)">
-            <ChainOfThought 
-              v-model:open="legacyOpen"
-              :is-thinking="legacyParser.isThinking.value"
-              :auto-close="true"
-            >
-              <ChainOfThoughtHeader>
-                <span v-if="legacyParser.isThinking.value">正在深度调研并执行多轮工具...</span>
-                <span v-else-if="legacyParser.totalDuration.value > 0">执行完毕 (用时 {{ legacyParser.totalDuration.value }}秒)</span>
-                <span v-else>多轮执行状态 (CoT)</span>
-              </ChainOfThoughtHeader>
-              <ChainOfThoughtContent>
-                <ChainOfThoughtRenderer :nodes="legacyParser.nodes.value" />
-              </ChainOfThoughtContent>
-            </ChainOfThought>
+          <!-- 1.5 新版 AgentTraceV2 (DAG 拓扑) 演示 -->
+          <template v-else-if="activeTab === 'traceV2' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
+            <div class="dag-playground-wrapper">
+              <AgentTraceDAG
+                :nodes="traceParser.nodes.value"
+                @node-click="handleNodeClick"
+                @node-fork="handleNodeFork"
+              />
+            </div>
           </template>
+
 
           <!-- 3. 空白就绪占位（无数据且未执行时呈现） -->
           <div v-else class="empty-preview">
@@ -804,11 +735,8 @@ const activeCodeTransformed = computed(() => {
           </div>
 
           <!-- 4. Markdown 正文结果（始终呈现在思维链正下方） -->
-          <div v-if="activeTab === 'trace' && traceParser.content.value" class="answer-content">
+          <div v-if="traceParser.content.value" class="answer-content">
             <div class="markdown-body">{{ traceParser.content.value }}</div>
-          </div>
-          <div v-else-if="activeTab === 'legacy' && legacyParser.content.value" class="answer-content">
-            <div class="markdown-body">{{ legacyParser.content.value }}</div>
           </div>
 
         </div>
@@ -1290,5 +1218,21 @@ button {
 
 .dark .markdown-body {
   color: #e4e4e7;
+}
+
+.dag-playground-wrapper {
+  width: 100%;
+  max-height: 600px;
+  overflow: auto;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+  box-sizing: border-box;
+}
+
+.dark .dag-playground-wrapper {
+  background: #09090b;
+  border-color: #27272a;
 }
 </style>
