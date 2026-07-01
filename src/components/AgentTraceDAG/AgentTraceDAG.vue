@@ -6,7 +6,6 @@ import DAGTraceNode from './DAGTraceNode.vue'
 
 interface Props {
   nodes: DAGNode[]
-  edges?: DAGEdge[]
   maxOutputLength?: number
 }
 
@@ -36,22 +35,18 @@ const links = ref<Array<{
   status: DAGTraceStatus
 }>>([])
 
-// 1. 自动推导 edges 边关系 (如果不传 edges)
+// 1. 规范化节点：统一转换为 parentIds 数组以解耦
+const normalizedNodes = computed(() => {
+  return props.nodes.map(node => ({
+    ...node,
+    parentIds: node.parentIds || (node.parentId ? [node.parentId] : [])
+  }))
+})
+
+// 2. 基于规范化节点自动推导边关系
 const computedEdges = computed<DAGEdge[]>(() => {
-  if (props.edges && props.edges.length > 0) {
-    return props.edges
-  }
   const result: DAGEdge[] = []
-  props.nodes.forEach(node => {
-    // 收集单亲节点
-    if (node.parentId) {
-      result.push({
-        source: node.parentId,
-        target: node.id,
-        status: node.status
-      })
-    }
-    // 收集多亲节点
+  normalizedNodes.value.forEach(node => {
     if (node.parentIds && node.parentIds.length > 0) {
       node.parentIds.forEach(pId => {
         result.push({
@@ -65,16 +60,16 @@ const computedEdges = computed<DAGEdge[]>(() => {
   return result
 })
 
-// 2. 拓扑分层布局算法 (BFS Layering)
+// 3. 拓扑分层布局算法 (BFS Layering)
 const columns = computed(() => {
-  if (props.nodes.length === 0) return []
+  if (normalizedNodes.value.length === 0) return []
 
-  const nodeMap = new Map<string, DAGNode>()
+  const nodeMap = new Map<string, typeof normalizedNodes.value[0]>()
   const childMap = new Map<string, string[]>()
   const inDegree = new Map<string, number>()
   
   // 初始化
-  props.nodes.forEach(node => {
+  normalizedNodes.value.forEach(node => {
     nodeMap.set(node.id, node)
     childMap.set(node.id, [])
     inDegree.set(node.id, 0)
@@ -95,10 +90,9 @@ const columns = computed(() => {
   const queue: string[] = []
 
   // 入度为 0 的作为 Level 0
-  props.nodes.forEach(node => {
+  normalizedNodes.value.forEach(node => {
     const deg = inDegree.get(node.id) || 0
-    // 如果没有亲节点，或者入度为0
-    if (deg === 0 || (!node.parentId && (!node.parentIds || node.parentIds.length === 0))) {
+    if (deg === 0 || (!node.parentIds || node.parentIds.length === 0)) {
       nodeLevels.set(node.id, 0)
       queue.push(node.id)
     }
@@ -112,11 +106,9 @@ const columns = computed(() => {
 
     children.forEach(childId => {
       const childLevel = nodeLevels.get(childId) || 0
-      // 节点的层级为其所有父节点最大层级 + 1
       const targetLevel = Math.max(childLevel, currLevel + 1)
       nodeLevels.set(childId, targetLevel)
       
-      // 入队
       if (!queue.includes(childId)) {
         queue.push(childId)
       }
@@ -136,12 +128,10 @@ const columns = computed(() => {
     if (level < resultCols.length) {
       resultCols[level].nodes.push(node)
     } else {
-      // 降级保护
       resultCols[0].nodes.push(node)
     }
   })
 
-  // 过滤掉没有节点的空列
   return resultCols.filter(col => col.nodes.length > 0)
 })
 
