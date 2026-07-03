@@ -34,11 +34,11 @@ Yuan UI 是一套完全数据驱动、面向高阶 AI Agent 场景开发的 Vue 
 
 **高阶场景** — 多级 Group 嵌套 + 文件语义渲染 + 审批确权拦截
 
-![高阶场景预览：多级 Group 嵌套、文件渲染与审批流](preview-advanced.png)
+![高阶场景预览：多级 Group 嵌套、文件渲染与审批流](.github/assets/preview-advanced.png)
 
 **中阶场景** — 工具调用 + JSON 自动 Fallback 折叠渲染
 
-![中阶场景预览：工具调用与 JSON Fallback 折叠渲染](preview-intermediate.png)
+![中阶场景预览：工具调用与 JSON Fallback 折叠渲染](.github/assets/preview-intermediate.png)
 
 ---
 
