@@ -25,8 +25,20 @@ Yuan UI 是一套完全数据驱动、面向高阶 AI Agent 场景开发的 Vue 
   - **Unified Diff**：红绿底色行级对比，自带行号。
   - **网页搜索**：卡片式列表，附带外链跳转与域名缩写。
   - **文件阅读**：自动扩展名 Icon 判定，大文件前 10 行预览剪裁。
-- 🛡️ **Human-in-the-loop 审批流**：在 Agent 执行敏感或高危操作（如 Shell 命令或关键写入）时发起审批拦截，UI 渲染“同意”与“拒绝”控制按钮，闭环传递用户操作决策。
+- 🛡️ **Human-in-the-loop 审批流**：在 Agent 执行敏感或高危操作（如 Shell 命令或关键写入）时发起审批拦截，UI 渲染"同意"与"拒绝"控制按钮，闭环传递用户操作决策。
 - 🎨 **全局主题变量定制**：完全抽取公共 CSS 变量设计，允许一键换肤或主题变量复写。
+
+---
+
+## 🖼️ 效果预览
+
+**高阶场景** — 多级 Group 嵌套 + 文件语义渲染 + 审批确权拦截
+
+![高阶场景预览：多级 Group 嵌套、文件渲染与审批流](preview-advanced.png)
+
+**中阶场景** — 工具调用 + JSON 自动 Fallback 折叠渲染
+
+![中阶场景预览：工具调用与 JSON Fallback 折叠渲染](preview-intermediate.png)
 
 ---
 
@@ -99,20 +111,6 @@ trace.handleTraceEvent({ type: 'finish' })
   --yuan-primary-hover: #7c3aed;
   --yuan-radius: 12px;           /* 更加圆润的卡片 */
 }
-```
-
----
-
-## 📖 交互文档网站
-
-我们提供了一个全景交互式说明书文档站。如需本地查看，请在克隆项目后运行：
-
-```bash
-# 启动文档开发服务
-npm run docs:dev
-
-# 构建文档静态产物
-npm run docs:build
 ```
 
 ---
