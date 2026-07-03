@@ -2,7 +2,7 @@
   "name": "yuan-ui",
   "version": "0.1.0",
   "type": "module",
-  "description": "一套对标大厂品质的 Vue 3 智能体思维链/执行轨迹 UI 组件库",
+  "description": "面向高阶 AI Agent 场景的 Vue 3 思维链与执行轨迹 UI 组件库",
   "main": "./dist/yuan-ui.umd.js",
   "module": "./dist/yuan-ui.es.js",
   "types": "./dist/index.d.ts",

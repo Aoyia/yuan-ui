@@ -12,7 +12,7 @@
   </a>
 </p>
 
-Yuan UI 是一套完全数据驱动、面向高阶 AI Agent 场景开发的 Vue 3 思维链与执行轨迹 UI 组件库。对标字节级开源组件库工程规范，具有多级分组（Grouping）嵌套、同级渐进式流式折叠（Progressive Collapse）、内置语义化高级渲染器（Terminal/Diff/Search/File）以及双向 Human-in-the-loop 审批确权能力。
+Yuan UI 是一套完全数据驱动、面向高阶 AI Agent 场景开发的 Vue 3 思维链与执行轨迹 UI 组件库。具有多级分组（Grouping）嵌套、同级渐进式流式折叠（Progressive Collapse）、内置语义化高级渲染器（Terminal/Diff/Search/File）以及双向 Human-in-the-loop 审批确权能力。
 
 ---
 
