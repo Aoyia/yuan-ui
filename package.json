@@ -46,6 +46,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:demo": "vite build --config vite.demo.config.js",
     "test": "vitest run src",
     "prepublishOnly": "npm run build",
     "docs:dev": "vitepress dev docs",
