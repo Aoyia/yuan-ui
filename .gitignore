@@ -3,6 +3,12 @@ dist/
 *.local
 .DS_Store
 
+# 文档站（本地开发用，不提交）
+docs/
+
+# 外部子项目（独立仓库，不提交）
+ai-elements-vue/
+
 # Agent tools
 .agents/
 skills-lock.json
