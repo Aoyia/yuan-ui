@@ -13,3 +13,6 @@ ai-elements-vue/
 # Agent tools
 .agents/
 skills-lock.json
+
+# Git worktrees
+.worktrees/
