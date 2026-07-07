@@ -5,13 +5,12 @@ import dagre from 'dagre'
  * 兼容 Vue Flow 嵌套分组 (Parent-Child Grouping) 并进行局部相对坐标转换。
  */
 export function computeDagreLayout(nodes: any[], edges: any[], isVertical = true): any[] {
-  const g = new dagre.graphlib.Graph({ compound: true })
+  const g = new dagre.graphlib.Graph({ compound: true, multigraph: true })
   
   g.setGraph({
     rankdir: isVertical ? 'TB' : 'LR',
     nodesep: 50, // 节点左右行间距
     ranksep: 70, // 层与层之间的垂直间距
-    multigraph: true
   })
   
   g.setDefaultEdgeLabel(() => ({}))
@@ -51,7 +50,37 @@ export function computeDagreLayout(nodes: any[], edges: any[], isVertical = true
   // 2. 塞入边 (仅当边的起点和终点都在可见节点集中时才塞入)
   edges.forEach(edge => {
     if (visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target)) {
-      g.setEdge(edge.source, edge.target)
+      const sourceNode = nodes.find(n => n.id === edge.source)
+      const targetNode = nodes.find(n => n.id === edge.target)
+
+      let isAncestor = false
+      
+      // 向上回溯，检查 targetNode 是否是 sourceNode 的祖先节点
+      let curr = sourceNode
+      while (curr && curr.parentNode) {
+        if (curr.parentNode === edge.target) {
+          isAncestor = true
+          break
+        }
+        curr = nodes.find(n => n.id === curr!.parentNode)
+      }
+      
+      // 向上回溯，检查 sourceNode 是否是 targetNode 的祖先节点
+      if (!isAncestor) {
+        curr = targetNode
+        while (curr && curr.parentNode) {
+          if (curr.parentNode === edge.source) {
+            isAncestor = true
+            break
+          }
+          curr = nodes.find(n => n.id === curr!.parentNode)
+        }
+      }
+
+      // 仅当二者不存在直接/间接嵌套层级关系时，才向排版引擎注入此边，规避 Compound 排序崩溃
+      if (!isAncestor) {
+        g.setEdge(edge.source, edge.target)
+      }
     }
   })
 

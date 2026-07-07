@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, shallowRef, nextTick } from 'vue'
+import { ref, computed, watch, shallowRef, nextTick, onBeforeUnmount } from 'vue'
 import { VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
@@ -84,8 +84,22 @@ function updateGraph() {
   flowEdges.value = filteredEdges
 }
 
-// 深度监听传入 nodes 数据变动，重绘图结构
-watch(() => props.nodes, updateGraph, { deep: true, immediate: true })
+let updateTimeout: any = null
+
+function debouncedUpdateGraph() {
+  clearTimeout(updateTimeout)
+  updateTimeout = setTimeout(() => {
+    updateGraph()
+    updateTimeout = null
+  }, 60)
+}
+
+onBeforeUnmount(() => {
+  clearTimeout(updateTimeout)
+})
+
+// 深度监听传入 nodes 数据变动，防抖缓冲重绘图结构
+watch(() => props.nodes, debouncedUpdateGraph, { deep: true, immediate: true })
 
 // 点击步骤节点聚焦事件
 function handleNodeClick({ node }: { node: any }) {
