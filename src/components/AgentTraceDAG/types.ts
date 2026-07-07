@@ -14,6 +14,8 @@ export interface DAGBaseNode {
   startedAt?: number
   endedAt?: number
   duration?: number
+  collapsed?: boolean
+  childrenIds?: string[]
 }
 
 export interface DAGReasoningNode extends DAGBaseNode {
