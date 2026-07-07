@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { DAGNode, DAGTraceStatus } from './types'
-import DAGTraceNode from './DAGTraceNode.vue'
-import { computeBFSLayout, getBezierPath } from './layout'
-import { useDAGLayout } from './useDAGLayout'
+import { ref, computed, watch, shallowRef, nextTick } from 'vue'
+import { VueFlow, useVueFlow } from '@vue-flow/core'
+import { Background } from '@vue-flow/background'
+import { Controls } from '@vue-flow/controls'
+import type { DAGNode } from './types'
+import { transformFlatToFlowElements } from './adapter'
+import { computeDagreLayout } from './layout'
+import CustomStepNode from './CustomStepNode.vue'
+import CustomGroupNode from './CustomGroupNode.vue'
 import DAGInspector from './DAGInspector.vue'
+
+// 引入 Vue Flow 所需的主题及核心 CSS
+import '@vue-flow/core/dist/style.css'
+import '@vue-flow/core/dist/theme-default.css'
 
 interface Props {
   nodes: DAGNode[]
@@ -19,122 +27,122 @@ const emit = defineEmits<{
   (e: 'node-click', id: string): void
 }>()
 
-const containerRef = ref<HTMLElement | null>(null)
-const nodeElements = ref<Record<string, HTMLElement>>({})
-
 const selectedNodeId = ref<string>('')
 const selectedNode = computed(() => props.nodes.find(node => node.id === selectedNodeId.value))
 
-// 1. 拓扑分层布局算法 (BFS Layering)
-const columns = computed(() => {
-  return computeBFSLayout(props.nodes)
-})
+// 用 shallowRef 优化大图的响应式性能，避免 Vue 深入递归代理巨大的 Vue Flow 图对象
+const flowNodes = shallowRef<any[]>([])
+const flowEdges = shallowRef<any[]>([])
 
-// 2. 调用连线 Hook 处理 SVG 连线和 ResizeObserver 自动重绘逻辑
-const nodesRef = computed(() => props.nodes)
-const { links } = useDAGLayout({
-  containerRef,
-  nodeElements,
-  nodes: nodesRef
-})
+// 保存各步骤组的展开/收缩折叠映射表
+const collapsedGroups = ref<Record<string, boolean>>({})
 
-// 注册气泡节点 DOM 元素句柄
-function registerNodeEl(id: string, el: any) {
-  if (el) {
-    // Vue 3 组件 ref 在组件上获取的是组件实例，如果是 HTML 元素则直接获取 DOM
-    nodeElements.value[id] = el.$el || el
-  } else {
-    delete nodeElements.value[id]
-  }
+// 提取 Vue Flow 画布控制器实例
+const { fitView, setCenter } = useVueFlow()
+
+const nodeTypes = {
+  step: CustomStepNode as any,
+  group: CustomGroupNode as any
 }
 
-// 连线的样式类
-function getLinkClass(status: DAGTraceStatus) {
-  return {
-    'link-complete': status === 'complete',
-    'link-active': status === 'active',
-    'link-pending': status === 'pending',
-    'link-error': status === 'error',
-    'link-cancelled': status === 'cancelled',
-    'link-pruned': status === 'pruned',
-  }
+// 核心排版与重绘算法
+function updateGraph() {
+  // 1. 构建最新的节点属性（附带当前 UI 响应的折叠属性）
+  const rawFlat = props.nodes.map(n => ({
+    ...n,
+    collapsed: collapsedGroups.value[n.id] ?? false
+  }))
+
+  // 2. 递归标记所有被折叠父节点所包裹的隐藏子节点
+  const hiddenNodeIds = new Set<string>()
+  rawFlat.forEach(node => {
+    if (node.parentId) {
+      // 如果其直接父级已折叠，或者其父级已被祖先折叠隐蔽，则该节点一并隐藏
+      if (collapsedGroups.value[node.parentId] || hiddenNodeIds.has(node.parentId)) {
+        hiddenNodeIds.add(node.id)
+      }
+    }
+  })
+
+  // 3. 将扁平数据结构映射适配为 Vue Flow elements
+  const { nodes: parsedNodes, edges: parsedEdges } = transformFlatToFlowElements(rawFlat)
+
+  // 4. 将隐藏状态附着到对应的节点和连线上
+  const filteredNodes = parsedNodes.map(node => ({
+    ...node,
+    hidden: hiddenNodeIds.has(node.id)
+  }))
+  const filteredEdges = parsedEdges.map(edge => ({
+    ...edge,
+    hidden: hiddenNodeIds.has(edge.source) || hiddenNodeIds.has(edge.target)
+  }))
+
+  // 5. 调用 Dagre 自动排版引擎分配自上而下对齐坐标，并更新 Group 尺寸
+  const positionedNodes = computeDagreLayout(filteredNodes, filteredEdges, true)
+
+  flowNodes.value = positionedNodes
+  flowEdges.value = filteredEdges
 }
 
-function handleNodeClick(id: string) {
-  selectedNodeId.value = id
-  emit('node-click', id)
+// 深度监听传入 nodes 数据变动，重绘图结构
+watch(() => props.nodes, updateGraph, { deep: true, immediate: true })
+
+// 点击步骤节点聚焦事件
+function handleNodeClick({ node }: { node: any }) {
+  // 分组容器节点不支持 Inspector 详情及定位聚焦
+  if (node.type === 'group') return
+
+  selectedNodeId.value = node.id
+  emit('node-click', node.id)
+
+  // 平滑平移至视口中心，并保持 1.1x 缩放比例
+  nextTick(() => {
+    setCenter(node.position.x, node.position.y, { zoom: 1.1, duration: 800 })
+  })
+}
+
+// 展开/收回步骤组事件
+function handleToggleCollapse(id: string) {
+  collapsedGroups.value[id] = !collapsedGroups.value[id]
+  updateGraph()
+
+  // 延时等待重排完成后平滑自适应画布视口
+  setTimeout(() => {
+    fitView({ duration: 600 })
+  }, 100)
 }
 </script>
 
 <template>
   <div class="dag-flex-layout">
-    <!-- 左栏拓扑画布 -->
-    <div class="yuan-dag-container" ref="containerRef">
-      <!-- 背景极简科技感的网格/渐变 -->
-      <div class="dag-grid-bg"></div>
+    <!-- 主体 Vue Flow 拓扑画布 -->
+    <div class="vue-flow-wrapper">
+      <VueFlow
+        v-model:nodes="flowNodes"
+        v-model:edges="flowEdges"
+        :node-types="nodeTypes"
+        @node-click="handleNodeClick"
+        :fit-view-on-init="true"
+        class="yuan-flow-canvas"
+      >
+        <!-- 精致淡网格背景层 -->
+        <Background pattern-color="#ccc" :gap="18" class="canvas-grid-bg" />
 
-      <!-- 拓扑连接层 (SVG 画布) -->
-      <svg class="dag-svg-canvas" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <!-- 激活连线的光亮点动画渐变 -->
-          <linearGradient id="glow-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="rgba(59, 130, 246, 0.1)" />
-            <stop offset="50%" stop-color="rgba(59, 130, 246, 1)" />
-            <stop offset="100%" stop-color="rgba(59, 130, 246, 0.1)" />
-          </linearGradient>
-        </defs>
+        <!-- 浮动多功能操控盘 -->
+        <Controls class="canvas-controls-panel" />
 
-        <g v-for="link in links" :key="link.id">
-          <!-- 底层虚化发光通道 (仅 active) -->
-          <path 
-            v-if="link.status === 'active'"
-            :d="getBezierPath(link.x1, link.y1, link.x2, link.y2)"
-            class="link-glow-underlay"
+        <!-- 针对 Group 组件节点自定义绑定插槽，实现事件冒泡通信 -->
+        <template #node-group="slotProps">
+          <CustomGroupNode
+            :id="slotProps.id"
+            :data="{ id: slotProps.id, title: slotProps.data.title, collapsed: slotProps.data.collapsed }"
+            @toggle-collapse="handleToggleCollapse"
           />
-          
-          <!-- 基础实线/虚线 -->
-          <path 
-            :d="getBezierPath(link.x1, link.y1, link.x2, link.y2)"
-            class="link-path"
-            :class="getLinkClass(link.status)"
-          />
-
-          <!-- 顶层流光动画 (仅 active) -->
-          <path 
-            v-if="link.status === 'active'"
-            :d="getBezierPath(link.x1, link.y1, link.x2, link.y2)"
-            class="link-flow-overlay"
-          />
-        </g>
-      </svg>
-
-      <!-- 节点容器层 (分列布局) -->
-      <div class="dag-columns-wrapper">
-        <div 
-          v-for="col in columns" 
-          :key="col.level" 
-          class="dag-column"
-        >
-          <div class="column-level-header">
-            <span class="level-indicator">STEP {{ col.level + 1 }}</span>
-          </div>
-          
-          <div class="column-nodes-list">
-            <DAGTraceNode
-              v-for="node in col.nodes"
-              :key="node.id"
-              :ref="(el) => registerNodeEl(node.id, el)"
-              v-bind="node"
-              :max-output-length="maxOutputLength"
-              :is-selected="node.id === selectedNodeId"
-              @click="handleNodeClick"
-            />
-          </div>
-        </div>
-      </div>
+        </template>
+      </VueFlow>
     </div>
 
-    <!-- 右栏详情抽屉面板 (Inspector) -->
+    <!-- 右侧联动详情抽屉 -->
     <Transition name="slide">
       <DAGInspector
         v-if="selectedNode"
@@ -156,158 +164,101 @@ function handleNodeClick(id: string) {
   position: relative;
 }
 
-.yuan-dag-container {
+.vue-flow-wrapper {
   flex: 1;
+  height: 100%;
+  background-color: #fafafa;
   position: relative;
-  overflow-x: auto;
-  overflow-y: auto;
-  box-sizing: border-box;
-  padding: 1.5rem;
-  scrollbar-width: thin;
+  transition: all 0.3s ease;
 }
 
-/* 科技感的背景网格 */
-.dag-grid-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  background-image: radial-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px);
-  background-size: 20px 20px;
-  z-index: 0;
+.dark .vue-flow-wrapper {
+  background-color: #09090b;
 }
 
-.dark .dag-grid-bg {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-}
-
-/* SVG SVG 连线画布 */
-.dag-svg-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
+.yuan-flow-canvas {
   width: 100%;
   height: 100%;
-  pointer-events: none;
-  z-index: 1;
 }
 
-/* 节点列包裹器 */
-.dag-columns-wrapper {
-  display: flex;
-  gap: 5.5rem; /* 列间距，为 SVG 连线空出美观的宽度 */
-  position: relative;
-  z-index: 2;
-  width: max-content;
-}
-
-.dag-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 280px;
-  flex-shrink: 0;
-}
-
-.column-level-header {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #64748b;
-  letter-spacing: 0.05em;
-  padding: 0.35rem 0.75rem;
-  border-radius: 20px;
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.03);
-  margin-bottom: 1.5rem;
-  user-select: none;
-}
-.dark .column-level-header {
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.02);
-  border-color: rgba(255, 255, 255, 0.03);
-}
-
-.column-nodes-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem; /* 节点行间距 */
-  width: 100%;
-}
-
-/* SVG 连线路径样式 */
-.link-path {
-  fill: none;
+/* 连线与特效美化 */
+:deep(.vue-flow__edge-path) {
   stroke: #cbd5e1;
-  stroke-width: 1.5px;
-  transition: d 0.3s cubic-bezier(0.25, 1, 0.5, 1), stroke 0.3s ease;
+  stroke-width: 2px;
+  transition: stroke 0.3s ease;
 }
-.dark .link-path {
+
+.dark :deep(.vue-flow__edge-path) {
   stroke: #334155;
 }
 
-.link-complete {
-  stroke: #94a3b8;
-  stroke-width: 1.5px;
-}
-.dark .link-complete {
-  stroke: #475569;
-}
-
-.link-active {
-  stroke: #3b82f6;
-  stroke-width: 2px;
+/* 状态高亮与流光动效 (利用 Vue Flow 默认 animated 类) */
+:deep(.vue-flow__edge-path.animated) {
+  stroke: #3b82f6 !important;
+  stroke-dasharray: 8 16 !important;
+  animation: edge-flow-scrolling 1.5s infinite linear !important;
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.65));
 }
 
-.link-error {
-  stroke: #ef4444;
-  stroke-width: 2px;
+.dark :deep(.vue-flow__edge-path.animated) {
+  filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.9));
 }
 
-.link-pruned {
-  stroke: #e2e8f0;
-  stroke-width: 1px;
-  stroke-dasharray: 4;
-  opacity: 0.4;
-}
-.dark .link-pruned {
-  stroke: #1e293b;
-}
-
-/* 激活的连线流光和发光效果 */
-.link-glow-underlay {
-  fill: none;
-  stroke: rgba(59, 130, 246, 0.25);
-  stroke-width: 6px;
-  filter: blur(2px);
-}
-
-.link-flow-overlay {
-  fill: none;
-  stroke: url(#glow-gradient);
-  stroke-width: 2px;
-  stroke-dasharray: 15 35;
-  animation: flow-dash 1.8s infinite linear;
-}
-
-@keyframes flow-dash {
+@keyframes edge-flow-scrolling {
   to {
-    stroke-dashoffset: -50;
+    stroke-dashoffset: -24;
   }
 }
 
+/* 控制台微小美化 */
+:deep(.vue-flow__controls) {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  padding: 2px;
+}
 
+.dark :deep(.vue-flow__controls) {
+  background: rgba(24, 24, 37, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
 
-/* Transitions */
+:deep(.vue-flow__controls-button) {
+  border-bottom: none !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.04) !important;
+  background: transparent !important;
+  fill: #64748b !important;
+  transition: all 0.2s !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.dark :deep(.vue-flow__controls-button) {
+  border-right-color: rgba(255, 255, 255, 0.04) !important;
+  fill: #94a3b8 !important;
+}
+
+:deep(.vue-flow__controls-button:hover) {
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+.dark :deep(.vue-flow__controls-button:hover) {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Transition slide */
 .slide-enter-active,
 .slide-leave-active {
   transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
+
 .slide-enter-from,
 .slide-leave-to {
   transform: translateX(100%);
   opacity: 0;
 }
 </style>
-
