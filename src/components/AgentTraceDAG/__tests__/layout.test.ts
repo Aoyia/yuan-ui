@@ -1,66 +1,63 @@
 import { describe, it, expect } from 'vitest'
-import { computeBFSLayout, getBezierPath } from '../layout'
-import type { DAGNode } from '../types'
+import { computeDagreLayout, getBezierPath } from '../layout'
 
-describe('computeBFSLayout', () => {
-  it('should layer independent nodes to level 0', () => {
-    const nodes: any[] = [
-      { id: '1', kind: 'reasoning', title: 'Node 1', status: 'complete' },
-      { id: '2', kind: 'tool', title: 'Node 2', status: 'complete' }
+describe('computeDagreLayout', () => {
+  it('should assign valid positions for simple nodes', () => {
+    const nodes = [
+      { id: '1', type: 'step', position: { x: 0, y: 0 } },
+      { id: '2', type: 'step', position: { x: 0, y: 0 } }
     ]
-    const result = computeBFSLayout(nodes)
-    expect(result).toHaveLength(1)
-    expect(result[0].level).toBe(0)
-    expect(result[0].nodes).toHaveLength(2)
+    const edges = [
+      { source: '1', target: '2' }
+    ]
+    const positioned = computeDagreLayout(nodes, edges)
+
+    expect(positioned).toHaveLength(2)
+    const n1 = positioned.find(n => n.id === '1')
+    const n2 = positioned.find(n => n.id === '2')
+
+    expect(n1?.position.x).toBeDefined()
+    expect(n1?.position.y).toBeDefined()
+    expect(n2?.position.x).toBeDefined()
+    expect(n2?.position.y).toBeDefined()
+    
+    // 自上而下排列中，下游节点 2 的 y 坐标应该明显大于上游节点 1
+    expect(n2!.position.y).toBeGreaterThan(n1!.position.y)
   })
 
-  it('should sort dependent nodes sequentially', () => {
-    const nodes: any[] = [
-      { id: '1', kind: 'reasoning', title: 'Node 1', status: 'complete' },
-      { id: '2', kind: 'tool', title: 'Node 2', status: 'complete', parentId: '1' }
+  it('should calculate relative coordinates for parent-child grouping nodes', () => {
+    const nodes = [
+      { id: 'parent-g', type: 'group', data: { collapsed: false }, position: { x: 0, y: 0 } },
+      { id: 'child-s', type: 'step', parentNode: 'parent-g', position: { x: 0, y: 0 } }
     ]
-    const result = computeBFSLayout(nodes)
-    expect(result).toHaveLength(2)
-    expect(result[0].level).toBe(0)
-    expect(result[1].level).toBe(1)
-    expect(result[0].nodes[0].id).toBe('1')
-    expect(result[1].nodes[0].id).toBe('2')
+    const edges: any[] = []
+    const positioned = computeDagreLayout(nodes, edges)
+
+    const parentNode = positioned.find(n => n.id === 'parent-g')
+    const childNode = positioned.find(n => n.id === 'child-s')
+
+    expect(parentNode?.style?.width).toBeDefined()
+    expect(parentNode?.style?.height).toBeDefined()
+
+    expect(childNode?.position.x).toBeDefined()
+    expect(childNode?.position.y).toBeDefined()
   })
 
-  it('should handle multi-parent paths and calculate correct levels', () => {
-    // 路径：1 -> 2 -> 4，同时 1 -> 3 -> 4
-    // 4 的层级应该是 2
-    const nodes: any[] = [
-      { id: '1', kind: 'reasoning', title: 'Node 1', status: 'complete' },
-      { id: '2', kind: 'tool', title: 'Node 2', status: 'complete', parentId: '1' },
-      { id: '3', kind: 'tool', title: 'Node 3', status: 'complete', parentId: '1' },
-      { id: '4', kind: 'artifact', title: 'Node 4', status: 'complete', parentIds: ['2', '3'] }
+  it('should hide children nodes when group collapsed', () => {
+    const nodes = [
+      { id: 'parent-g', type: 'group', data: { collapsed: true }, position: { x: 0, y: 0 } },
+      { id: 'child-s', type: 'step', parentNode: 'parent-g', hidden: true, position: { x: 0, y: 0 } }
     ]
-    const result = computeBFSLayout(nodes)
-    expect(result).toHaveLength(3) // level 0, 1, 2
-    
-    const level0 = result.find(r => r.level === 0)
-    const level1 = result.find(r => r.level === 1)
-    const level2 = result.find(r => r.level === 2)
-    
-    expect(level0?.nodes.map(n => n.id)).toContain('1')
-    expect(level1?.nodes.map(n => n.id)).toContain('2')
-    expect(level1?.nodes.map(n => n.id)).toContain('3')
-    expect(level2?.nodes.map(n => n.id)).toEqual(['4'])
-  })
+    const edges: any[] = []
+    const positioned = computeDagreLayout(nodes, edges)
 
-  it('should prevent infinite loops and handle cycles gracefully', () => {
-    // 环路：1 -> 2 -> 3 -> 1
-    const nodes: any[] = [
-      { id: '1', kind: 'reasoning', title: 'Node 1', status: 'complete', parentId: '3' },
-      { id: '2', kind: 'tool', title: 'Node 2', status: 'complete', parentId: '1' },
-      { id: '3', kind: 'tool', title: 'Node 3', status: 'complete', parentId: '2' }
-    ]
-    
-    // 如果没有死循环保护，这行会由于 OOM 卡死
-    const result = computeBFSLayout(nodes)
-    // 尽管有环，算法应优雅终止并返回分类结果
-    expect(result.length).toBeGreaterThan(0)
+    const parentNode = positioned.find(n => n.id === 'parent-g')
+    const childNode = positioned.find(n => n.id === 'child-s')
+
+    // 折叠状态下，由于子节点 hidden 为 true 且不加入 Dagre，所以子节点保持 hidden，父节点会具有固定的缩小尺寸
+    expect(parentNode?.style?.width).toBe('180px')
+    expect(parentNode?.style?.height).toBe('40px')
+    expect(childNode?.position.x).toBe(0) // 不变
   })
 })
 
@@ -71,5 +68,3 @@ describe('getBezierPath', () => {
     expect(path).toBe('M 0 0 C 50 0, 50 50, 100 50')
   })
 })
-
-
