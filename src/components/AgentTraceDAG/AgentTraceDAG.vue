@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { X, ExternalLink, FileText, Info } from '@lucide/vue'
-import type { DAGNode, DAGEdge, DAGTraceStatus } from './types'
+import type { DAGNode, DAGTraceStatus } from './types'
 import DAGTraceNode from './DAGTraceNode.vue'
+import { computeBFSLayout, getBezierPath } from './layout'
+import { useDAGLayout } from './useDAGLayout'
 
 // 导入内置的四个 Renderer
 import TerminalRenderer from '../AgentTrace/renderers/TerminalRenderer.vue'
@@ -29,113 +31,17 @@ const nodeElements = ref<Record<string, HTMLElement>>({})
 const selectedNodeId = ref<string>('')
 const selectedNode = computed(() => props.nodes.find(node => node.id === selectedNodeId.value))
 
-const links = ref<Array<{
-  id: string
-  x1: number
-  y1: number
-  x2: number
-  y2: number
-  status: DAGTraceStatus
-}>>([])
-
-// 1. 规范化节点：统一转换为 parentIds 数组以解耦
-const normalizedNodes = computed(() => {
-  return props.nodes.map(node => ({
-    ...node,
-    parentIds: node.parentIds || (node.parentId ? [node.parentId] : [])
-  }))
-})
-
-// 2. 基于规范化节点自动推导边关系
-const computedEdges = computed<DAGEdge[]>(() => {
-  const result: DAGEdge[] = []
-  normalizedNodes.value.forEach(node => {
-    if (node.parentIds && node.parentIds.length > 0) {
-      node.parentIds.forEach(pId => {
-        result.push({
-          source: pId,
-          target: node.id,
-          status: node.status
-        })
-      })
-    }
-  })
-  return result
-})
-
-// 3. 拓扑分层布局算法 (BFS Layering)
+// 1. 拓扑分层布局算法 (BFS Layering)
 const columns = computed(() => {
-  if (normalizedNodes.value.length === 0) return []
+  return computeBFSLayout(props.nodes)
+})
 
-  const nodeMap = new Map<string, typeof normalizedNodes.value[0]>()
-  const childMap = new Map<string, string[]>()
-  const inDegree = new Map<string, number>()
-  
-  // 初始化
-  normalizedNodes.value.forEach(node => {
-    nodeMap.set(node.id, node)
-    childMap.set(node.id, [])
-    inDegree.set(node.id, 0)
-  })
-
-  // 构建邻接表和入度
-  computedEdges.value.forEach(edge => {
-    const parentIds = childMap.get(edge.source) || []
-    parentIds.push(edge.target)
-    childMap.set(edge.source, parentIds)
-
-    const deg = inDegree.get(edge.target) || 0
-    inDegree.set(edge.target, deg + 1)
-  })
-
-  // BFS 计算层级
-  const nodeLevels = new Map<string, number>()
-  const queue: string[] = []
-
-  // 入度为 0 的作为 Level 0
-  normalizedNodes.value.forEach(node => {
-    const deg = inDegree.get(node.id) || 0
-    if (deg === 0 || (!node.parentIds || node.parentIds.length === 0)) {
-      nodeLevels.set(node.id, 0)
-      queue.push(node.id)
-    }
-  })
-
-  // 队列扩散
-  while (queue.length > 0) {
-    const currId = queue.shift()!
-    const currLevel = nodeLevels.get(currId) || 0
-    const children = childMap.get(currId) || []
-
-    children.forEach(childId => {
-      const childLevel = nodeLevels.get(childId) || 0
-      const targetLevel = Math.max(childLevel, currLevel + 1)
-      nodeLevels.set(childId, targetLevel)
-      
-      if (!queue.includes(childId)) {
-        queue.push(childId)
-      }
-    })
-  }
-
-  // 组织多列
-  const maxLevel = Math.max(0, ...Array.from(nodeLevels.values()))
-  const resultCols: Array<{ level: number; nodes: DAGNode[] }> = []
-
-  for (let i = 0; i <= maxLevel; i++) {
-    resultCols.push({ level: i, nodes: [] })
-  }
-
-  props.nodes.forEach(node => {
-    const level = nodeLevels.get(node.id) ?? 0
-    if (level < resultCols.length) {
-      resultCols[level].nodes.push(node)
-    } else {
-      resultCols[0].nodes.push(node)
-    }
-  })
-
-  return resultCols.filter(col => col.nodes.length > 0)
+// 2. 调用连线 Hook 处理 SVG 连线和 ResizeObserver 自动重绘逻辑
+const nodesRef = computed(() => props.nodes)
+const { links } = useDAGLayout({
+  containerRef,
+  nodeElements,
+  nodes: nodesRef
 })
 
 // 注册气泡节点 DOM 元素句柄
@@ -146,53 +52,6 @@ function registerNodeEl(id: string, el: any) {
   } else {
     delete nodeElements.value[id]
   }
-}
-
-// 3. 计算连线在 SVG 坐标系中的相对位置
-function updateLinks() {
-  if (!containerRef.value) return
-  
-  const containerRect = containerRef.value.getBoundingClientRect()
-  const computedLinks: typeof links.value = []
-
-  computedEdges.value.forEach(edge => {
-    const parentEl = nodeElements.value[edge.source]
-    const childEl = nodeElements.value[edge.target]
-
-    if (parentEl && childEl) {
-      const parentRect = parentEl.getBoundingClientRect()
-      const childRect = childEl.getBoundingClientRect()
-
-      // 父节点右侧中心作为起点
-      const x1 = parentRect.right - containerRect.left
-      const y1 = parentRect.top - containerRect.top + parentRect.height / 2
-
-      // 子节点左侧中心作为终点
-      const x2 = childRect.left - containerRect.left
-      const y2 = childRect.top - containerRect.top + childRect.height / 2
-
-      // 取目标子节点的状态作为连线的展示状态，便于直观展示剪裁和激活
-      const childNode = props.nodes.find(n => n.id === edge.target)
-      const edgeStatus = childNode ? childNode.status : (edge.status || 'complete')
-
-      computedLinks.push({
-        id: `${edge.source}-${edge.target}`,
-        x1,
-        y1,
-        x2,
-        y2,
-        status: edgeStatus
-      })
-    }
-  })
-
-  links.value = computedLinks
-}
-
-// 获取贝塞尔曲线路径
-function getBezierPath(x1: number, y1: number, x2: number, y2: number) {
-  const dx = Math.abs(x2 - x1) * 0.5
-  return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`
 }
 
 // 连线的样式类
@@ -206,35 +65,6 @@ function getLinkClass(status: DAGTraceStatus) {
     'link-pruned': status === 'pruned',
   }
 }
-
-// 4. 监听与生命周期处理
-let resizeObserver: ResizeObserver | null = null
-
-onMounted(() => {
-  nextTick(() => {
-    updateLinks()
-  })
-
-  // 用 ResizeObserver 监听容器大小改变，实时重绘 SVG 曲线
-  if (window.ResizeObserver && containerRef.value) {
-    resizeObserver = new ResizeObserver(() => {
-      updateLinks()
-    })
-    resizeObserver.observe(containerRef.value)
-  }
-})
-
-watch(() => props.nodes, () => {
-  nextTick(() => {
-    updateLinks()
-  })
-}, { deep: true })
-
-onBeforeUnmount(() => {
-  if (resizeObserver) {
-    resizeObserver.disconnect()
-  }
-})
 
 function handleNodeClick(id: string) {
   selectedNodeId.value = id
