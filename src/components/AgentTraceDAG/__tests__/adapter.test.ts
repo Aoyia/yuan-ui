@@ -28,7 +28,7 @@ describe('transformFlatToFlowElements', () => {
 
   it('should identify parent group nodes and assign subnodes correctly', () => {
     const flatNodes: any[] = [
-      { id: 'g-1', kind: 'reasoning', title: 'Group A', status: 'complete', childrenIds: ['n-1'] },
+      { id: 'g-1', kind: 'group', title: 'Group A', status: 'complete' },
       { id: 'n-1', kind: 'tool', title: 'Step 1', status: 'complete', parentId: 'g-1' }
     ]
     const { nodes, edges } = transformFlatToFlowElements(flatNodes)
