@@ -35,7 +35,7 @@ export function transformFlatToFlowElements(flatNodes: DAGNode[]): { nodes: Flow
     // 判定是否是分组节点：如果有 childrenIds 列表，或者 kind 是特定的 reasoning 而作为容器等
     // 这里我们检查 childrenIds 是否包含元素，或者 node.kind === 'reasoning' 且被当做 parent 时。
     // 最稳妥的是检查 node.childrenIds && node.childrenIds.length > 0。
-    const isGroup = node.kind === 'group'
+    const isGroup = (node.kind as any) === 'group'
 
     nodes.push({
       id: node.id,

@@ -10,9 +10,10 @@ import {
   useAgentTraceStream
 } from './components/AgentTrace'
 import { AgentTraceDAG } from './components/AgentTraceDAG'
+import { AgentTraceLinear } from './components/AgentTraceLinear'
 import { Play, RotateCcw, Activity, ShieldCheck } from '@lucide/vue'
 
-const activeTab = ref<'trace' | 'traceDAG'>('trace')
+const activeTab = ref<'trace' | 'traceDAG' | 'traceLinear'>('traceLinear')
 const currentScenario = ref<'basic' | 'intermediate' | 'advanced'>('advanced')
 const isStreaming = ref(false)
 
@@ -212,11 +213,21 @@ const activeCodeTransformed = computed(() => {
           <ShieldCheck class="tab-icon" />
           <span>新版 AgentTraceDAG (DAG拓扑)</span>
         </button>
+        <button
+          type="button"
+          class="tab-btn"
+          :class="{ active: activeTab === 'traceLinear' }"
+          @click="activeTab = 'traceLinear'"
+          :disabled="isStreaming"
+        >
+          <Activity class="tab-icon" />
+          <span>扁平线性流 (办公/大厂)</span>
+        </button>
       </div>
 
       <div class="header-actions">
-        <!-- 渐进式场景选择器（仅在新版 AgentTrace 下展示） -->
-        <div v-if="activeTab === 'trace'" class="scenario-selector">
+        <!-- 渐进式场景选择器 -->
+        <div v-if="activeTab === 'trace' || activeTab === 'traceLinear'" class="scenario-selector">
           <span class="selector-label">演示场景:</span>
           <div class="selector-options">
             <button 
@@ -313,6 +324,16 @@ const activeCodeTransformed = computed(() => {
               <AgentTraceDAG
                 :nodes="traceParser.nodes.value"
                 @node-click="handleNodeClick"
+              />
+            </div>
+          </template>
+
+          <!-- 1.6 扁平树形线性流演示 -->
+          <template v-else-if="activeTab === 'traceLinear' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
+            <div class="linear-playground-wrapper">
+              <AgentTraceLinear
+                :nodes="traceParser.nodes.value"
+                :is-streaming="traceParser.isStreaming.value"
               />
             </div>
           </template>
@@ -815,8 +836,8 @@ button {
 
 .dag-playground-wrapper {
   width: 100%;
-  max-height: 600px;
-  overflow: auto;
+  height: 620px;
+  overflow: hidden;
   border-radius: 12px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -827,5 +848,17 @@ button {
 .dark .dag-playground-wrapper {
   background: #09090b;
   border-color: #27272a;
+}
+
+.linear-playground-wrapper {
+  width: 100%;
+  background: transparent;
+  border-bottom: 1px solid #f1f1f4;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+}
+
+.dark .linear-playground-wrapper {
+  border-bottom-color: #27272a;
 }
 </style>
