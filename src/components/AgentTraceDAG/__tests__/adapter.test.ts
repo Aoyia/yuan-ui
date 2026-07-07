@@ -4,7 +4,7 @@ import type { DAGNode } from '../types'
 
 describe('transformFlatToFlowElements', () => {
   it('should transform basic nodes and edges correctly', () => {
-    const flatNodes: DAGNode[] = [
+    const flatNodes: any[] = [
       { id: 'n-1', kind: 'reasoning', title: 'Start Planning', status: 'complete' },
       { id: 'n-2', kind: 'tool', title: 'Run cmd', status: 'active', parentIds: ['n-1'] }
     ]
@@ -27,7 +27,7 @@ describe('transformFlatToFlowElements', () => {
   })
 
   it('should identify parent group nodes and assign subnodes correctly', () => {
-    const flatNodes: DAGNode[] = [
+    const flatNodes: any[] = [
       { id: 'g-1', kind: 'reasoning', title: 'Group A', status: 'complete', childrenIds: ['n-1'] },
       { id: 'n-1', kind: 'tool', title: 'Step 1', status: 'complete', parentId: 'g-1' }
     ]
