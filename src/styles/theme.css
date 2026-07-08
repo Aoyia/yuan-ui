@@ -1,33 +1,61 @@
 :root {
-  /* 极简冷灰与克制科技蓝 */
-  --yuan-primary: #0071e3;
-  --yuan-primary-hover: #0077ed;
-  --yuan-primary-light: #f4f9ff;
-  
-  --yuan-success: #1d9bf0; /* 柔和的天蓝色/绿蓝色 */
-  --yuan-success-hover: #0c8bd9;
-  --yuan-success-light: #f0f9ff;
-  
-  --yuan-error: #e02424;
-  --yuan-error-hover: #c81e1e;
-  --yuan-error-light: #fdf2f2;
-  
-  --yuan-warning: #f59e0b;
-  --yuan-warning-hover: #d97706;
-  --yuan-warning-light: #fffbeb;
-  
-  /* 更加纤细浅薄的边界色 */
-  --yuan-border: #f1f5f9;
-  --yuan-border-light: #f8fafc;
-  --yuan-bg: #ffffff;
-  --yuan-bg-muted: #fafafa;
-  
   /* 现代字体系统 */
   --yuan-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --yuan-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* 全局圆角变量 */
+  --yuan-radius: 4px;
+  --yuan-radius-sm: 2px;
+  --yuan-radius-lg: 6px;
+
+  /* 亮色模式色彩映射 (Semi Design / Lark) */
+  --yuan-primary: #165dff;
+  --yuan-primary-hover: #4080ff;
+  --yuan-primary-light: #e8f3ff;
   
-  /* 像素级克制圆角 */
-  --yuan-radius: 6px;
-  --yuan-radius-sm: 4px;
-  --yuan-radius-lg: 10px;
+  --yuan-success: #00b42a;
+  --yuan-success-hover: #23c343;
+  --yuan-success-light: #e8ffeb;
+  
+  --yuan-error: #f53f3f;
+  --yuan-error-hover: #f76560;
+  --yuan-error-light: #ffeceb;
+  
+  --yuan-warning: #ff7d00;
+  --yuan-warning-hover: #ff9a2e;
+  --yuan-warning-light: #fff7e8;
+  
+  --yuan-border: #e5e6eb;
+  --yuan-border-light: #f2f3f5;
+  --yuan-bg: #ffffff;
+  --yuan-bg-muted: #f7f8fa;
+  
+  --yuan-text-primary: #1d2129;
+  --yuan-text-secondary: #4e5969;
+  --yuan-text-tertiary: #86909c;
+}
+
+.dark {
+  /* 暗色模式色彩映射 (Semi Design / Lark) */
+  --yuan-primary: #3c7eff;
+  --yuan-primary-hover: #689eff;
+  --yuan-primary-light: #161b26;
+  
+  --yuan-success: #00b42a;
+  --yuan-success-light: #142416;
+  
+  --yuan-error: #f53f3f;
+  --yuan-error-light: #2c1616;
+  
+  --yuan-warning: #ff7d00;
+  --yuan-warning-light: #2c1e14;
+  
+  --yuan-border: #303030;
+  --yuan-border-light: #232324;
+  --yuan-bg: #16161a;
+  --yuan-bg-muted: #1d1d1f;
+  
+  --yuan-text-primary: #f2f3f5;
+  --yuan-text-secondary: #a6a9ad;
+  --yuan-text-tertiary: #797a7d;
 }
