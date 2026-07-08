@@ -24,19 +24,35 @@ const fileIcon = computed(() => {
 })
 
 const isExpanded = ref(false)
+const currentMaxHeight = ref<string | null>(null)
+const contentWrapper = ref<HTMLElement | null>(null)
 
 const totalLines = computed(() => props.content ? props.content.split('\n').length : 0)
+const hasMore = computed(() => totalLines.value > 12)
 
-const hasMore = computed(() => totalLines.value > 12 && !isExpanded.value)
-
-const previewText = computed(() => {
-  if (!props.content) return ''
-  if (hasMore.value) {
-    const lines = props.content.split('\n')
-    return lines.slice(0, 10).join('\n')
+const wrapperStyle = computed(() => {
+  if (!hasMore.value) {
+    return {}
   }
-  return props.content
+  if (isExpanded.value) {
+    return { maxHeight: currentMaxHeight.value || 'none' }
+  }
+  return { maxHeight: '160px' }
 })
+
+const handleExpand = () => {
+  if (!contentWrapper.value) return
+  // 1. 获取真实 scrollHeight
+  const scrollHeight = contentWrapper.value.scrollHeight
+  currentMaxHeight.value = `${scrollHeight}px`
+  isExpanded.value = true
+}
+
+const handleTransitionEnd = (event: TransitionEvent) => {
+  if (event.propertyName === 'max-height' && isExpanded.value) {
+    currentMaxHeight.value = null
+  }
+}
 </script>
 
 <template>
@@ -46,10 +62,16 @@ const previewText = computed(() => {
       <span class="file-path">{{ filePath || '未知文件' }}</span>
     </div>
     <div v-if="content" class="file-content-preview">
-      <div class="content-wrapper" :class="{ 'collapsible': totalLines > 12, 'collapsed': !isExpanded }">
-        <pre class="content-pre"><code>{{ previewText }}</code></pre>
-        <div v-if="hasMore" class="fade-mask">
-          <button type="button" class="expand-btn" @click="isExpanded = true">
+      <div 
+        ref="contentWrapper"
+        class="content-wrapper" 
+        :class="{ 'collapsible': hasMore, 'collapsed': !isExpanded }"
+        :style="wrapperStyle"
+        @transitionend="handleTransitionEnd"
+      >
+        <pre class="content-pre"><code>{{ content }}</code></pre>
+        <div v-if="hasMore && !isExpanded" class="fade-mask">
+          <button type="button" class="expand-btn" @click="handleExpand">
             展开全文 (共 {{ totalLines }} 行)
           </button>
         </div>
@@ -112,14 +134,6 @@ const previewText = computed(() => {
   overflow: hidden;
 }
 
-.content-wrapper.collapsible.collapsed {
-  max-height: 160px;
-}
-
-.content-wrapper.collapsible:not(.collapsed) {
-  max-height: 2000px;
-}
-
 .content-pre {
   margin: 0;
   padding: 0.375rem;
@@ -139,7 +153,7 @@ const previewText = computed(() => {
   left: 0;
   right: 0;
   height: 48px;
-  background: linear-gradient(to bottom, transparent 0%, var(--yuan-bg-muted) 100%);
+  background: linear-gradient(to bottom, transparent, var(--yuan-bg-muted) 100%);
   display: flex;
   align-items: flex-end;
   justify-content: center;
