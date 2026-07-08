@@ -108,10 +108,6 @@ const parsedHtml = computed(() => {
   margin-top: 0.25rem;
 }
 
-.dark .yuan-terminal-renderer {
-  background-color: #11111b;
-}
-
 .hover-copy-btn {
   position: absolute;
   top: 0.35rem;
@@ -145,7 +141,7 @@ const parsedHtml = computed(() => {
 }
 
 .copy-icon.copied {
-  color: #34c759;
+  color: var(--yuan-success);
 }
 
 .terminal-body {
