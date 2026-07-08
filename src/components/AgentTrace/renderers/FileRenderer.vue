@@ -139,7 +139,7 @@ const previewText = computed(() => {
   left: 0;
   right: 0;
   height: 48px;
-  background: linear-gradient(to bottom, rgba(247, 248, 250, 0) 0%, var(--yuan-bg-muted) 100%);
+  background: linear-gradient(to bottom, transparent 0%, var(--yuan-bg-muted) 100%);
   display: flex;
   align-items: flex-end;
   justify-content: center;
