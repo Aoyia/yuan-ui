@@ -51,21 +51,21 @@
 ```css
 .dark {
   /* 字节 Semi 暗色主色调 */
-  --yuan-primary: #3c7eff;
-  --yuan-primary-hover: #689eff;
-  --yuan-primary-light: #161b26;
+  --yuan-primary: #3C7EFF;
+  --yuan-primary-hover: #689EFF;
+  --yuan-primary-light: #161B26;
   
   /* 辅助状态色 */
   --yuan-success: #00b42a;
-  --yuan-success-hover: #23c343;
+  --yuan-success-hover: #26c24a;
   --yuan-success-light: #142416;
   
   --yuan-error: #f53f3f;
-  --yuan-error-hover: #f76560;
+  --yuan-error-hover: #f86e6b;
   --yuan-error-light: #2c1616;
   
   --yuan-warning: #ff7d00;
-  --yuan-warning-hover: #ff9a2e;
+  --yuan-warning-hover: #ffa238;
   --yuan-warning-light: #2c1e14;
   
   /* 暗色中性底 */
