@@ -4,6 +4,5 @@ import './styles/theme.css'
 export * from './components/AgentTrace'
 export * from './components/AgentTrace/context'
 export * from './components/AgentTrace/types'
-export * from './components/AgentTraceDAG'
 export * from './components/Loading'
 

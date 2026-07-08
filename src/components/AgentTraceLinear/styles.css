@@ -1,0 +1,360 @@
+/* Yuan UI - AgentTraceLinear Stylesheet */
+
+.agent-trace-linear {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "SF Pro Display", sans-serif;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #1d1d1f;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: transparent;
+  padding: 8px 0;
+  width: 100%;
+}
+
+.dark .agent-trace-linear {
+  color: #f5f5f7;
+}
+
+/* 树状层级容器 */
+.v2-item {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* 缩进导线 (VS Code 风格 Indent Guide Lines) */
+.v2-children {
+  padding-left: 20px;
+  margin-left: 6px;
+  border-left: 1px solid #f1f1f4;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+  transition: max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+.dark .v2-children {
+  border-left-color: #27272a;
+}
+
+/* 步骤头部 */
+.v2-header {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  padding: 3px 8px;
+  margin-left: -8px;
+  border-radius: 4px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.v2-header:hover {
+  background-color: #f4f4f5;
+}
+
+.dark .v2-header:hover {
+  background-color: #1c1c1f;
+}
+
+.v2-header:hover .v2-arrow {
+  color: #1d1d1f;
+  transform: translate(2px, 0);
+}
+
+.dark .v2-header:hover .v2-arrow {
+  color: #f5f5f7;
+}
+
+.v2-item:not(.collapsed) > .v2-header:hover .v2-arrow {
+  transform: translate(0, 2px) rotate(0deg);
+}
+
+/* 动词灰色 */
+.v2-verb {
+  color: #71717a;
+  font-weight: 400;
+}
+
+.dark .v2-verb {
+  color: #a1a1aa;
+}
+
+/* 宾语黑色加粗 */
+.v2-object {
+  color: #18181b;
+  font-weight: 600;
+}
+
+.dark .v2-object {
+  color: #fafafa;
+}
+
+/* 行内小巧图标 */
+.v2-inline-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #52525b;
+  font-size: 13px;
+}
+
+.dark .v2-inline-icon {
+  color: #a1a1aa;
+}
+
+.v2-icon-mcp {
+  color: #007aff;
+  font-weight: 700;
+}
+
+.dark .v2-icon-mcp {
+  color: #0a84ff;
+}
+
+/* 展开折叠小箭头 */
+.v2-arrow {
+  font-size: 11px;
+  color: #c7c7cc;
+  margin-left: 2px;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+  display: inline-block;
+}
+
+.dark .v2-arrow {
+  color: #52525b;
+}
+
+.v2-item.collapsed > .v2-header .v2-arrow {
+  transform: rotate(-90deg);
+}
+
+/* 活动中的 Spinner 动画 */
+.v2-spinner {
+  animation: spin-v2 1s linear infinite;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid #007aff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  margin-left: 4px;
+  display: inline-block;
+}
+
+.dark .v2-spinner {
+  border-color: #0a84ff;
+  border-top-color: transparent;
+}
+
+@keyframes spin-v2 {
+  to { transform: rotate(360deg); }
+}
+
+/* 活跃节点胶囊背景高亮与呼吸 */
+.v2-item.active > .v2-header {
+  background-color: #f0f7ff;
+  color: #007aff;
+  animation: v2-pulse 1.5s infinite alternate;
+}
+
+.dark .v2-item.active > .v2-header {
+  background-color: rgba(10, 132, 255, 0.1);
+  color: #0a84ff;
+}
+
+.v2-item.active > .v2-header .v2-object {
+  color: #007aff;
+}
+
+.dark .v2-item.active > .v2-header .v2-object {
+  color: #0a84ff;
+}
+
+@keyframes v2-pulse {
+  0% { background-color: rgba(0, 122, 255, 0.08); }
+  100% { background-color: rgba(0, 122, 255, 0.15); }
+}
+
+/* 内容与子步骤折叠 CSS */
+.v2-content {
+  overflow: hidden;
+  transition: max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  padding-left: 26px; /* 使折叠内容与图标后的首字对齐，空灵开阔 */
+}
+
+.v2-item.collapsed > .v2-content,
+.v2-item.collapsed > .v2-children {
+  max-height: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 思考文本排版 */
+.v2-CoT-text {
+  color: #48484a;
+  font-size: 13px;
+  line-height: 1.7;
+  padding: 8px 0 12px 0;
+  white-space: pre-wrap;
+}
+
+.dark .v2-CoT-text {
+  color: #d1d1d6;
+}
+
+.v2-CoT-title {
+  display: block;
+  font-weight: 700;
+  color: #18181b;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-size: 13.5px;
+}
+
+.dark .v2-CoT-title {
+  color: #fafafa;
+}
+
+/* 流式极光光标 (Aurora typing cursor) */
+.v2-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 14px;
+  background-image: linear-gradient(to bottom, #007aff, #00c6ff);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: v2-aurora 1s infinite alternate;
+  box-shadow: 0 0 4px #007aff;
+}
+
+.dark .v2-cursor {
+  background-image: linear-gradient(to bottom, #0a84ff, #0aedff);
+  box-shadow: 0 0 4px #0a84ff;
+}
+
+@keyframes v2-aurora {
+  0% { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+
+/* 命令行执行参数截断 */
+.v2-cmd-param {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: #18181b;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: inline-block;
+  max-width: 320px;
+  vertical-align: bottom;
+}
+
+.dark .v2-cmd-param {
+  color: #fafafa;
+}
+
+/* 技术细节卡片 */
+.v2-tech-box {
+  background-color: #fdfdfd;
+  border-radius: 6px;
+  border: 1px solid rgba(228, 228, 231, 0.8);
+  padding: 10px 12px;
+  margin-top: 6px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
+}
+
+.dark .v2-tech-box {
+  background-color: #121214;
+  border-color: rgba(39, 39, 42, 0.8);
+}
+
+.v2-tech-code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #2c2c2e;
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+.dark .v2-tech-code {
+  color: #e5e5ea;
+}
+
+/* Git Diff 卡片行高亮与精细色线 */
+.v2-diff-box {
+  font-family: var(--font-mono);
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: 1px solid #f4f4f5;
+  overflow: hidden;
+  font-size: 11.5px;
+}
+
+.dark .v2-diff-box {
+  background-color: #18181c;
+  border-color: #27272a;
+}
+
+.v2-diff-line {
+  display: flex;
+  padding: 3px 8px;
+  border-left: 2px solid transparent;
+}
+
+.v2-diff-line.add {
+  background-color: rgba(16, 185, 129, 0.05);
+  color: #065f46;
+  border-left-color: #10b981;
+}
+
+.dark .v2-diff-line.add {
+  background-color: rgba(16, 185, 129, 0.08);
+  color: #34d399;
+}
+
+.v2-diff-line.del {
+  background-color: rgba(239, 68, 68, 0.04);
+  color: #b91c1c;
+  border-left-color: #ef4444;
+}
+
+.dark .v2-diff-line.del {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+}
+
+.v2-diff-sign {
+  width: 14px;
+  flex-shrink: 0;
+  opacity: 0.5;
+  font-weight: bold;
+}
+
+/* 日志展开更多 */
+.v2-more-link {
+  font-size: 11px;
+  color: #007aff;
+  cursor: pointer;
+  display: block;
+  margin-top: 6px;
+  text-align: right;
+  font-weight: 500;
+  user-select: none;
+}
+
+.dark .v2-more-link {
+  color: #0a84ff;
+}
+
+.v2-more-link:hover {
+  text-decoration: underline;
+}

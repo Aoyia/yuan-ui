@@ -9,11 +9,10 @@ import {
   AgentTraceList,
   useAgentTraceStream
 } from './components/AgentTrace'
-import { AgentTraceDAG } from './components/AgentTraceDAG'
 import { AgentTraceLinear } from './components/AgentTraceLinear'
 import { Play, RotateCcw, Activity, ShieldCheck } from '@lucide/vue'
 
-const activeTab = ref<'trace' | 'traceDAG' | 'traceLinear'>('traceLinear')
+const activeTab = ref<'trace' | 'traceLinear'>('traceLinear')
 const currentScenario = ref<'basic' | 'intermediate' | 'advanced'>('advanced')
 const isStreaming = ref(false)
 
@@ -206,16 +205,6 @@ const activeCodeTransformed = computed(() => {
         <button
           type="button"
           class="tab-btn"
-          :class="{ active: activeTab === 'traceDAG' }"
-          @click="activeTab = 'traceDAG'"
-          :disabled="isStreaming"
-        >
-          <ShieldCheck class="tab-icon" />
-          <span>新版 AgentTraceDAG (DAG拓扑)</span>
-        </button>
-        <button
-          type="button"
-          class="tab-btn"
           :class="{ active: activeTab === 'traceLinear' }"
           @click="activeTab = 'traceLinear'"
           :disabled="isStreaming"
@@ -316,16 +305,6 @@ const activeCodeTransformed = computed(() => {
                 <AgentTraceList :nodes="traceParser.nodes.value" />
               </AgentTraceContent>
             </AgentTrace>
-          </template>
-
-          <!-- 1.5 新版 AgentTraceDAG (DAG 拓扑) 演示 -->
-          <template v-else-if="activeTab === 'traceDAG' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
-            <div class="dag-playground-wrapper">
-              <AgentTraceDAG
-                :nodes="traceParser.nodes.value"
-                @node-click="handleNodeClick"
-              />
-            </div>
           </template>
 
           <!-- 1.6 扁平树形线性流演示 -->
@@ -836,8 +815,8 @@ button {
 
 .dag-playground-wrapper {
   width: 100%;
-  height: 620px;
-  overflow: hidden;
+  max-height: 600px;
+  overflow: auto;
   border-radius: 12px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
