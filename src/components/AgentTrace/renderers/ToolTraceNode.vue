@@ -343,23 +343,19 @@ function handleReject() {
 .icon-tool {
   width: 0.7rem;
   height: 0.7rem;
-  color: #86868b;
-}
-
-.dark .icon-tool {
-  color: #71717a;
+  color: var(--yuan-text-secondary);
 }
 
 .icon-error {
   width: 0.75rem;
   height: 0.75rem;
-  color: #ff3b30;
+  color: var(--yuan-error, #ff3b30);
 }
 
 .icon-active {
   width: 0.75rem;
   height: 0.75rem;
-  color: #0071e3;
+  color: var(--yuan-primary);
 }
 
 
@@ -377,11 +373,7 @@ function handleReject() {
 
 .step-label {
   font-weight: 500;
-  color: #1d1d1f;
-}
-
-.dark .step-label {
-  color: #f4f4f5;
+  color: var(--yuan-text-primary);
 }
 
 .state-badge {
@@ -389,49 +381,36 @@ function handleReject() {
   padding: 0 0.25rem;
   border-radius: 4px;
   font-weight: 600;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--yuan-border);
   background: transparent;
-  color: #86868b;
+  color: var(--yuan-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
 
-.dark .state-badge {
-  border-color: rgba(255, 255, 255, 0.05);
-  color: #a1a1aa;
-}
-
 .state-input-streaming {
-  color: #0071e3 !important;
-  border-color: rgba(0, 113, 227, 0.1) !important;
-}
-
-.dark .state-input-streaming {
-  color: #2997ff !important;
+  color: var(--yuan-primary) !important;
+  border-color: var(--yuan-primary-light, rgba(0, 113, 227, 0.1)) !important;
 }
 
 .state-approval-requested {
-  color: #ff9500 !important;
-  border-color: rgba(255, 149, 0, 0.1) !important;
+  color: var(--yuan-warning, #ff9500) !important;
+  border-color: var(--yuan-warning-light, rgba(255, 149, 0, 0.1)) !important;
 }
 
 .state-output-available {
-  color: #34c759 !important;
-  border-color: rgba(52, 199, 89, 0.1) !important;
+  color: var(--yuan-success, #34c759) !important;
+  border-color: var(--yuan-success-light, rgba(52, 199, 89, 0.1)) !important;
 }
 
 .state-output-error {
-  color: #ff3b30 !important;
-  border-color: rgba(255, 59, 48, 0.1) !important;
+  color: var(--yuan-error, #ff3b30) !important;
+  border-color: var(--yuan-error-light, rgba(255, 59, 48, 0.1)) !important;
 }
 
 .step-duration {
   font-size: 0.68rem;
-  color: #86868b;
-}
-
-.dark .step-duration {
-  color: #71717a;
+  color: var(--yuan-text-tertiary);
 }
 
 .step-body {
@@ -443,8 +422,8 @@ function handleReject() {
 
 /* 极其精制透明的审批面板 */
 .approval-panel {
-  border: 1px dashed #f1f5f9;
-  background-color: #fafafa;
+  border: 1px dashed var(--yuan-border);
+  background-color: var(--yuan-bg-muted);
   border-radius: 6px;
   padding: 0.5rem 0.6rem;
   display: flex;
@@ -453,27 +432,18 @@ function handleReject() {
   margin-top: 0.15rem;
 }
 
-.dark .approval-panel {
-  border-color: #27272a;
-  background-color: #181825;
-}
-
 .approval-message {
   display: flex;
   align-items: center;
   gap: 0.35rem;
   font-size: 0.7rem;
-  color: #86868b;
-}
-
-.dark .approval-message {
-  color: #a1a1aa;
+  color: var(--yuan-text-secondary);
 }
 
 .shield-icon {
   width: 0.8rem;
   height: 0.8rem;
-  color: #ff9500;
+  color: var(--yuan-warning, #ff9500);
   flex-shrink: 0;
 }
 
@@ -494,36 +464,21 @@ function handleReject() {
   border-radius: 4px;
   cursor: pointer;
   background: transparent;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  color: #1d1d1f;
+  border: 1px solid var(--yuan-border);
+  color: var(--yuan-text-primary);
   transition: all 0.15s ease;
 }
 
-.dark .approve-btn, .dark .reject-btn {
-  border-color: rgba(255, 255, 255, 0.08);
-  color: #f4f4f5;
-}
-
 .approve-btn:hover {
-  background-color: rgba(52, 199, 89, 0.06);
-  color: #248a3d;
-  border-color: rgba(52, 199, 89, 0.2);
-}
-
-.dark .approve-btn:hover {
-  background-color: rgba(52, 199, 89, 0.1);
-  color: #30d158;
+  background-color: var(--yuan-success-light);
+  color: var(--yuan-success);
+  border-color: var(--yuan-success);
 }
 
 .reject-btn:hover {
-  background-color: rgba(255, 59, 48, 0.06);
-  color: #b3261e;
-  border-color: rgba(255, 59, 48, 0.2);
-}
-
-.dark .reject-btn:hover {
-  background-color: rgba(255, 59, 48, 0.1);
-  color: #ff453a;
+  background-color: var(--yuan-error-light);
+  color: var(--yuan-error);
+  border-color: var(--yuan-error);
 }
 
 .btn-icon {
@@ -532,13 +487,9 @@ function handleReject() {
 }
 
 .panel-section {
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--yuan-border);
   border-radius: 6px;
   overflow: hidden;
-}
-
-.dark .panel-section {
-  border-color: #27272a;
 }
 
 .section-toggle {
@@ -546,43 +497,30 @@ function handleReject() {
   align-items: center;
   width: 100%;
   padding: 0.2rem 0.4rem;
-  background-color: #fafafa;
+  background-color: var(--yuan-bg-muted);
   border: none;
   cursor: pointer;
   outline: none;
   text-align: left;
 }
 
-.dark .section-toggle {
-  background-color: #181825;
-}
-
 .toggle-icon {
   width: 0.75rem;
   height: 0.75rem;
-  color: #86868b;
+  color: var(--yuan-text-secondary);
   margin-right: 0.2rem;
 }
 
 .section-title {
   font-size: 0.7rem;
   font-weight: 500;
-  color: #515154;
-}
-
-.dark .section-title {
-  color: #a1a1aa;
+  color: var(--yuan-text-primary);
 }
 
 .section-content {
   padding: 0.4rem;
-  background-color: #fff;
-  border-top: 1px solid #f1f5f9;
-}
-
-.dark .section-content {
-  background-color: #1e1e2e;
-  border-top-color: #27272a;
+  background-color: var(--yuan-bg);
+  border-top: 1px solid var(--yuan-border);
 }
 
 /* Grid 折叠动效 */
@@ -601,27 +539,22 @@ function handleReject() {
 .code-block {
   margin: 0;
   padding: 0.2rem;
-  background-color: #fafafa;
+  background-color: var(--yuan-bg-muted);
   border-radius: 4px;
   font-family: monospace;
   font-size: 0.7rem;
   white-space: pre-wrap;
   word-break: break-all;
-  color: #515154;
+  color: var(--yuan-text-secondary);
   max-height: 120px;
   overflow-y: auto;
   scrollbar-width: thin;
 }
 
-.dark .code-block {
-  background-color: #181825;
-  color: #a1a1aa;
-}
-
 .error-panel {
   padding: 0.4rem;
-  background-color: rgba(255, 59, 48, 0.04);
-  border: 1px solid rgba(255, 59, 48, 0.08);
+  background-color: var(--yuan-error-light, rgba(255, 59, 48, 0.04));
+  border: 1px solid var(--yuan-error, rgba(255, 59, 48, 0.08));
   border-radius: 4px;
   margin-bottom: 0.25rem;
 }
@@ -632,23 +565,17 @@ function handleReject() {
   font-size: 0.7rem;
   white-space: pre-wrap;
   word-break: break-all;
-  color: #ff3b30;
+  color: var(--yuan-error, #ff3b30);
 }
 
 /* 状态修饰 */
 .status-complete .step-label {
-  color: #86868b;
-}
-.dark .status-complete .step-label {
-  color: #71717a;
+  color: var(--yuan-text-secondary);
 }
 
 .status-active .step-label {
-  color: #1d1d1f;
+  color: var(--yuan-primary);
   font-weight: 600;
-}
-.dark .status-active .step-label {
-  color: #f4f4f5;
 }
 
 .spin {

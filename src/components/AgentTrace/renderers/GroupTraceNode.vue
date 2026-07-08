@@ -146,17 +146,13 @@ function handleToggle() {
 .icon-active {
   width: 0.75rem;
   height: 0.75rem;
-  color: #0071e3;
+  color: var(--yuan-primary);
 }
 
 .icon-folder {
   width: 0.75rem;
   height: 0.75rem;
-  color: #86868b;
-}
-
-.dark .icon-folder {
-  color: #71717a;
+  color: var(--yuan-text-secondary);
 }
 
 
@@ -189,36 +185,32 @@ function handleToggle() {
 
 .group-label {
   font-weight: 600;
-  color: #1d1d1f;
+  color: var(--yuan-text-primary);
   font-size: 0.82rem;
-}
-
-.dark .group-label {
-  color: #f4f4f5;
 }
 
 .group-duration {
   font-size: 0.7rem;
-  color: #86868b;
+  color: var(--yuan-text-tertiary);
 }
 
 .header-right-controls {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  color: #86868b;
+  color: var(--yuan-text-secondary);
 }
 
 .group-child-count {
   font-size: 0.7rem;
-  color: #86868b;
+  color: var(--yuan-text-tertiary);
   font-weight: 500;
 }
 
 .toggle-chevron {
   width: 0.75rem;
   height: 0.75rem;
-  color: #86868b;
+  color: var(--yuan-text-secondary);
   transition: transform 0.15s ease;
 }
 
@@ -246,30 +238,18 @@ function handleToggle() {
 
 /* 状态修饰 */
 .status-complete .group-label {
-  color: #515154;
-}
-.dark .status-complete .group-label {
-  color: #a1a1aa;
+  color: var(--yuan-text-secondary);
 }
 
 .status-complete .icon-folder {
-  color: #a1a1aa;
-}
-.dark .status-complete .icon-folder {
-  color: #52525b;
+  color: var(--yuan-text-tertiary);
 }
 
 .status-active .group-label {
-  color: #0071e3;
-}
-.dark .status-active .group-label {
-  color: #2997ff;
+  color: var(--yuan-primary);
 }
 
 .status-pending .group-label {
-  color: #d1d1d6;
-}
-.dark .status-pending .group-label {
-  color: #3f3f46;
+  color: var(--yuan-text-tertiary);
 }
 </style>

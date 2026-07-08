@@ -76,7 +76,7 @@ const props = defineProps<Props>()
   width: 1.25rem;
   height: 1.25rem;
   z-index: 2;
-  background-color: #fff;
+  background-color: transparent;
   transition: all 0.3s ease;
 }
 
@@ -87,8 +87,8 @@ const props = defineProps<Props>()
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  background-color: #f1f5f9;
-  color: #64748b;
+  background-color: var(--yuan-bg-muted);
+  color: var(--yuan-text-secondary);
 }
 
 .icon-text-node {
@@ -112,7 +112,7 @@ const props = defineProps<Props>()
 
 .step-label {
   font-weight: 500;
-  color: #64748b;
+  color: var(--yuan-text-secondary);
 }
 
 .step-body {
@@ -122,7 +122,7 @@ const props = defineProps<Props>()
 .text-content {
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: #475569;
+  color: var(--yuan-text-primary);
   white-space: pre-wrap;
 }
 </style>

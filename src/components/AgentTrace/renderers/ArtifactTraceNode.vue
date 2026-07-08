@@ -103,7 +103,7 @@ const props = defineProps<Props>()
   width: 1.25rem;
   height: 1.25rem;
   z-index: 2;
-  background-color: #fff;
+  background-color: transparent;
   transition: all 0.3s ease;
 }
 
@@ -114,8 +114,8 @@ const props = defineProps<Props>()
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  background-color: #f1f5f9;
-  color: #64748b;
+  background-color: var(--yuan-bg-muted);
+  color: var(--yuan-text-secondary);
 }
 
 .icon-artifact {
@@ -139,7 +139,7 @@ const props = defineProps<Props>()
 
 .step-label {
   font-weight: 500;
-  color: #64748b;
+  color: var(--yuan-text-secondary);
 }
 
 .step-body {
@@ -159,14 +159,14 @@ const props = defineProps<Props>()
   max-width: 100%;
   max-height: 15rem;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--yuan-border);
   object-fit: contain;
-  background-color: #f8fafc;
+  background-color: var(--yuan-bg-muted);
 }
 
 .caption-text {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--yuan-text-secondary);
   margin: 0;
 }
 
@@ -176,24 +176,24 @@ const props = defineProps<Props>()
   align-items: center;
   gap: 0.375rem;
   padding: 0.375rem 0.625rem;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--yuan-bg-muted);
+  border: 1px solid var(--yuan-border);
   border-radius: 6px;
-  color: #2563eb;
+  color: var(--yuan-primary);
   text-decoration: none;
   font-size: 0.8125rem;
   transition: all 0.2s ease;
 }
 
 .file-link:hover {
-  background-color: #eff6ff;
-  border-color: #bfdbfe;
+  background-color: var(--yuan-primary-light);
+  border-color: var(--yuan-primary);
 }
 
 .icon-file {
   width: 0.875rem;
   height: 0.875rem;
-  color: #64748b;
+  color: var(--yuan-text-secondary);
 }
 
 .icon-ext {
@@ -206,7 +206,7 @@ const props = defineProps<Props>()
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  color: #2563eb;
+  color: var(--yuan-primary);
   text-decoration: none;
   font-size: 0.8125rem;
 }

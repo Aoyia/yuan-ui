@@ -102,14 +102,13 @@ const parsedHtml = computed(() => {
   position: relative;
   border-radius: 6px;
   background-color: #0b0f19; /* 墨灰蓝 */
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--yuan-border);
   overflow: hidden;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   margin-top: 0.25rem;
 }
 
 .dark .yuan-terminal-renderer {
-  border-color: rgba(255, 255, 255, 0.04);
   background-color: #11111b;
 }
 
@@ -118,9 +117,9 @@ const parsedHtml = computed(() => {
   top: 0.35rem;
   right: 0.35rem;
   background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--yuan-border-light, rgba(255, 255, 255, 0.05));
   cursor: pointer;
-  color: #a6adc8;
+  color: var(--yuan-text-tertiary);
   padding: 0.2rem;
   border-radius: 4px;
   display: flex;

@@ -106,7 +106,7 @@ const statusClass = computed(() => {
   width: 1.25rem;
   height: 1.25rem;
   z-index: 2;
-  background-color: #fff;
+  background-color: transparent;
   transition: all 0.3s ease;
 }
 
@@ -117,8 +117,8 @@ const statusClass = computed(() => {
   width: 1.125rem;
   height: 1.125rem;
   border-radius: 50%;
-  background-color: #e2e8f0;
-  color: #64748b;
+  background-color: var(--yuan-bg-muted);
+  color: var(--yuan-text-secondary);
 }
 
 .icon-check {
@@ -130,13 +130,13 @@ const statusClass = computed(() => {
 .icon-active {
   width: 0.95rem;
   height: 0.95rem;
-  color: #3b82f6;
+  color: var(--yuan-primary);
 }
 
 .icon-pending {
   width: 0.75rem;
   height: 0.75rem;
-  color: #e2e8f0;
+  color: var(--yuan-border);
 }
 
 .bubble-cancelled {
@@ -146,16 +146,14 @@ const statusClass = computed(() => {
   width: 1.125rem;
   height: 1.125rem;
   border-radius: 50%;
-  background-color: #f1f5f9;
-  color: #94a3b8;
+  background-color: var(--yuan-bg-muted);
+  color: var(--yuan-text-tertiary);
 }
 
 .icon-cancel-line {
   font-size: 0.75rem;
   font-weight: bold;
 }
-
-
 
 .step-details {
   flex: 1;
@@ -171,26 +169,26 @@ const statusClass = computed(() => {
 
 .step-label {
   font-weight: 500;
-  color: #1e293b;
+  color: var(--yuan-text-primary);
 }
 
 .step-duration {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--yuan-text-tertiary);
 }
 
 .step-body {
   font-size: 0.8125rem;
   line-height: 1.5;
   margin-top: 0.25rem;
-  color: #475569;
+  color: var(--yuan-text-secondary);
 }
 
 .redacted-content {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  color: #94a3b8;
+  color: var(--yuan-text-tertiary);
   font-style: italic;
 }
 
@@ -205,32 +203,32 @@ const statusClass = computed(() => {
 
 /* 状态过渡 */
 .status-complete .step-label {
-  color: #64748b;
+  color: var(--yuan-text-secondary);
 }
 
 .status-complete .step-body {
-  color: #64748b;
+  color: var(--yuan-text-secondary);
 }
 
 .status-active .step-label {
-  color: #1e293b;
+  color: var(--yuan-text-primary);
   font-weight: 600;
 }
 
 .status-active .step-body {
-  color: #334155;
+  color: var(--yuan-text-primary);
 }
 
 .status-pending .step-label {
-  color: #cbd5e1;
+  color: var(--yuan-text-tertiary);
 }
 
 .status-pending .step-body {
-  color: #cbd5e1;
+  color: var(--yuan-text-tertiary);
 }
 
 .status-cancelled .step-label {
-  color: #94a3b8;
+  color: var(--yuan-text-tertiary);
   text-decoration: line-through;
 }
 
