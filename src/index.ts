@@ -5,4 +5,5 @@ export * from './components/AgentTrace'
 export * from './components/AgentTrace/context'
 export * from './components/AgentTrace/types'
 export * from './components/Loading'
+export * from './components/StreamMarkdownRenderer'
 
