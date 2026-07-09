@@ -28,14 +28,22 @@ function handleNodeClick(id: string) {
 
 
 
-// 自动滚动锚底逻辑
+// 智能自动滚动锚底：仅在滚动条本来就在底部、或处于流式运行状态时，才追加自动滚动，防止打断浏览器原生 Scroll Anchoring
 function scrollToBottom() {
   nextTick(() => {
     if (chatViewportRef.value) {
-      chatViewportRef.value.scrollTop = chatViewportRef.value.scrollHeight
+      const el = chatViewportRef.value
+      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 15
+      if (isAtBottom || isStreaming.value) {
+        el.scrollTop = el.scrollHeight
+      }
     }
     if (documentViewportRef.value) {
-      documentViewportRef.value.scrollTop = documentViewportRef.value.scrollHeight
+      const el = documentViewportRef.value
+      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 15
+      if (isAtBottom || isStreaming.value) {
+        el.scrollTop = el.scrollHeight
+      }
     }
   })
 }
@@ -143,21 +151,8 @@ watch(traceOpen, (newVal) => {
     if (!isStreaming.value) {
       traceParser.handleTraceEvent({ type: 'collapse-all-groups' })
     }
-  } else {
-    // 自动或手动收拢折叠：启动 requestAnimationFrame 跟随器，在 350ms 动画周期内逐帧将滚动条锁死在底部，防止高度骤缩与滚动跳闪
-    const startTime = Date.now()
-    const duration = 350
-    
-    const trackScroll = () => {
-      if (documentViewportRef.value) {
-        documentViewportRef.value.scrollTop = documentViewportRef.value.scrollHeight
-      }
-      if (Date.now() - startTime < duration) {
-        requestAnimationFrame(trackScroll)
-      }
-    }
-    requestAnimationFrame(trackScroll)
   }
+  // 彻底移除 else 分支中的 requestAnimationFrame 锁死滚动条行为，允许浏览器底层的原生 scroll-anchoring 发挥作用
 })
 
 
