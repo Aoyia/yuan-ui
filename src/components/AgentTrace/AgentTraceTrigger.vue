@@ -41,17 +41,11 @@ function toggleOpen() {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.45rem 0.2rem;
+  padding: 0.35rem 0.2rem;
   font-size: 0.75rem;
   font-weight: 500;
   color: #86868b;
-  
-  /* 智能吸顶与不透明底色，防止滚动穿透 */
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: var(--yuan-bg);
-  
+  background: transparent;
   border: none;
   border-bottom: 1px solid var(--yuan-border);
   cursor: pointer;

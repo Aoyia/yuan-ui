@@ -30,7 +30,7 @@ const currentLevelNodes = computed(() => {
 </script>
 
 <template>
-  <TransitionGroup name="yuan-list" tag="div" class="yuan-agent-trace-list">
+  <div class="yuan-agent-trace-list">
     <template v-for="node in currentLevelNodes" :key="node.id">
       <!-- 1. 递归 Group 节点 -->
       <GroupTraceNodeComponent 
@@ -61,7 +61,7 @@ const currentLevelNodes = computed(() => {
       <!-- 5. 纯文本节点 -->
       <TextTraceNode v-else-if="node.kind === 'text'" v-bind="node" />
     </template>
-  </TransitionGroup>
+  </div>
 </template>
 
 <style scoped>
@@ -70,30 +70,5 @@ const currentLevelNodes = computed(() => {
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
-}
-
-/* 布局移动平滑过渡 */
-.yuan-list-move {
-  transition: transform 0.32s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-/* 列表节点渐入动画 */
-.yuan-list-enter-active {
-  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-}
-.yuan-list-enter-from {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-/* 列表节点离开动画 */
-.yuan-list-leave-active {
-  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-  position: absolute;
-  width: 100%;
-}
-.yuan-list-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
 }
 </style>
