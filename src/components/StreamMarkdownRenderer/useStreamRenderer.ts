@@ -129,7 +129,12 @@ export function useStreamRenderer(options: UseStreamRendererOptions = {}) {
     });
 
     // 将扁平 Tokens 树形化重组为 VNode 渲染树
-    return treeifyTokens(finalTokens);
+    const nodes = treeifyTokens(finalTokens);
+    if (isInnerStreaming.value && nodes.length > 0) {
+      const lastNode = nodes[nodes.length - 1];
+      nodes[nodes.length - 1] = { ...lastNode, isActive: true };
+    }
+    return nodes;
   });
 
   return {

@@ -116,7 +116,6 @@ watch(
         animationFrameId = null;
       }
       isAutoScrolling.value = false;
-      stopFpsCounter();
     }
     if (newStreaming === true) {
       // 开启流式时，默认激活吸底，保障新一轮输出能被立刻看到
@@ -126,7 +125,6 @@ watch(
       } else {
         lastKnownScrollTop = 0;
       }
-      startFpsCounter();
     }
   }
 );
@@ -135,64 +133,6 @@ watch(
 let animationFrameId: number | null = null;
 const userScrolledUp = ref(false);
 const isAutoScrolling = ref(false);
-
-// ─── FPS 帧率计数器 ───────────────────────────────────────────────────────────
-const fps = ref(0);
-const fpsVisible = ref(false);
-let fpsRafId: number | null = null;
-let fpsFrameCount = 0;
-let fpsLastTime = 0;
-let fpsHideTimer: ReturnType<typeof setTimeout> | null = null;
-
-const fpsColor = computed(() => {
-  if (fps.value >= 50) return '#10b981'; // 绿色：流畅
-  if (fps.value >= 30) return '#f59e0b'; // 黄色：一般
-  return '#ef4444';                      // 红色：卡顿
-});
-
-function startFpsCounter() {
-  if (fpsRafId !== null) return;
-  fpsFrameCount = 0;
-  fpsLastTime = performance.now();
-  fpsVisible.value = true;
-  if (fpsHideTimer !== null) {
-    clearTimeout(fpsHideTimer);
-    fpsHideTimer = null;
-  }
-
-  const tick = (now: number) => {
-    fpsFrameCount++;
-    const elapsed = now - fpsLastTime;
-    if (elapsed >= 500) {
-      fps.value = Math.round((fpsFrameCount / elapsed) * 1000);
-      fpsFrameCount = 0;
-      fpsLastTime = now;
-    }
-    fpsRafId = requestAnimationFrame(tick);
-  };
-  fpsRafId = requestAnimationFrame(tick);
-}
-
-function stopFpsCounter() {
-  if (fpsRafId !== null) {
-    cancelAnimationFrame(fpsRafId);
-    fpsRafId = null;
-  }
-  // 延迟 1 秒后隐藏，让用户看到最终帧率
-  fpsHideTimer = setTimeout(() => {
-    fpsVisible.value = false;
-    fps.value = 0;
-    fpsHideTimer = null;
-  }, 1000);
-}
-
-watch(userScrolledUp, (newVal) => {
-  if (newVal) {
-    console.log('[StreamScroll] 停用滚动跟随 (用户已手动向上滚动或离开底部)');
-  } else {
-    console.log('[StreamScroll] 启用滚动跟随 (已回到底部并自动恢复跟随)');
-  }
-});
 
 const handleScroll = () => {
   if (!scrollContainerRef.value) return;
@@ -237,12 +177,6 @@ onUnmounted(() => {
   }
   if (scrollContainerRef.value) {
     scrollContainerRef.value.removeEventListener('scroll', handleScroll);
-  }
-  if (fpsRafId !== null) {
-    cancelAnimationFrame(fpsRafId);
-  }
-  if (fpsHideTimer !== null) {
-    clearTimeout(fpsHideTimer);
   }
 });
 
@@ -338,14 +272,6 @@ onMounted(() => {
 
 <template>
   <div ref="containerRef" class="yuan-stream-renderer">
-    <!-- FPS 帧率角标 -->
-    <Transition name="yuan-fps-fade">
-      <div v-if="fpsVisible" class="yuan-fps-badge" :style="{ '--fps-color': fpsColor }">
-        <span class="yuan-fps-dot"></span>
-        <span class="yuan-fps-value">{{ fps }}</span>
-        <span class="yuan-fps-unit">fps</span>
-      </div>
-    </Transition>
     <VNodeMarkdownRenderer
       :nodes="nodesTree"
       :allowed-components="allowedComponents"
@@ -358,71 +284,6 @@ onMounted(() => {
 
 <style>
 /* 与 yuan-ui 主题色彩系统深度统一，支持亮色与暗色模式的平滑适配 */
-
-/* ── FPS 帧率角标 ──────────────────────────────────────────────── */
-.yuan-fps-badge {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px 3px 6px;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  font-family: var(--yuan-font-mono, 'SFMono-Regular', Menlo, monospace);
-  font-size: 11px;
-  line-height: 1;
-  color: #e5e7eb;
-  z-index: 10;
-  pointer-events: none;
-  user-select: none;
-}
-
-.yuan-fps-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--fps-color, #10b981);
-  box-shadow: 0 0 4px var(--fps-color, #10b981);
-  animation: yuan-fps-pulse 1s ease-in-out infinite;
-  flex-shrink: 0;
-}
-
-.yuan-fps-value {
-  font-weight: 700;
-  color: var(--fps-color, #10b981);
-  min-width: 2ch;
-  text-align: right;
-}
-
-.yuan-fps-unit {
-  color: #9ca3af;
-  font-weight: 400;
-}
-
-@keyframes yuan-fps-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.yuan-fps-fade-enter-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.yuan-fps-fade-leave-active {
-  transition: opacity 0.6s ease, transform 0.4s ease;
-}
-.yuan-fps-fade-enter-from {
-  opacity: 0;
-  transform: translateY(-4px) scale(0.92);
-}
-.yuan-fps-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-2px) scale(0.95);
-}
 
 .yuan-stream-renderer {
   font-family: var(--yuan-font-sans), system-ui, -apple-system, sans-serif;
@@ -527,5 +388,56 @@ onMounted(() => {
   font-size: 12.5px;
   line-height: 1.6;
   color: #d1d5db;
+}
+
+/* ── 引用块样式 (Blockquotes) ── */
+.yuan-stream-renderer blockquote {
+  margin: 14px 0;
+  padding: 6px 12px 6px 16px;
+  border-left: 4px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: #475569;
+  border-radius: 0 4px 4px 0;
+}
+
+.dark .yuan-stream-renderer blockquote {
+  background-color: rgba(255, 255, 255, 0.02);
+  border-left-color: #334155;
+  color: #94a3b8;
+}
+
+/* 支持多级嵌套 */
+.yuan-stream-renderer blockquote blockquote {
+  margin: 8px 0 0 0;
+  border-left-color: #cbd5e1;
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+.dark .yuan-stream-renderer blockquote blockquote {
+  border-left-color: #475569;
+  background-color: rgba(255, 255, 255, 0.01);
+}
+
+.yuan-stream-renderer blockquote p {
+  margin: 0;
+}
+
+.yuan-stream-renderer blockquote p + p {
+  margin-top: 6px;
+}
+
+@keyframes dxf-block-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.yuan-stream-renderer .dxf-block-enter {
+  animation: dxf-block-enter 0.18s ease-out both;
 }
 </style>

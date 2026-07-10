@@ -33,6 +33,7 @@ describe('useStreamRenderer Composable', () => {
       type: 'element',
       tag: 'dxf-paragraph',
       props: {},
+      isActive: true,
       children: [
         { type: 'text', content: 'Hello Paragraph' }
       ]
@@ -63,6 +64,7 @@ describe('useStreamRenderer Composable', () => {
       type: 'element',
       tag: 'dxf-paragraph',
       props: {},
+      isActive: true,
       children: [
         { type: 'text', content: 'Hello ' },
         {
@@ -91,6 +93,7 @@ describe('useStreamRenderer Composable', () => {
       type: 'element',
       tag: 'dxf-paragraph',
       props: {},
+      isActive: true,
       children: [
         { type: 'text', content: 'Hello **bold text' }
       ]

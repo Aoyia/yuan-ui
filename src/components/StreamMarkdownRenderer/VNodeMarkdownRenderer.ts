@@ -230,26 +230,38 @@ export const VNodeMarkdownRenderer = defineComponent({
 
           if (componentClass) {
             // 递归渲染子节点
-            return h(componentClass, node.props || {}, {
-              default: () => h(VNodeMarkdownRenderer as any, {
-                nodes: node.children,
-                allowedComponents: props.allowedComponents,
-                customComponents: props.customComponents,
-                isStreaming: props.isStreaming,
-                onFeedback: (msg: string) => emit('feedback', msg)
-              })
-            });
+            return h(componentClass, 
+              {
+                ...(node.props || {}),
+                class: node.isActive ? 'dxf-block-enter' : undefined
+              },
+              {
+                default: () => h(VNodeMarkdownRenderer as any, {
+                  nodes: node.children,
+                  allowedComponents: props.allowedComponents,
+                  customComponents: props.customComponents,
+                  isStreaming: props.isStreaming,
+                  onFeedback: (msg: string) => emit('feedback', msg)
+                })
+              }
+            );
           } else {
             // 降级为原生 HTML 标签
-            return h(node.tag, node.props || {}, [
-              h(VNodeMarkdownRenderer as any, {
-                nodes: node.children,
-                allowedComponents: props.allowedComponents,
-                customComponents: props.customComponents,
-                isStreaming: props.isStreaming,
-                onFeedback: (msg: string) => emit('feedback', msg)
-              })
-            ]);
+            return h(node.tag, 
+              {
+                ...(node.props || {}),
+                class: node.isActive ? 'dxf-block-enter' : undefined
+              },
+              [
+                h(VNodeMarkdownRenderer as any, {
+                  nodes: node.children,
+                  allowedComponents: props.allowedComponents,
+                  customComponents: props.customComponents,
+                  isStreaming: props.isStreaming,
+                  onFeedback: (msg: string) => emit('feedback', msg)
+                })
+              ]
+            );
           }
         }
 

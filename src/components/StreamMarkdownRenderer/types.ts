@@ -2,6 +2,7 @@ export type RendererNodeType = 'text' | 'element' | 'component'
 
 export interface RendererBaseNode {
   type: RendererNodeType
+  isActive?: boolean
 }
 
 export interface RendererTextNode extends RendererBaseNode {
