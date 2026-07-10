@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, computed, getCurrentInstance, defineComponent, h } from 'vue'
+import { ref, watch, nextTick, computed, getCurrentInstance, defineComponent, h, onMounted, onUnmounted } from 'vue'
 import { z } from 'zod'
+import * as echarts from 'echarts'
 import { mockBasicFlow, mockIntermediateFlow, mockAdvancedFlow } from './mockData'
 import { staticSnippets } from './constants/snippets'
 import {
@@ -315,9 +316,12 @@ const DxfBarChart = defineComponent({
   },
   emits: ['feedback'],
   setup(props, { emit }) {
+    const chartRef = ref<HTMLElement | null>(null)
     const errorMsg = ref<string | null>(null)
     const parsedData = ref<any>(null)
+    let chartInstance: echarts.ECharts | null = null
 
+    // 校验 JSON 与 Zod 逻辑
     watch(() => props.dataset, (newVal) => {
       if (!newVal) return
       try {
@@ -330,6 +334,10 @@ const DxfBarChart = defineComponent({
         if (result.success) {
           parsedData.value = result.data
           errorMsg.value = null
+          // 数据校验通过，下个 Tick 更新/重新渲染 ECharts
+          nextTick(() => {
+            renderChart()
+          })
         } else {
           errorMsg.value = result.error.issues.map(issue => `字段 ${issue.path.join('.') || 'root'}: ${issue.message}`).join(' | ')
         }
@@ -337,6 +345,114 @@ const DxfBarChart = defineComponent({
         errorMsg.value = `JSON 解析失败: ${e.message}`
       }
     }, { immediate: true })
+
+    const renderChart = () => {
+      if (!chartRef.value || !parsedData.value) return
+
+      // 初始化 echarts
+      if (!chartInstance) {
+        chartInstance = echarts.init(chartRef.value)
+      }
+
+      const categories = parsedData.value.values.map((_: any, idx: number) => `Q${idx + 1}`)
+      
+      const option = {
+        title: {
+          text: parsedData.value.title,
+          textStyle: {
+            fontSize: 13,
+            fontWeight: '600',
+            color: 'var(--yuan-text-primary)'
+          },
+          left: 'center',
+          top: 0
+        },
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: '#1f2937',
+          borderWidth: 0,
+          textStyle: {
+            color: '#fff',
+            fontSize: 12
+          },
+          axisPointer: {
+            type: 'shadow'
+          }
+        },
+        grid: {
+          top: '20%',
+          left: '5%',
+          right: '5%',
+          bottom: '10%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          data: categories,
+          axisLine: {
+            lineStyle: {
+              color: 'var(--yuan-border)'
+            }
+          },
+          axisLabel: {
+            color: 'var(--yuan-text-tertiary)',
+            fontSize: 11
+          }
+        },
+        yAxis: {
+          type: 'value',
+          splitLine: {
+            lineStyle: {
+              color: 'var(--yuan-border-light)',
+              type: 'dashed'
+            }
+          },
+          axisLabel: {
+            color: 'var(--yuan-text-tertiary)',
+            fontSize: 11
+          }
+        },
+        series: [
+          {
+            data: parsedData.value.values,
+            type: 'bar',
+            barWidth: '35%',
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: '#3b82f6' }, // 蓝色渐变
+                { offset: 1, color: '#10b981' }  // 绿色渐变
+              ]),
+              borderRadius: [4, 4, 0, 0]
+            }
+          }
+        ]
+      }
+
+      chartInstance.setOption(option)
+    }
+
+    onMounted(() => {
+      renderChart()
+      if (typeof window !== 'undefined') {
+        window.addEventListener('resize', handleResize)
+      }
+    })
+
+    onUnmounted(() => {
+      if (chartInstance) {
+        chartInstance.dispose()
+        chartInstance = null
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', handleResize)
+      }
+    })
+
+    const handleResize = () => {
+      if (chartInstance) {
+        chartInstance.resize()
+      }
+    }
 
     return () => {
       if (errorMsg.value) {
@@ -361,35 +477,30 @@ const DxfBarChart = defineComponent({
         ])
       }
 
-      if (parsedData.value) {
-        return h('div', { class: 'custom-chart-container' }, [
-          h('div', { class: 'chart-header' }, [
-            h('span', {}, '📊 实时渲染 AI 组件 (DxfBarChart)'),
-            h('span', {
-              style: {
-                fontSize: '11px',
-                color: 'var(--yuan-success)',
-                background: 'var(--yuan-success-light)',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                border: '1px solid var(--yuan-border)',
-                marginLeft: '8px'
-              }
-            }, 'Zod 验证通过')
-          ]),
-          h('h4', { style: { marginBottom: '12px', fontSize: '14px', color: 'var(--yuan-text-primary)' } }, parsedData.value.title),
-          h('div', { class: 'chart-bars', style: { display: 'flex', alignItems: 'flex-end', gap: '16px', height: '180px', paddingTop: '20px', borderBottom: '1px solid var(--yuan-border)' } }, parsedData.value.values.map((val: number, idx: number) => {
-            return h('div', { key: idx, class: 'bar-wrapper', style: { flex: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' } }, [
-              h('div', { class: 'bar', style: { height: Math.min(val * 1.2, 160) + 'px', background: 'linear-gradient(to top, var(--yuan-primary), var(--yuan-success))', borderRadius: '4px 4px 0 0', width: '100%', position: 'relative' } }, [
-                h('span', { class: 'bar-value', style: { position: 'absolute', top: '-24px', left: '50%', transform: 'translateX(-50%)', fontSize: '11px', fontWeight: '600', color: 'var(--yuan-text-secondary)' } }, val)
-              ]),
-              h('div', { class: 'bar-label', style: { fontSize: '11px', color: 'var(--yuan-text-tertiary)' } }, `Q${idx + 1}`)
-            ])
-          }))
-        ])
-      }
-
-      return null
+      return h('div', { class: 'custom-chart-container' }, [
+        h('div', { class: 'chart-header' }, [
+          h('span', {}, '📊 ECharts AI 柱状图组件 (DxfBarChart)'),
+          h('span', {
+            style: {
+              fontSize: '11px',
+              color: 'var(--yuan-success)',
+              background: 'var(--yuan-success-light)',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              border: '1px solid var(--yuan-border)',
+              marginLeft: '8px'
+            }
+          }, 'Zod & ECharts 渲染就绪')
+        ]),
+        h('div', {
+          ref: chartRef,
+          style: {
+            width: '100%',
+            height: '240px',
+            marginTop: '12px'
+          }
+        })
+      ])
     }
   }
 })
