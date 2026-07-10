@@ -7,18 +7,18 @@
 ### 1. 顶栏品牌名称与切换按钮变更
 
 #### [MODIFY] [App.vue](file:///Users/neoyuan/Desktop/aoyi/yuan-ui/playground/App.vue)
-- 将顶栏品牌文字：
+- 将顶栏 brand-text 品牌文字：
   `Yuan UI 智能体工作台`
   修改为：
   `Yuan UI - 思维链与 Markdown 流式渲染`
-- 将切换按钮 `streamRenderer` 的文案（对标 Ant Design X 中的 `XMarkdown` 组件）：
+- 将切换按钮 `streamRenderer` 的文案（对标 Ant Design X 中的 `XMarkdown`，适配当前库的对应组件名）：
   `流式 VNode 渲染 (Renderer)`
   修改为：
-  `XMarkdown`
-- 将切换按钮 `trace` 的文案（对标 Ant Design X 中的 `ThoughtChain` 组件）：
+  `StreamMarkdownRenderer`
+- 将切换按钮 `trace` 的文案（对标 Ant Design X 中的 `ThoughtChain`，适配当前库的对应组件名）：
   `新版 AgentTrace (List)`
   修改为：
-  `ThoughtChain`
+  `AgentTrace`
 
 ### 2. 网页标题变更
 
@@ -32,8 +32,6 @@
 
 ### 手动验证
 - 运行本地 Vite 开发服务器，访问对应的页面（通常为 `http://localhost:5173/`）。
-- 确认浏览器标签页的 Title 显示为 `Yuan UI - 思维链与 Markdown 流式渲染`。
+- 确认浏览器标签页的 Title显示为 `Yuan UI - 思维链与 Markdown 流式渲染`。
 - 确认页面左上角品牌标志处文字显示为 `Yuan UI - 思维链与 Markdown 流式渲染`。
-- 确认顶栏右侧的两个 Tab 按钮文案分别显示为 `XMarkdown` 和 `ThoughtChain`。
-
-
+- 确认顶栏右侧的两个 Tab 按钮文案分别显示为 `StreamMarkdownRenderer` 和 `AgentTrace`。
