@@ -1,20 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Loading } from '../src/index'
 import { ShieldCheck, Terminal } from '@lucide/vue'
 import TraceDemo from './components/TraceDemo.vue'
 import RendererDemo from './components/RendererDemo.vue'
 
 const activeTab = ref<'trace' | 'streamRenderer'>('trace')
-const isSwitching = ref(false)
 
 function handleTabChange(tab: 'trace' | 'streamRenderer') {
-  if (isSwitching.value) return
-  isSwitching.value = true
-  setTimeout(() => {
-    activeTab.value = tab
-    isSwitching.value = false
-  }, 150) // 缩短加载延迟至 150ms，更加轻快
+  activeTab.value = tab
 }
 </script>
 
@@ -44,7 +37,6 @@ function handleTabChange(tab: 'trace' | 'streamRenderer') {
               type="button"
               class="tab-btn"
               @click="handleTabChange('streamRenderer')"
-              :disabled="isSwitching"
             >
               <Terminal class="tab-icon" />
               <span>流式 VNode 渲染 (Renderer)</span>
@@ -65,7 +57,6 @@ function handleTabChange(tab: 'trace' | 'streamRenderer') {
               type="button"
               class="tab-btn"
               @click="handleTabChange('trace')"
-              :disabled="isSwitching"
             >
               <ShieldCheck class="tab-icon" />
               <span>新版 AgentTrace (List)</span>
@@ -77,18 +68,17 @@ function handleTabChange(tab: 'trace' | 'streamRenderer') {
 
     <!-- 主工作区 Workspace -->
     <div class="workspace">
-      <!-- 极客美学 Loading 遮罩层 -->
-      <Transition name="fade">
-        <div v-if="isSwitching" class="workspace-loading-overlay">
-          <Loading size="sm" text="正在切换视图..." />
-        </div>
+      <!-- 动态视图切换，带渐隐渐现过渡 -->
+      <Transition name="tab-fade">
+        <KeepAlive>
+          <div v-if="activeTab === 'trace'" class="tab-view-container" key="trace">
+            <TraceDemo />
+          </div>
+          <div v-else class="tab-view-container" key="streamRenderer">
+            <RendererDemo />
+          </div>
+        </KeepAlive>
       </Transition>
-
-      <!-- 动态视图切换 -->
-      <KeepAlive>
-        <TraceDemo v-if="activeTab === 'trace'" />
-        <RendererDemo v-else />
-      </KeepAlive>
     </div>
   </div>
 </template>
