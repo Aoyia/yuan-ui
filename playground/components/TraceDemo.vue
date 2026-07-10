@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, computed } from 'vue'
 import {
-  AgentTrace,
-  AgentTraceTrigger,
-  AgentTraceContent,
-  AgentTraceList,
-  useAgentTraceStream
+  AsThoughtChain,
+  AsThoughtChainTrigger,
+  AsThoughtChainContent,
+  AsThoughtChainList,
+  useAsThoughtChainStream
 } from '../../src/index'
 import { Play, RotateCcw, Activity, FileText } from '@lucide/vue'
 import { useSimulator } from '../hooks/useSimulator'
@@ -13,8 +13,8 @@ import { staticSnippets } from '../snippets'
 
 const currentScenario = ref<'basic' | 'intermediate' | 'advanced'>('advanced')
 
-// 1. 初始化新版 AgentTrace 解析器
-const traceParser = useAgentTraceStream()
+// 1. 初始化新版 AsThoughtChain 解析器
+const traceParser = useAsThoughtChainStream()
 
 // 2. 引入模拟器 Engine 核心逻辑
 const {
@@ -163,9 +163,9 @@ const activeCodeTransformed = computed(() => {
     </div>
 
     <div class="document-container">
-      <!-- 1. 新版 AgentTrace 演示 -->
+      <!-- 1. 新版 AsThoughtChain 演示 -->
       <template v-if="traceParser.nodes.value.length > 0 || traceParser.isStreaming.value">
-        <AgentTrace
+        <AsThoughtChain
           v-model:open="traceOpen"
           :is-streaming="traceParser.isStreaming.value"
           :duration="traceParser.duration.value"
@@ -173,11 +173,11 @@ const activeCodeTransformed = computed(() => {
           @reject="onUserReject"
           @toggle-collapse="onUserToggleCollapse"
         >
-          <AgentTraceTrigger />
-          <AgentTraceContent>
-            <AgentTraceList :nodes="traceParser.nodes.value" />
-          </AgentTraceContent>
-        </AgentTrace>
+          <AsThoughtChainTrigger />
+          <AsThoughtChainContent>
+            <AsThoughtChainList :nodes="traceParser.nodes.value" />
+          </AsThoughtChainContent>
+        </AsThoughtChain>
       </template>
 
       <!-- 3. 空白就绪占位 -->

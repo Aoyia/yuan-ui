@@ -11,7 +11,7 @@ export function useSimulator(traceParser: any) {
   const streamText = ref('')
   const isMarkdownStreaming = ref(false)
   const notification = ref('')
-  const streamSpeed = ref(20) // 默认 20ms
+  const streamSpeed = ref(25) // 默认 25ms (对应 80 tokens/s)
   let markdownTimer = null
 
   function onUserApprove(nodeId: string) {

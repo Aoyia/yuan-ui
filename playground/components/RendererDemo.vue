@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onActivated, onMounted, watch, nextTick } from 'vue'
-import { StreamMarkdownRenderer } from '../../src/index'
+import { AsMarkdown } from '../../src/index'
 import { Play, RotateCcw, Activity, Palette, AlertCircle, Bot, Search, Terminal } from '@lucide/vue'
 import { useSimulator } from '../hooks/useSimulator'
 import DxfBarChart from './DxfBarChart.vue'
@@ -19,7 +19,7 @@ const {
 
 const allowedComponents = ref(['dxf-bar-chart'])
 
-const tokensPerSecond = ref(100)
+const tokensPerSecond = ref(80)
 watch(tokensPerSecond, (newVal) => {
   streamSpeed.value = Math.round(2000 / newVal)
 }, { immediate: true })
@@ -70,6 +70,74 @@ onActivated(() => {
       startMarkdownStream()
     }, 150)
   })
+})
+
+// ─── FPS 帧率计数器 ───────────────────────────────────────────────────────────
+const fps = ref(0)
+const fpsVisible = ref(false)
+let fpsRafId: number | null = null
+let fpsFrameCount = 0
+let fpsLastTime = 0
+let fpsHideTimer: ReturnType<typeof setTimeout> | null = null
+
+const fpsColor = computed(() => {
+  if (fps.value >= 50) return '#10b981' // 绿色：流畅
+  if (fps.value >= 30) return '#f59e0b' // 黄色：一般
+  return '#ef4444'                      // 红色：卡顿
+})
+
+function startFpsCounter() {
+  if (fpsRafId !== null) return
+  fpsFrameCount = 0
+  fpsLastTime = performance.now()
+  fpsVisible.value = true
+  if (fpsHideTimer !== null) {
+    clearTimeout(fpsHideTimer)
+    fpsHideTimer = null
+  }
+
+  const tick = (now: number) => {
+    fpsFrameCount++
+    const elapsed = now - fpsLastTime
+    if (elapsed >= 500) {
+      fps.value = Math.round((fpsFrameCount / elapsed) * 1000)
+      fpsFrameCount = 0
+      fpsLastTime = now
+    }
+    fpsRafId = requestAnimationFrame(tick)
+  }
+  fpsRafId = requestAnimationFrame(tick)
+}
+
+function stopFpsCounter() {
+  if (fpsRafId !== null) {
+    cancelAnimationFrame(fpsRafId)
+    fpsRafId = null
+  }
+  // 延迟 1 秒后隐藏，让用户看到最终帧率
+  fpsHideTimer = setTimeout(() => {
+    fpsVisible.value = false
+    fps.value = 0
+    fpsHideTimer = null
+  }, 1000)
+}
+
+watch(isMarkdownStreaming, (newVal) => {
+  if (newVal) {
+    startFpsCounter()
+  } else {
+    stopFpsCounter()
+  }
+}, { immediate: true })
+
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  if (fpsRafId !== null) {
+    cancelAnimationFrame(fpsRafId)
+  }
+  if (fpsHideTimer !== null) {
+    clearTimeout(fpsHideTimer)
+  }
 })
 </script>
 
@@ -195,7 +263,16 @@ onActivated(() => {
       </div>
 
       <div class="markdown-stream-container-card">
-        <StreamMarkdownRenderer
+        <!-- FPS 帧率角标 (Playground 特色，不污染组件) -->
+        <Transition name="yuan-fps-fade">
+          <div v-if="fpsVisible" class="yuan-fps-badge" :style="{ '--fps-color': fpsColor }">
+            <span class="yuan-fps-dot"></span>
+            <span class="yuan-fps-value">{{ fps }}</span>
+            <span class="yuan-fps-unit">fps</span>
+          </div>
+        </Transition>
+
+        <AsMarkdown
           :text="streamText"
           :is-streaming="isMarkdownStreaming"
           :allowed-components="allowedComponents"
@@ -222,3 +299,74 @@ onActivated(() => {
     </div>
   </main>
 </template>
+
+<style scoped>
+.markdown-stream-container-card {
+  position: relative; /* 确保 FPS 限制在卡片内部绝对定位 */
+}
+
+/* ── FPS 帧率角标 ──────────────────────────────────────────────── */
+.yuan-fps-badge {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 6px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  font-family: var(--yuan-font-mono, 'SFMono-Regular', Menlo, monospace);
+  font-size: 11px;
+  line-height: 1;
+  color: #e5e7eb;
+  z-index: 10;
+  pointer-events: none;
+  user-select: none;
+}
+
+.yuan-fps-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fps-color, #10b981);
+  box-shadow: 0 0 4px var(--fps-color, #10b981);
+  animation: yuan-fps-pulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.yuan-fps-value {
+  font-weight: 700;
+  color: var(--fps-color, #10b981);
+  min-width: 2ch;
+  text-align: right;
+}
+
+.yuan-fps-unit {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+@keyframes yuan-fps-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.yuan-fps-fade-enter-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.yuan-fps-fade-leave-active {
+  transition: opacity 0.6s ease, transform 0.4s ease;
+}
+.yuan-fps-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.92);
+}
+.yuan-fps-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-2px) scale(0.95);
+}
+</style>

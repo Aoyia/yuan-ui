@@ -17,12 +17,12 @@ function handleTabChange(tab: 'trace' | 'streamRenderer') {
     <header class="demo-header">
       <div class="header-brand">
         <span class="brand-dot" />
-        <span class="brand-text">Yuan UI 智能体工作台</span>
+        <span class="brand-text">AiStream-vue - 思维链与 Markdown 流式渲染</span>
       </div>
       
       <div class="header-actions">
         <div class="nav-tabs">
-          <!-- 流式 VNode 渲染 (Renderer) -->
+          <!-- AsMarkdown -->
           <button
             type="button"
             class="tab-btn"
@@ -30,9 +30,9 @@ function handleTabChange(tab: 'trace' | 'streamRenderer') {
             @click="handleTabChange('streamRenderer')"
           >
             <Terminal class="tab-icon" />
-            <span>流式 VNode 渲染 (Renderer)</span>
+            <span>AsMarkdown</span>
           </button>
-          <!-- 新版 AgentTrace (List) -->
+          <!-- AsThoughtChain -->
           <button
             type="button"
             class="tab-btn"
@@ -40,7 +40,7 @@ function handleTabChange(tab: 'trace' | 'streamRenderer') {
             @click="handleTabChange('trace')"
           >
             <ShieldCheck class="tab-icon" />
-            <span>新版 AgentTrace (List)</span>
+            <span>AsThoughtChain</span>
           </button>
         </div>
       </div>
