@@ -847,3 +847,89 @@ button {
 .fade-leave-to {
   opacity: 0;
 }
+
+/* ========================================== */
+/* Token 速度控制滑块样式                     */
+/* ========================================== */
+.speed-value-display {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--yuan-primary);
+  font-family: ui-monospace, monospace;
+}
+
+.speed-slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: rgba(15, 23, 42, 0.2);
+  border: 1px solid var(--yuan-border-light);
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+}
+
+.dark .speed-slider-container {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.speed-slider-bar {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--yuan-border-light);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 6px 0;
+}
+
+.speed-slider-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--yuan-primary);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+  transition: all 0.15s ease;
+}
+
+.speed-slider-bar::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  background: var(--yuan-primary-hover);
+}
+
+.speed-slider-bar:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.speed-presets-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.speed-presets-labels span {
+  font-size: 0.65rem;
+  color: var(--yuan-text-tertiary);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.speed-presets-labels span:hover:not(.active) {
+  color: var(--yuan-text-primary);
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.speed-presets-labels span.active {
+  color: var(--yuan-primary);
+  font-weight: 600;
+  background: rgba(139, 92, 246, 0.1);
+}

@@ -11,6 +11,7 @@ const {
   streamText,
   isMarkdownStreaming,
   notification,
+  streamSpeed,
   startMarkdownStream,
   resetMarkdownStream,
   handleFeedback
@@ -67,6 +68,31 @@ onActivated(() => {
           <option value="invalid-zod">⚠️ Zod 校验失败（触发错误面板与自我纠错）</option>
           <option value="malicious-inject">🚫 恶意非法标签注入（VNode 级沙箱拦截）</option>
         </select>
+      </div>
+
+      <!-- Token 速度调节面板 -->
+      <div class="control-group-item">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+          <label class="control-label-text">Token 渲染时延:</label>
+          <span class="speed-value-display">{{ streamSpeed }}ms/chunk</span>
+        </div>
+        <div class="speed-slider-container">
+          <input 
+            type="range" 
+            min="2" 
+            max="150" 
+            step="1"
+            v-model.number="streamSpeed"
+            :disabled="isMarkdownStreaming"
+            class="speed-slider-bar"
+          />
+          <div class="speed-presets-labels">
+            <span @click="!isMarkdownStreaming && (streamSpeed = 5)" :class="{ active: streamSpeed <= 10 }">🚀 极速</span>
+            <span @click="!isMarkdownStreaming && (streamSpeed = 20)" :class="{ active: streamSpeed > 10 && streamSpeed <= 35 }">⚡ 飞快</span>
+            <span @click="!isMarkdownStreaming && (streamSpeed = 50)" :class="{ active: streamSpeed > 35 && streamSpeed <= 75 }">🚶 正常</span>
+            <span @click="!isMarkdownStreaming && (streamSpeed = 120)" :class="{ active: streamSpeed > 75 }">🐌 较慢</span>
+          </div>
+        </div>
       </div>
 
       <div class="control-buttons-row">

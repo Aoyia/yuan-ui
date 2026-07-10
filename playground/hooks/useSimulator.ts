@@ -11,7 +11,8 @@ export function useSimulator(traceParser: any) {
   const streamText = ref('')
   const isMarkdownStreaming = ref(false)
   const notification = ref('')
-  let markdownTimer: any = null
+  const streamSpeed = ref(20) // 默认 20ms
+  let markdownTimer = null
 
   function onUserApprove(nodeId: string) {
     if (pendingApproval.value && pendingApproval.value.id === nodeId) {
@@ -105,11 +106,13 @@ export function useSimulator(traceParser: any) {
         streamText.value += fullText.slice(index, index + 4)
         index += 4
       } else {
-        clearInterval(markdownTimer)
+        if (markdownTimer) {
+          clearInterval(markdownTimer)
+        }
         streamText.value = fullText
         isMarkdownStreaming.value = false
       }
-    }, 20)
+    }, streamSpeed.value)
   }
 
   function resetMarkdownStream() {
@@ -144,6 +147,7 @@ export function useSimulator(traceParser: any) {
     streamText,
     isMarkdownStreaming,
     notification,
+    streamSpeed,
     onUserApprove,
     onUserReject,
     onUserToggleCollapse,
