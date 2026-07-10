@@ -182,7 +182,7 @@ const handleResize = () => {
   <div v-else class="custom-chart-container">
     <div class="chart-header" style="display: flex; align-items: center; gap: 6px;">
       <BarChart3 style="width: 14px; height: 14px; color: var(--yuan-primary);" />
-      <span>ECharts AI 柱状图组件 (DxfBarChart)</span>
+      <span>ECharts AI 柱状图组件 (DfBarChart)</span>
       <span
         style="
           font-size: 11px;

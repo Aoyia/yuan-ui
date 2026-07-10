@@ -258,13 +258,13 @@ git commit -m "feat: add markdown autocompletion parser and tests"
     expect(nodesTree.value.length).toBeGreaterThan(0);
     expect(nodesTree.value[0]).toEqual({
       type: 'element',
-      tag: 'dxf-paragraph',
+      tag: 'df-paragraph',
       props: {},
       children: [
         { type: 'text', content: 'Hello ' },
         {
           type: 'element',
-          tag: 'dxf-strong',
+          tag: 'df-strong',
           props: {},
           children: [
             { type: 'text', content: 'bold text' }
@@ -285,7 +285,7 @@ git commit -m "feat: add markdown autocompletion parser and tests"
     expect(nodesTree.value.length).toBeGreaterThan(0);
     expect(nodesTree.value[0]).toEqual({
       type: 'element',
-      tag: 'dxf-paragraph',
+      tag: 'df-paragraph',
       props: {},
       children: [
         { type: 'text', content: 'Hello **bold text' }

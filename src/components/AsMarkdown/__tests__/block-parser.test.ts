@@ -18,12 +18,12 @@ describe('splitIntoLogicalBlocks', () => {
     ]);
   });
 
-  it('should split dxf- components into individual blocks', () => {
-    const input = 'Here is chart:\n<dxf-bar-chart dataset="1"></dxf-bar-chart>\nAnd this is text';
+  it('should split df- components into individual blocks', () => {
+    const input = 'Here is chart:\n<df-bar-chart dataset="1"></df-bar-chart>\nAnd this is text';
     const result = splitIntoLogicalBlocks(input);
     expect(result).toEqual([
       'Here is chart:',
-      '<dxf-bar-chart dataset="1"></dxf-bar-chart>',
+      '<df-bar-chart dataset="1"></df-bar-chart>',
       'And this is text'
     ]);
   });

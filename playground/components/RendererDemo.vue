@@ -3,7 +3,7 @@ import { ref, computed, onActivated, onMounted, watch, nextTick } from 'vue'
 import { AsMarkdown } from '../../src/index'
 import { Play, RotateCcw, Activity, Palette, AlertCircle, Bot, Search, Terminal } from '@lucide/vue'
 import { useSimulator } from '../hooks/useSimulator'
-import DxfBarChart from './DxfBarChart.vue'
+import DfBarChart from './DfBarChart.vue'
 
 // 1. 引入模拟器 Engine 核心 logic
 const {
@@ -17,7 +17,7 @@ const {
   handleFeedback
 } = useSimulator(null)
 
-const allowedComponents = ref(['dxf-bar-chart'])
+const allowedComponents = ref(['df-bar-chart'])
 
 const tokensPerSecond = ref(80)
 watch(tokensPerSecond, (newVal) => {
@@ -37,10 +37,10 @@ const parsedComponents = computed(() => {
   const list: { tag: string; content: string; allowed: boolean }[] = []
   
   // 简单匹配标签
-  const regex = /<dxf-([a-zA-Z0-9_-]+)([^>]*)/g
+  const regex = /<df-([a-zA-Z0-9_-]+)([^>]*)/g
   let match
   while ((match = regex.exec(streamText.value)) !== null) {
-    const tag = `dxf-${match[1]}`
+    const tag = `df-${match[1]}`
     const isAllowed = allowedComponents.value.includes(tag)
     list.push({
       tag,
@@ -234,7 +234,7 @@ onUnmounted(() => {
         </div>
         <div class="ast-list-box">
           <div v-if="parsedComponents.length === 0" class="ast-empty-msg">
-            暂未解析到以 &lt;dxf- 开头的 HTML 标签 Token
+            暂未解析到以 &lt;df- 开头的 HTML 标签 Token
           </div>
           <div v-else v-for="(token, index) in parsedComponents" :key="index" class="ast-item-card">
             <div class="ast-item-info">
@@ -276,7 +276,7 @@ onUnmounted(() => {
           :text="streamText"
           :is-streaming="isMarkdownStreaming"
           :allowed-components="allowedComponents"
-          :custom-components="{ 'dxf-bar-chart': DxfBarChart }"
+          :custom-components="{ 'df-bar-chart': DfBarChart }"
           scroll-container=".document-container"
           @feedback="handleFeedback"
         />

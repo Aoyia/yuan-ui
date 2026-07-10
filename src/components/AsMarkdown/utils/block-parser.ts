@@ -13,7 +13,7 @@ export function splitIntoLogicalBlocks(text: string): string[] {
       inCodeBlock = !inCodeBlock;
     }
 
-    if (!inCodeBlock && (trimmed.startsWith('<dxf-') || trimmed.startsWith('</dxf-'))) {
+    if (!inCodeBlock && (trimmed.startsWith('<df-') || trimmed.startsWith('</df-'))) {
       // 1. 如果之前已经有累积的内容，先将之前的内容打包为一个 block
       if (currentBlock.length > 0) {
         blocks.push(currentBlock.join('\n'));

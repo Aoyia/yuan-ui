@@ -67,7 +67,7 @@ sequenceDiagram
 
 ### 3.1 启发式尾部修剪 (Heuristic Tailoring)
 **逻辑说明**：如果流式文本正在输出中，需要在编译前对文本尾部进行正则扫描。
-- **HTML 标签裁剪**：检测尾部是否包含 `<dxf-` 但未闭合的半残标签，若有，将其截断至该标签前。
+- **HTML 标签裁剪**：检测尾部是否包含 `<df-` 但未闭合的半残标签，若有，将其截断至该标签前。
 - **引用符裁剪**：若以 `\n>` 或 `\n> ` 结尾，临时切掉该末尾字符。
 - **无序列表符裁剪**：若以 `\n-` 或 `\n- `、`\n*`、`\n* ` 结尾，临时切掉该末尾字符。
 - **代码块反引号裁剪**：若尾部包含连续的 1 个或 2 个 \x60（反引号），临时裁剪。
@@ -78,7 +78,7 @@ function tailorStreamText(text: string, isStreaming: boolean): string {
   if (!isStreaming || !text) return text
   
   // 1. 过滤行尾残欠的 HTML 自定义标签声明
-  const tagIndex = text.lastIndexOf('<dxf-')
+  const tagIndex = text.lastIndexOf('<df-')
   if (tagIndex !== -1) {
     const remaining = text.slice(tagIndex)
     if (!remaining.includes('>')) {
@@ -117,7 +117,7 @@ function tailorStreamText(text: string, isStreaming: boolean): string {
 
 ### 3.2 段落级 WeakMap AST 缓存与切块
 **逻辑说明**：为了防止文本变长时 `markdown-it` 全量解析导致的 O(N) 级别计算阻塞，需要进行段落切割。
-1. **段落分割**：将文本按行分割，如果在代码块外部且遇到空行，或者是一行独立的 `<dxf-` 标签，则将其判定为一个独立的段落块。
+1. **段落分割**：将文本按行分割，如果在代码块外部且遇到空行，或者是一行独立的 `<df-` 标签，则将其判定为一个独立的段落块。
 2. **Active 态判断**：当且仅当处于流式传输中，且是最后一个段落时，认为它处于 Active 态（不缓存，每次实时编译）。
 3. **WeakMap 键引用**：由于 WeakMap 的键必须是对象，我们需要在内存中维护一个段落对象数组：
    `let paragraphObjects: { text: string }[] = []`
@@ -126,16 +126,16 @@ function tailorStreamText(text: string, isStreaming: boolean): string {
 ### 3.3 扁平 Tokens 树形重组化 (Treeify)
 Markdown-it 编译输出的 Tokens 是扁平的（含有 `nesting: 1` 开启标签，`nesting: -1` 关闭标签）。
 我们需要编写一个 `treeifyTokens` 递归函数，将其转化为带有 `children` 的 VNode 节点树，供 Vue 渲染器使用：
-- **普通元素 (nesting === 1)**：开启一个自定义的标签组件，例如将 `p` 映射为 `dxf-paragraph`，将 `h1` 映射为 `dxf-heading` (带 level props)，并压入解析栈。
+- **普通元素 (nesting === 1)**：开启一个自定义的标签组件，例如将 `p` 映射为 `df-paragraph`，将 `h1` 映射为 `df-heading` (带 level props)，并压入解析栈。
 - **关闭元素 (nesting === -1)**：将解析栈出栈。
-- **自定义组件标签 (e.g. `<dxf-bar-chart>`)**：解析出属性键值对（例如用正则获取 `dataset` 属性的 JSON 串），作为叶子节点直接插入当前栈顶父节点的 `children` 中，不需要压栈。
-- **代码块 (fence)**：转换为 `dxf-code-block` 节点类型。
-- **行内代码 (code_inline)**：转换为 `dxf-inline-code` 节点类型。
+- **自定义组件标签 (e.g. `<df-bar-chart>`)**：解析出属性键值对（例如用正则获取 `dataset` 属性的 JSON 串），作为叶子节点直接插入当前栈顶父节点的 `children` 中，不需要压栈。
+- **代码块 (fence)**：转换为 `df-code-block` 节点类型。
+- **行内代码 (code_inline)**：转换为 `df-inline-code` 节点类型。
 
 ### 3.4 纯 VNode 递归映射渲染器
 在 Vue 组件内层，编写一个函数式或微型 VNode 渲染组件，使用 Vue 3 原生的 `h()` 函数：
 - `DxfText` 必须使用函数式组件：`() => props.content`。Vue 3 会将其解析为原生文本节点 `TextNode`。
-- 其他 VNode（`dxf-paragraph`、`dxf-heading` 等）可以通过对应的封装组件或 HTML 原生元素渲染，使用 Vue 的插槽机制递归传递 `children` 渲染：
+- 其他 VNode（`df-paragraph`、`df-heading` 等）可以通过对应的封装组件或 HTML 原生元素渲染，使用 Vue 的插槽机制递归传递 `children` 渲染：
   ```typescript
   h(componentClass, node.props || {}, {
     default: () => h(VNodeMarkdownRenderer, { nodes: node.children })
@@ -204,7 +204,7 @@ export function useStreamRenderer(options?: UseStreamRendererOptions): {
 |---|---|---|---|---|
 | `text` | `string` | 是 | `""` | 实时传入的 Markdown 文本或流式文本段 |
 | `isStreaming` | `boolean` | 否 | `false` | 是否处于流式生成状态（激活尾部修剪） |
-| `allowedComponents` | `string[]` | 否 | `['dxf-bar-chart']` | 自定义组件挂载白名单，不在白名单的标签会被降级渲染 |
+| `allowedComponents` | `string[]` | 否 | `['df-bar-chart']` | 自定义组件挂载白名单，不在白名单的标签会被降级渲染 |
 | `enableCache` | `boolean` | 否 | `true` | 是否启用段落级 WeakMap AST 缓存 |
 | `enableTailoring` | `boolean` | 否 | `true` | 是否启用启发式尾部防闪烁修剪 |
 
@@ -232,8 +232,8 @@ export function useStreamRenderer(options?: UseStreamRendererOptions): {
 ### 任务 2: 实现 AST Token 编译与树形化 (Treeify)
 1. **创建文件**：`src/components/StreamMarkdownRenderer/utils/treeify.ts`
    - 实现 `treeifyTokens(tokens)`。
-   - 特别处理：`<dxf-bar-chart>` 属性参数解析，将单引号/双引号中的键值正确转换为 props 对象。
-   - 特别处理：`fence` 代码块转换为统一的 `dxf-code-block` 结构。
+   - 特别处理：`<df-bar-chart>` 属性参数解析，将单引号/双引号中的键值正确转换为 props 对象。
+   - 特别处理：`fence` 代码块转换为统一的 `df-code-block` 结构。
    - **TDD 单元测试验证**：输入模拟的 markdown-it tokens 数组，确认输出的树形结构能够准确表达层级嵌套，且叶子节点属性解析无误。
 
 ### 任务 3: 构建 useStreamRenderer 核心 Composable

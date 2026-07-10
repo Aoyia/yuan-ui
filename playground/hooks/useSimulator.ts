@@ -131,7 +131,7 @@ export function useSimulator(traceParser: any) {
     streamText.value = ''
 
     setTimeout(() => {
-      streamText.value = `抱歉，刚才 values 输出的参数 structure 存在校验问题（Zod 报错已捕获回喂）。我已经对其进行了修正，已重新输出符合 Schema 规格的数据：\n\n<dxf-bar-chart dataset='{"title":"季度已修正数据（自我纠错成功）","values":[95, 140, 185]}'></dxf-bar-chart>\n\n数据现在已经过 Zod Schema 规则的强校对，原生 Vue 组件已被安全挂载上屏。`
+      streamText.value = `抱歉，刚才 values 输出的参数 structure 存在校验问题（Zod 报错已捕获回喂）。我已经对其进行了修正，已重新输出符合 Schema 规格的数据：\n\n<df-bar-chart dataset='{"title":"季度已修正数据（自我纠错成功）","values":[95, 140, 185]}'></df-bar-chart>\n\n数据现在已经过 Zod Schema 规则的强校对，原生 Vue 组件已被安全挂载上屏。`
       isMarkdownStreaming.value = false
       notification.value = "✅ 大模型自我纠错成功！新数据已完美渲染。"
       setTimeout(() => {

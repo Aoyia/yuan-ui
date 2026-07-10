@@ -19,12 +19,12 @@ describe('VNodeMarkdownRenderer Component', () => {
     const nodes: RendererNode[] = [
       {
         type: 'element',
-        tag: 'dxf-paragraph',
+        tag: 'df-paragraph',
         children: [
           { type: 'text', content: 'Normal text ' },
           {
             type: 'element',
-            tag: 'dxf-strong',
+            tag: 'df-strong',
             children: [{ type: 'text', content: 'bold text' }]
           }
         ]
@@ -35,9 +35,9 @@ describe('VNodeMarkdownRenderer Component', () => {
     });
     const p = wrapper.find('p');
     expect(p.exists()).toBe(true);
-    expect(p.classes()).toContain('dxf-paragraph');
+    expect(p.classes()).toContain('df-paragraph');
     expect(p.find('strong').exists()).toBe(true);
-    expect(p.find('strong').classes()).toContain('dxf-strong');
+    expect(p.find('strong').classes()).toContain('df-strong');
     expect(wrapper.text()).toBe('Normal text bold text');
   });
 
@@ -45,16 +45,16 @@ describe('VNodeMarkdownRenderer Component', () => {
     const nodes: RendererNode[] = [
       {
         type: 'component',
-        tag: 'dxf-danger-terminal',
+        tag: 'df-danger-terminal',
         props: { command: 'rm -rf /' }
       }
     ];
     const wrapper = mount(VNodeMarkdownRenderer, {
       props: {
         nodes,
-        allowedComponents: ['dxf-bar-chart']
+        allowedComponents: ['df-bar-chart']
       }
     });
-    expect(wrapper.text()).toContain('发现非白名单未授权组件: <dxf-danger-terminal>');
+    expect(wrapper.text()).toContain('发现非白名单未授权组件: <df-danger-terminal>');
   });
 });

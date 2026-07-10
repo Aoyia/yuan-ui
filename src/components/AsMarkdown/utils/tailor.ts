@@ -1,8 +1,8 @@
 export function tailorStreamText(text: string, isStreaming: boolean): string {
   if (!isStreaming || !text) return text;
 
-  // 1. 过滤行尾残欠的 HTML 自定义标签声明 (如 '<dxf-' 还没有输出到 '>')
-  const tagIndex = text.lastIndexOf('<dxf-');
+  // 1. 过滤行尾残欠的 HTML 自定义标签声明 (如 '<df-' 还没有输出到 '>')
+  const tagIndex = text.lastIndexOf('<df-');
   if (tagIndex !== -1) {
     const remaining = text.slice(tagIndex);
     if (!remaining.includes('>')) {

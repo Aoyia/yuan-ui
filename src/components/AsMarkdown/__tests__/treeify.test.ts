@@ -16,14 +16,14 @@ describe('treeifyTokens', () => {
     const tokens = [
       {
         type: 'html_inline',
-        content: '<dxf-bar-chart dataset=\'{"title":"chart","values":[1,2]}\'></dxf-bar-chart>'
+        content: '<df-bar-chart dataset=\'{"title":"chart","values":[1,2]}\'></df-bar-chart>'
       }
     ];
     const nodes = treeifyTokens(tokens);
     expect(nodes).toEqual([
       {
         type: 'component',
-        tag: 'dxf-bar-chart',
+        tag: 'df-bar-chart',
         props: {
           dataset: '{"title":"chart","values":[1,2]}'
         }
@@ -31,7 +31,7 @@ describe('treeifyTokens', () => {
     ]);
   });
 
-  it('should transform code block fence to dxf-code-block component', () => {
+  it('should transform code block fence to df-code-block component', () => {
     const tokens = [
       {
         type: 'fence',
@@ -44,7 +44,7 @@ describe('treeifyTokens', () => {
     expect(nodes).toEqual([
       {
         type: 'component',
-        tag: 'dxf-code-block',
+        tag: 'df-code-block',
         props: {
           code: 'const a = 1;',
           lang: 'typescript'
@@ -53,7 +53,7 @@ describe('treeifyTokens', () => {
     ]);
   });
 
-  it('should transform inline code to dxf-inline-code component', () => {
+  it('should transform inline code to df-inline-code component', () => {
     const tokens = [
       {
         type: 'code_inline',
@@ -64,7 +64,7 @@ describe('treeifyTokens', () => {
     expect(nodes).toEqual([
       {
         type: 'component',
-        tag: 'dxf-inline-code',
+        tag: 'df-inline-code',
         props: {
           content: 'const b = 2;'
         }
@@ -96,7 +96,7 @@ describe('treeifyTokens', () => {
     expect(nodes).toEqual([
       {
         type: 'element',
-        tag: 'dxf-paragraph',
+        tag: 'df-paragraph',
         props: {},
         children: [
           { type: 'text', content: 'inner text' }

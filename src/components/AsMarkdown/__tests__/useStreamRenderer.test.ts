@@ -11,7 +11,7 @@ describe('useStreamRenderer Composable', () => {
     expect(nodesTree.value.length).toBeGreaterThan(0);
     expect(nodesTree.value[0]).toEqual({
       type: 'element',
-      tag: 'dxf-paragraph',
+      tag: 'df-paragraph',
       props: {},
       children: [
         { type: 'text', content: 'Hello Paragraph' }
@@ -31,7 +31,7 @@ describe('useStreamRenderer Composable', () => {
     expect(nodesTree.value.length).toBeGreaterThan(0);
     expect(nodesTree.value[0]).toEqual({
       type: 'element',
-      tag: 'dxf-paragraph',
+      tag: 'df-paragraph',
       props: {},
       isActive: true,
       children: [
@@ -62,14 +62,14 @@ describe('useStreamRenderer Composable', () => {
     expect(nodesTree.value.length).toBeGreaterThan(0);
     expect(nodesTree.value[0]).toEqual({
       type: 'element',
-      tag: 'dxf-paragraph',
+      tag: 'df-paragraph',
       props: {},
       isActive: true,
       children: [
         { type: 'text', content: 'Hello ' },
         {
           type: 'element',
-          tag: 'dxf-strong',
+          tag: 'df-strong',
           props: {},
           children: [
             { type: 'text', content: 'bold text' }
@@ -91,7 +91,7 @@ describe('useStreamRenderer Composable', () => {
     expect(nodesTree.value.length).toBeGreaterThan(0);
     expect(nodesTree.value[0]).toEqual({
       type: 'element',
-      tag: 'dxf-paragraph',
+      tag: 'df-paragraph',
       props: {},
       isActive: true,
       children: [

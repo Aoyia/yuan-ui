@@ -8,10 +8,10 @@ describe('tailorStreamText', () => {
   });
 
   it('should trim incomplete HTML tags', () => {
-    const input1 = 'Here is a chart: <dxf-bar-chart dataset="123"';
+    const input1 = 'Here is a chart: <df-bar-chart dataset="123"';
     expect(tailorStreamText(input1, true)).toBe('Here is a chart: ');
 
-    const input2 = 'Here is a chart: <dxf-bar-chart dataset="123">';
+    const input2 = 'Here is a chart: <df-bar-chart dataset="123">';
     expect(tailorStreamText(input2, true)).toBe(input2);
   });
 

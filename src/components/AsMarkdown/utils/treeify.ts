@@ -4,10 +4,10 @@ import type { RendererNode, RendererElementNode } from '../types';
 export function parseLeafToken(token: any): RendererNode {
   const content = token.content ? token.content.trim() : '';
 
-  // 解析以 <dxf- 开头的开标签，例如 <dxf-bar-chart dataset='...'> 或 <dxf-bar-chart dataset='...' />
-  const match = content.match(/^<dxf-([a-zA-Z0-9_-]+)([^>]*)/);
+  // 解析以 <df- 开头的开标签，例如 <df-bar-chart dataset='...'> 或 <df-bar-chart dataset='...' />
+  const match = content.match(/^<df-([a-zA-Z0-9_-]+)([^>]*)/);
   if (match) {
-    const tag = `dxf-${match[1]}`;
+    const tag = `df-${match[1]}`;
     const attrStr = match[2];
     const props: Record<string, any> = {};
 
@@ -42,13 +42,13 @@ export function treeifyTokens(tokens: any[]): RendererNode[] {
 
     const content = token.content ? token.content.trim() : '';
 
-    // 1. 前置过滤自定义闭标签 (例如 </dxf-bar-chart>)：因为开标签已包含全部属性且已渲染，闭标签直接忽略防重叠
-    if ((token.type === 'html_inline' || token.type === 'html_block') && content.startsWith('</dxf-')) {
+    // 1. 前置过滤自定义闭标签 (例如 </df-bar-chart>)：因为开标签已包含全部属性且已渲染，闭标签直接忽略防重叠
+    if ((token.type === 'html_inline' || token.type === 'html_block') && content.startsWith('</df-')) {
       return;
     }
 
-    // 2. 前置处理自定义开标签 (例如 <dxf-bar-chart dataset='...'>)
-    if ((token.type === 'html_inline' || token.type === 'html_block') && content.startsWith('<dxf-')) {
+    // 2. 前置处理自定义开标签 (例如 <df-bar-chart dataset='...'>)
+    if ((token.type === 'html_inline' || token.type === 'html_block') && content.startsWith('<df-')) {
       const leaf = parseLeafToken(token);
       if (leaf) {
         currentParent.children.push(leaf);
@@ -56,11 +56,11 @@ export function treeifyTokens(tokens: any[]): RendererNode[] {
       return; // 自定义组件作为原子叶子节点，不需要压栈，直接返回
     }
 
-    // 3. 处理大代码块 (fence 或是 code_block) -> 直接包装为 dxf-code-block 组件
+    // 3. 处理大代码块 (fence 或是 code_block) -> 直接包装为 df-code-block 组件
     if (token.type === 'fence' || token.type === 'code_block') {
       const leaf = {
         type: 'component' as const,
-        tag: 'dxf-code-block',
+        tag: 'df-code-block',
         props: {
           code: token.content,
           lang: token.info || 'text'
@@ -70,11 +70,11 @@ export function treeifyTokens(tokens: any[]): RendererNode[] {
       return;
     }
 
-    // 4. 行内代码 code_inline -> 映射为 dxf-inline-code 组件
+    // 4. 行内代码 code_inline -> 映射为 df-inline-code 组件
     if (token.type === 'code_inline') {
       const leaf = {
         type: 'component' as const,
-        tag: 'dxf-inline-code',
+        tag: 'df-inline-code',
         props: { content: token.content }
       };
       currentParent.children.push(leaf);
@@ -87,12 +87,12 @@ export function treeifyTokens(tokens: any[]): RendererNode[] {
       const props: Record<string, any> = {};
 
       if (token.tag === 'p') {
-        compTag = 'dxf-paragraph';
+        compTag = 'df-paragraph';
       } else if (token.tag.match(/^h[1-6]$/)) {
-        compTag = 'dxf-heading';
+        compTag = 'df-heading';
         props.level = parseInt(token.tag.slice(1));
       } else if (token.tag === 'strong') {
-        compTag = 'dxf-strong';
+        compTag = 'df-strong';
       }
 
       const node: RendererElementNode = {

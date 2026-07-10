@@ -71,7 +71,7 @@ const DxfText = {
 const DxfParagraph = defineComponent({
   name: 'DxfParagraph',
   setup(_, { slots }) {
-    return () => h('p', { class: 'dxf-paragraph' }, slots.default ? slots.default() : []);
+    return () => h('p', { class: 'df-paragraph' }, slots.default ? slots.default() : []);
   }
 });
 
@@ -82,14 +82,14 @@ const DxfHeading = defineComponent({
   },
   setup(props, { slots }) {
     const tag = `h${props.level}`;
-    return () => h(tag, { class: `dxf-heading dxf-${tag}` }, slots.default ? slots.default() : []);
+    return () => h(tag, { class: `df-heading df-${tag}` }, slots.default ? slots.default() : []);
   }
 });
 
 const DxfStrong = defineComponent({
   name: 'DxfStrong',
   setup(_, { slots }) {
-    return () => h('strong', { class: 'dxf-strong' }, slots.default ? slots.default() : []);
+    return () => h('strong', { class: 'df-strong' }, slots.default ? slots.default() : []);
   }
 });
 
@@ -99,7 +99,7 @@ const DxfInlineCode = defineComponent({
     content: { type: String, required: true }
   },
   setup(props) {
-    return () => h('code', { class: 'dxf-inline-code' }, props.content);
+    return () => h('code', { class: 'df-inline-code' }, props.content);
   }
 });
 
@@ -126,21 +126,21 @@ const DxfCodeBlock = defineComponent({
     return () => {
       // 复制按钮
       const copyBtn = h('button', {
-        class: ['dxf-code-block-copy', copied.value ? 'copied' : ''],
+        class: ['df-code-block-copy', copied.value ? 'copied' : ''],
         onClick: handleCopy
       }, copied.value ? '✅ 已复制！' : '📋 复制代码');
 
       // 代码块头部面板
-      const header = h('div', { class: 'dxf-code-block-header' }, [
-        h('span', { class: 'dxf-code-block-lang' }, props.lang),
+      const header = h('div', { class: 'df-code-block-header' }, [
+        h('span', { class: 'df-code-block-lang' }, props.lang),
         copyBtn
       ]);
 
       // 代码预设与高亮内容
       const highlighted = highlightCode(props.code, props.lang);
-      const pre = h('pre', { class: 'dxf-code-block-pre' }, [highlighted]);
+      const pre = h('pre', { class: 'df-code-block-pre' }, [highlighted]);
 
-      return h('div', { class: 'dxf-code-block' }, [header, pre]);
+      return h('div', { class: 'df-code-block' }, [header, pre]);
     };
   }
 });
@@ -154,7 +154,7 @@ export const VNodeMarkdownRenderer = defineComponent({
     },
     allowedComponents: {
       type: Array as () => string[],
-      default: () => ['dxf-bar-chart']
+      default: () => ['df-bar-chart']
     },
     customComponents: {
       type: Object as () => Record<string, Component>,
@@ -181,10 +181,10 @@ export const VNodeMarkdownRenderer = defineComponent({
           const tag = node.tag;
 
           // 内置的代码块与行内代码组件，直接放行
-          if (tag === 'dxf-inline-code') {
+          if (tag === 'df-inline-code') {
             return h(DxfInlineCode, { content: node.props.content });
           }
-          if (tag === 'dxf-code-block') {
+          if (tag === 'df-code-block') {
             return h(DxfCodeBlock, { code: node.props.code, lang: node.props.lang });
           }
 
@@ -220,11 +220,11 @@ export const VNodeMarkdownRenderer = defineComponent({
           const tag = node.tag;
           let componentClass: any = null;
 
-          if (tag === 'dxf-paragraph') {
+          if (tag === 'df-paragraph') {
             componentClass = DxfParagraph;
-          } else if (tag === 'dxf-heading') {
+          } else if (tag === 'df-heading') {
             componentClass = DxfHeading;
-          } else if (tag === 'dxf-strong') {
+          } else if (tag === 'df-strong') {
             componentClass = DxfStrong;
           }
 
@@ -234,7 +234,7 @@ export const VNodeMarkdownRenderer = defineComponent({
             return h(componentClass, 
               {
                 ...(node.props || {}),
-                class: [node.props?.class, node.isActive && 'dxf-block-enter']
+                class: [node.props?.class, node.isActive && 'df-block-enter']
               },
               {
                 default: () => h(VNodeMarkdownRenderer as any, {
@@ -252,7 +252,7 @@ export const VNodeMarkdownRenderer = defineComponent({
             return h(node.tag, 
               {
                 ...(node.props || {}),
-                class: [node.props?.class, node.isActive && 'dxf-block-enter']
+                class: [node.props?.class, node.isActive && 'df-block-enter']
               },
               [
                 h(VNodeMarkdownRenderer as any, {
