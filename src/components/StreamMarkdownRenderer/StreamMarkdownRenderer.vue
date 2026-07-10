@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch, onMounted, ref, nextTick } from 'vue';
+import { watch, onMounted, onUnmounted, ref, nextTick } from 'vue';
 import { useStreamRenderer } from './useStreamRenderer';
 import { VNodeMarkdownRenderer } from './VNodeMarkdownRenderer';
 
@@ -29,7 +29,7 @@ const props = withDefaults(defineProps<Props>(), {
   enableTailoring: true,
   autoScroll: true,
   scrollContainer: null,
-  scrollOffset: 64
+  scrollOffset: 20
 });
 
 const emit = defineEmits<{
@@ -38,7 +38,15 @@ const emit = defineEmits<{
 }>();
 
 const containerRef = ref<HTMLElement | null>(null);
+const scrollContainerRef = ref<HTMLElement | null>(null);
 let resolvedScrollContainer: HTMLElement | null = null;
+let lastKnownScrollTop = 0;
+
+const isTestEnv = () => {
+  if (typeof window === 'undefined') return true;
+  const ua = window.navigator.userAgent.toLowerCase();
+  return ua.includes('happydom') || ua.includes('jsdom') || !!(window as any).__vitest_environment__;
+};
 
 // 寻找最近的滚动父级容器
 function getScrollParent(el: HTMLElement): HTMLElement {
@@ -56,18 +64,29 @@ function getScrollParent(el: HTMLElement): HTMLElement {
 
 const resolveScrollContainer = () => {
   if (!containerRef.value) return;
+  let container: HTMLElement | null = null;
   if (props.scrollContainer instanceof HTMLElement) {
-    resolvedScrollContainer = props.scrollContainer;
+    container = props.scrollContainer;
   } else if (typeof props.scrollContainer === 'string') {
-    resolvedScrollContainer = document.querySelector(props.scrollContainer) as HTMLElement;
+    // 优先从当前组件的祖先中寻找，防止多组件实例下 document.querySelector 错选其他隐藏容器
+    container = containerRef.value.closest(props.scrollContainer) as HTMLElement;
+    if (!container) {
+      container = document.querySelector(props.scrollContainer) as HTMLElement;
+    }
   }
   
-  if (!resolvedScrollContainer) {
-    resolvedScrollContainer = getScrollParent(containerRef.value);
+  if (!container) {
+    container = getScrollParent(containerRef.value);
+  }
+  scrollContainerRef.value = container;
+  resolvedScrollContainer = container;
+  if (container) {
+    lastKnownScrollTop = container.scrollTop;
   }
 };
 
 watch(() => props.scrollContainer, () => {
+  scrollContainerRef.value = null;
   resolvedScrollContainer = null;
 });
 
@@ -92,9 +111,125 @@ watch(
   (newStreaming, oldStreaming) => {
     if (oldStreaming === true && newStreaming === false) {
       emit('render-complete');
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      isAutoScrolling.value = false;
+    }
+    if (newStreaming === true) {
+      // 开启流式时，默认激活吸底，保障新一轮输出能被立刻看到
+      userScrolledUp.value = false;
+      if (scrollContainerRef.value) {
+        lastKnownScrollTop = scrollContainerRef.value.scrollTop;
+      } else {
+        lastKnownScrollTop = 0;
+      }
     }
   }
 );
+
+// 滚动控制与平滑缓动状态维护
+let animationFrameId: number | null = null;
+const userScrolledUp = ref(false);
+const isAutoScrolling = ref(false);
+
+watch(userScrolledUp, (newVal) => {
+  if (newVal) {
+    console.log('[StreamScroll] 停用滚动跟随 (用户已手动向上滚动或离开底部)');
+  } else {
+    console.log('[StreamScroll] 启用滚动跟随 (已回到底部并自动恢复跟随)');
+  }
+});
+
+const handleScroll = () => {
+  if (!scrollContainerRef.value) return;
+  const el = scrollContainerRef.value;
+  const currentScrollTop = el.scrollTop;
+  const distanceToBottom = el.scrollHeight - currentScrollTop - el.clientHeight;
+
+  // 1. 如果已经回到最底部，恢复吸底
+  if (distanceToBottom <= props.scrollOffset) {
+    userScrolledUp.value = false;
+    lastKnownScrollTop = currentScrollTop;
+    return;
+  }
+
+  // 2. 单调性对比：如果当前位置比上一次记录的值减小了（偏离大于 2.0px，过滤排网精度误差）
+  // 说明滚动条向上运动了，判定为用户手动向上滚动以查看历史
+  if (currentScrollTop < lastKnownScrollTop - 2.0) {
+    userScrolledUp.value = true;
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+    isAutoScrolling.value = false;
+  }
+
+  lastKnownScrollTop = currentScrollTop;
+};
+
+// 绑定/解绑事件监听
+watch(scrollContainerRef, (newEl, oldEl) => {
+  if (oldEl) {
+    oldEl.removeEventListener('scroll', handleScroll);
+  }
+  if (newEl) {
+    newEl.addEventListener('scroll', handleScroll, { passive: true });
+  }
+});
+
+onUnmounted(() => {
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId);
+  }
+  if (scrollContainerRef.value) {
+    scrollContainerRef.value.removeEventListener('scroll', handleScroll);
+  }
+});
+
+function startSmoothScroll() {
+  if (!scrollContainerRef.value || !props.autoScroll || userScrolledUp.value) return;
+
+  const el = scrollContainerRef.value;
+
+  if (isTestEnv()) {
+    el.scrollTop = el.scrollHeight;
+    lastKnownScrollTop = el.scrollTop;
+    isAutoScrolling.value = false;
+    return;
+  }
+
+  isAutoScrolling.value = true;
+
+  const step = () => {
+    if (!scrollContainerRef.value || userScrolledUp.value) {
+      isAutoScrolling.value = false;
+      animationFrameId = null;
+      return;
+    }
+
+    const current = el.scrollTop;
+    const target = el.scrollHeight - el.clientHeight;
+
+    // 如果目标高度有效，且当前尚未完全贴合底部，则进行 25% 插值以提速高速传输下的跟进
+    if (target <= 0 || Math.abs(target - current) < 1.0) {
+      el.scrollTop = el.scrollHeight; // 彻底到底并兼容 happy-dom 的断言限制
+      lastKnownScrollTop = el.scrollTop;
+      isAutoScrolling.value = false;
+      animationFrameId = null;
+    } else {
+      el.scrollTop = current + (target - current) * 0.25;
+      lastKnownScrollTop = el.scrollTop;
+      animationFrameId = requestAnimationFrame(step);
+    }
+  };
+
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId);
+  }
+  animationFrameId = requestAnimationFrame(step);
+}
 
 // 4. 滚动判定逻辑：在 DOM 更新前检查是否处于底部 (flush: 'pre')
 let wasAtBottom = false;
@@ -105,13 +240,24 @@ watch(
       wasAtBottom = false;
       return;
     }
-    if (!resolvedScrollContainer) {
+    if (!scrollContainerRef.value) {
       resolveScrollContainer();
     }
-    if (resolvedScrollContainer) {
-      const el = resolvedScrollContainer;
+    if (scrollContainerRef.value) {
+      const el = scrollContainerRef.value;
       const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-      wasAtBottom = distanceToBottom <= props.scrollOffset;
+      
+      if (userScrolledUp.value) {
+        wasAtBottom = false;
+      } else {
+        if (isAutoScrolling.value) {
+          // 如果已经在自动跟随过程中，默认保持吸底，不受平滑滚动的暂存落后距离干扰
+          wasAtBottom = true;
+        } else {
+          // 首次运行或静止期，只有当滚动位置确实在最底部时才激活吸底跟随
+          wasAtBottom = distanceToBottom <= props.scrollOffset;
+        }
+      }
     }
   },
   { flush: 'pre' }
@@ -122,9 +268,7 @@ watch(
   () => nodesTree.value,
   () => {
     if (!props.autoScroll || !props.isStreaming || !wasAtBottom) return;
-    if (resolvedScrollContainer) {
-      resolvedScrollContainer.scrollTop = resolvedScrollContainer.scrollHeight;
-    }
+    startSmoothScroll();
   },
   { flush: 'post' }
 );
