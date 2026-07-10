@@ -7,7 +7,7 @@ export function useSimulator(traceParser: any) {
   const pendingApproval = ref<{ resolve: (approved: boolean) => void; id: string } | null>(null)
 
   // Markdown 流式渲染器测试状态
-  const selectedTemplate = ref<'normal' | 'invalid-zod' | 'malicious-inject' | 'stress-test'>('normal')
+  const selectedTemplate = ref<'normal' | 'invalid-zod' | 'malicious-inject' | 'stress-test'>('stress-test')
   const streamText = ref('')
   const isMarkdownStreaming = ref(false)
   const notification = ref('')
