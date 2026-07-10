@@ -24,6 +24,10 @@ function handleTabChange(tab: 'trace' | 'streamRenderer') {
   setTimeout(() => {
     activeTab.value = tab
     isSwitching.value = false
+    
+    if (tab === 'streamRenderer') {
+      startMarkdownStream()
+    }
   }, 150) // 缩短加载延迟至 150ms，更加轻快
 }
 
