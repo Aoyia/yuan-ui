@@ -107,10 +107,10 @@ onActivated(() => {
             class="speed-slider-bar"
           />
           <div class="speed-presets-labels">
-            <span @click="!isMarkdownStreaming && (tokensPerSecond = 400)" :class="{ active: tokensPerSecond >= 300 }">极速</span>
-            <span @click="!isMarkdownStreaming && (tokensPerSecond = 100)" :class="{ active: tokensPerSecond >= 80 && tokensPerSecond < 300 }">飞快</span>
-            <span @click="!isMarkdownStreaming && (tokensPerSecond = 40)" :class="{ active: tokensPerSecond >= 30 && tokensPerSecond < 80 }">正常</span>
             <span @click="!isMarkdownStreaming && (tokensPerSecond = 16)" :class="{ active: tokensPerSecond < 30 }">较慢</span>
+            <span @click="!isMarkdownStreaming && (tokensPerSecond = 40)" :class="{ active: tokensPerSecond >= 30 && tokensPerSecond < 80 }">正常</span>
+            <span @click="!isMarkdownStreaming && (tokensPerSecond = 100)" :class="{ active: tokensPerSecond >= 80 && tokensPerSecond < 300 }">飞快</span>
+            <span @click="!isMarkdownStreaming && (tokensPerSecond = 400)" :class="{ active: tokensPerSecond >= 300 }">极速</span>
           </div>
         </div>
       </div>
