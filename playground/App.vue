@@ -4,7 +4,7 @@ import { ShieldCheck, Terminal } from '@lucide/vue'
 import TraceDemo from './components/TraceDemo.vue'
 import RendererDemo from './components/RendererDemo.vue'
 
-const activeTab = ref<'trace' | 'streamRenderer'>('trace')
+const activeTab = ref<'trace' | 'streamRenderer'>('streamRenderer')
 
 function handleTabChange(tab: 'trace' | 'streamRenderer') {
   activeTab.value = tab
@@ -22,46 +22,26 @@ function handleTabChange(tab: 'trace' | 'streamRenderer') {
       
       <div class="header-actions">
         <div class="nav-tabs">
-          <template v-if="activeTab === 'trace'">
-            <!-- 激活态：新版 AgentTrace -->
-            <button
-              type="button"
-              class="tab-btn active"
-              style="cursor: default;"
-            >
-              <ShieldCheck class="tab-icon" />
-              <span>新版 AgentTrace (List)</span>
-            </button>
-            <!-- 未激活态：流式 VNode 渲染，点击切换 -->
-            <button
-              type="button"
-              class="tab-btn"
-              @click="handleTabChange('streamRenderer')"
-            >
-              <Terminal class="tab-icon" />
-              <span>流式 VNode 渲染 (Renderer)</span>
-            </button>
-          </template>
-          <template v-else>
-            <!-- 激活态：流式 VNode 渲染 -->
-            <button
-              type="button"
-              class="tab-btn active"
-              style="cursor: default;"
-            >
-              <Terminal class="tab-icon" />
-              <span>流式 VNode 渲染 (Renderer)</span>
-            </button>
-            <!-- 未激活态：新版 AgentTrace，点击切换 -->
-            <button
-              type="button"
-              class="tab-btn"
-              @click="handleTabChange('trace')"
-            >
-              <ShieldCheck class="tab-icon" />
-              <span>新版 AgentTrace (List)</span>
-            </button>
-          </template>
+          <!-- 流式 VNode 渲染 (Renderer) -->
+          <button
+            type="button"
+            class="tab-btn"
+            :class="{ active: activeTab === 'streamRenderer' }"
+            @click="handleTabChange('streamRenderer')"
+          >
+            <Terminal class="tab-icon" />
+            <span>流式 VNode 渲染 (Renderer)</span>
+          </button>
+          <!-- 新版 AgentTrace (List) -->
+          <button
+            type="button"
+            class="tab-btn"
+            :class="{ active: activeTab === 'trace' }"
+            @click="handleTabChange('trace')"
+          >
+            <ShieldCheck class="tab-icon" />
+            <span>新版 AgentTrace (List)</span>
+          </button>
         </div>
       </div>
     </header>
