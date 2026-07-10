@@ -9,10 +9,8 @@ import {
   AgentTraceList,
   useAgentTraceStream
 } from './components/AgentTrace'
-import { AgentTraceLinear } from './components/AgentTraceLinear'
-import { Play, RotateCcw, Activity, ShieldCheck } from '@lucide/vue'
+import { Play, RotateCcw, Activity } from '@lucide/vue'
 
-const activeTab = ref<'trace' | 'traceLinear'>('traceLinear')
 const currentScenario = ref<'basic' | 'intermediate' | 'advanced'>('advanced')
 const isStreaming = ref(false)
 
