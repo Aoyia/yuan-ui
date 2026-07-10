@@ -316,7 +316,7 @@ button {
 .code-panel {
   width: 420px;
   border-right: 1px solid var(--yuan-border);
-  background-color: #ffffff;
+  background-color: #f8fafc; /* 亮色下默认为精致的代码块背景 */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -331,7 +331,7 @@ button {
 /* 页签栏 */
 .code-tab-header {
   height: 34px;
-  background-color: #ffffff;
+  background-color: #f1f5f9; /* 亮色下默认为稍深的页签背景 */
   border-bottom: 1px solid var(--yuan-border-light);
   display: flex;
   align-items: center;
@@ -343,6 +343,23 @@ button {
 .dark .code-tab-header {
   background-color: #070a12;
   border-bottom-color: rgba(255, 255, 255, 0.03);
+}
+
+/* 如果是流式输出配置面板，特异性重置为 Arco 纯白 */
+.spec-md-controls {
+  background-color: #ffffff;
+}
+
+.spec-md-controls .code-tab-header {
+  background-color: #ffffff;
+}
+
+.dark .spec-md-controls {
+  background-color: #09090b;
+}
+
+.dark .spec-md-controls .code-tab-header {
+  background-color: #070a12;
 }
 
 .code-tab-active {
