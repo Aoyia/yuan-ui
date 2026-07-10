@@ -82,26 +82,29 @@ body {
   gap: 1.25rem;
 }
 
-.github-link-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  color: var(--yuan-text-secondary);
-  transition: all 0.15s ease;
-  opacity: 0.65;
-  cursor: pointer;
+.github-corner:hover .octo-arm {
+  animation: octocat-wave 560ms ease-in-out;
 }
 
-.github-link-btn:hover {
-  color: var(--yuan-text-primary);
-  opacity: 1;
+@keyframes octocat-wave {
+  0%, 100% {
+    transform: rotate(0);
+  }
+  20%, 60% {
+    transform: rotate(-25deg);
+  }
+  40%, 80% {
+    transform: rotate(10deg);
+  }
 }
 
-.github-icon {
-  width: 18px;
-  height: 18px;
+@media (max-width: 500px) {
+  .github-corner:hover .octo-arm {
+    animation: none;
+  }
+  .github-corner .octo-arm {
+    animation: octocat-wave 560ms ease-in-out;
+  }
 }
 
 /* 顶栏 Tab 导航：字节 Arco 极简分段控制器 */
