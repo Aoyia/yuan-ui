@@ -108,39 +108,68 @@ onMounted(() => {
 }
 
 .yuan-stream-renderer .dxf-code-block {
-  background: var(--yuan-bg-muted);
-  border: 1px solid var(--yuan-border);
-  border-radius: var(--yuan-radius-lg, 6px);
+  background: #18181c;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
   margin: 16px 0;
   overflow: hidden;
   position: relative;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .yuan-stream-renderer .dxf-code-block-header {
-  background: var(--yuan-border-light);
-  border-bottom: 1px solid var(--yuan-border);
-  padding: 8px 16px;
+  background: #111114;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 6px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  user-select: none;
 }
 
 .yuan-stream-renderer .dxf-code-block-lang {
-  font-size: 11px;
-  font-family: var(--yuan-font-mono), monospace;
-  font-weight: bold;
-  color: var(--yuan-text-secondary);
+  font-size: 10px;
+  font-family: var(--yuan-font-mono), SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  color: #80808a;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
+}
+
+.yuan-stream-renderer .dxf-code-block-copy {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #a0a0ab;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.yuan-stream-renderer .dxf-code-block-copy:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.yuan-stream-renderer .dxf-code-block-copy.copied {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
 .yuan-stream-renderer .dxf-code-block-pre {
   margin: 0;
-  padding: 16px;
+  padding: 14px 16px;
   overflow-x: auto;
-  font-family: var(--yuan-font-mono), monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--yuan-text-primary);
+  font-family: var(--yuan-font-mono), SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #d1d5db;
 }
 </style>
