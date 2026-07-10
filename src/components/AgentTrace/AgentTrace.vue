@@ -65,7 +65,7 @@ provide(AgentTraceKey, {
   </div>
 </template>
 
-<style scoped>
+<style>
 .yuan-agent-trace {
   max-width: 65ch;
   margin-bottom: 1rem;

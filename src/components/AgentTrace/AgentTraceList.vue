@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { AgentTraceNode, GroupTraceNode } from './types'
+import type { AgentTraceNode } from './types'
 import ReasoningTraceNode from './renderers/ReasoningTraceNode.vue'
 import ToolTraceNode from './renderers/ToolTraceNode.vue'
 import ArtifactTraceNode from './renderers/ArtifactTraceNode.vue'
@@ -30,7 +30,7 @@ const currentLevelNodes = computed(() => {
 </script>
 
 <template>
-  <div class="yuan-agent-trace-list">
+  <div class="yuan-agent-trace__list">
     <template v-for="node in currentLevelNodes" :key="node.id">
       <!-- 1. 递归 Group 节点 -->
       <GroupTraceNodeComponent 
@@ -64,8 +64,8 @@ const currentLevelNodes = computed(() => {
   </div>
 </template>
 
-<style scoped>
-.yuan-agent-trace-list {
+<style>
+.yuan-agent-trace__list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;

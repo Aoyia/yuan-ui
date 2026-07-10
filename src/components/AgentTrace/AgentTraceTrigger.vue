@@ -12,18 +12,18 @@ function toggleOpen() {
 <template>
   <button
     type="button"
-    class="yuan-agent-trace-header"
+    class="yuan-agent-trace__trigger"
     @click="toggleOpen"
   >
-    <div class="header-left">
+    <div class="yuan-agent-trace__trigger-left">
       <div 
-        class="status-dot" 
+        class="yuan-agent-trace__trigger-dot" 
         :class="{ 
-          'is-streaming': isStreaming, 
-          'is-complete': !isStreaming && duration !== undefined 
+          'yuan-agent-trace__trigger-dot--streaming': isStreaming, 
+          'yuan-agent-trace__trigger-dot--complete': !isStreaming && duration !== undefined 
         }" 
       />
-      <span class="status-text">
+      <span class="yuan-agent-trace__trigger-text">
         <slot>
           <template v-if="isStreaming">Thinking...</template>
           <template v-else-if="duration !== undefined">Completed in {{ duration }}s</template>
@@ -31,12 +31,12 @@ function toggleOpen() {
         </slot>
       </span>
     </div>
-    <ChevronDown class="icon-chevron" :class="{ 'is-open': isOpen }" />
+    <ChevronDown class="yuan-agent-trace__trigger-chevron" :class="{ 'yuan-agent-trace__trigger-chevron--open': isOpen }" />
   </button>
 </template>
 
-<style scoped>
-.yuan-agent-trace-header {
+<style>
+.yuan-agent-trace__trigger {
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -55,25 +55,25 @@ function toggleOpen() {
   margin-bottom: 0.5rem;
 }
 
-.dark .yuan-agent-trace-header {
+.dark .yuan-agent-trace__trigger {
   color: #a1a1aa;
 }
 
-.yuan-agent-trace-header:hover {
+.yuan-agent-trace__trigger:hover {
   color: #1d1d1f;
 }
 
-.dark .yuan-agent-trace-header:hover {
+.dark .yuan-agent-trace__trigger:hover {
   color: #f4f4f5;
 }
 
-.header-left {
+.yuan-agent-trace__trigger-left {
   display: flex;
   align-items: center;
   gap: 0.45rem;
 }
 
-.status-dot {
+.yuan-agent-trace__trigger-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
@@ -81,16 +81,16 @@ function toggleOpen() {
   transition: background-color 0.3s ease;
 }
 
-.dark .status-dot {
+.dark .yuan-agent-trace__trigger-dot {
   background-color: #52525b;
 }
 
-.status-dot.is-streaming {
+.yuan-agent-trace__trigger-dot--streaming {
   background-color: #0071e3;
   animation: yuan-pulse-dot 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.status-dot.is-complete {
+.yuan-agent-trace__trigger-dot--complete {
   background-color: #34c759;
 }
 
@@ -105,23 +105,23 @@ function toggleOpen() {
   }
 }
 
-.status-text {
+.yuan-agent-trace__trigger-text {
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 
-.icon-chevron {
+.yuan-agent-trace__trigger-chevron {
   width: 0.8rem;
   height: 0.8rem;
   color: #86868b;
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dark .icon-chevron {
+.dark .yuan-agent-trace__trigger-chevron {
   color: #71717a;
 }
 
-.icon-chevron.is-open {
+.yuan-agent-trace__trigger-chevron--open {
   transform: rotate(180deg);
 }
 </style>
