@@ -852,26 +852,24 @@ body {
   background-color: #09090b;
 }
 
-/* 顶栏精致 Header - 极致毛玻璃透光质感 */
+/* 顶栏精致 Header - 字节 Arco 极简工业风 */
 .demo-header {
   position: relative;
   height: 52px;
   padding: 0 1.5rem;
-  border-bottom: 1px solid rgba(241, 245, 249, 0.8);
+  border-bottom: 1px solid var(--yuan-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background-color: var(--yuan-bg);
   z-index: 100;
   flex-shrink: 0;
   user-select: none;
 }
 
 .dark .demo-header {
-  border-bottom-color: rgba(39, 39, 42, 0.8);
-  background-color: rgba(9, 9, 11, 0.85);
+  border-bottom-color: var(--yuan-border);
+  background-color: var(--yuan-bg);
 }
 
 .header-brand {
@@ -881,21 +879,21 @@ body {
 }
 
 .brand-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0071e3 0%, #6366f1 100%);
+  background-color: var(--yuan-primary);
 }
 
 .brand-text {
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #1d1d1f;
+  color: var(--yuan-text-primary);
 }
 
 .dark .brand-text {
-  color: #f4f4f5;
+  color: var(--yuan-text-primary);
 }
 
 .header-actions {
@@ -904,62 +902,61 @@ body {
   gap: 1.25rem;
 }
 
-/* 顶栏 Tab 导航：苹果风胶囊设计 (Segmented Control) */
+/* 顶栏 Tab 导航：字节 Arco 极简分段控制器 */
 .nav-tabs {
   display: flex;
-  background-color: #f1f5f9;
-  padding: 3px;
-  border-radius: 8px;
+  background-color: var(--yuan-border-light);
+  padding: 2px;
+  border-radius: var(--yuan-radius);
   gap: 2px;
   align-items: center;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .dark .nav-tabs {
-  background-color: #1c1917;
+  background-color: var(--yuan-border-light);
 }
 
 .tab-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.85rem;
+  padding: 0.3rem 0.8rem;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--yuan-radius-sm);
   font-size: 0.75rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--yuan-text-secondary);
   cursor: pointer;
-  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
   outline: none;
 }
 
 .dark .tab-btn {
-  color: #a1a1aa;
+  color: var(--yuan-text-secondary);
 }
 
 .tab-btn:hover:not(.active) {
-  color: #1d1d1f;
-  background-color: rgba(0, 0, 0, 0.03);
+  color: var(--yuan-text-primary);
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 .dark .tab-btn:hover:not(.active) {
-  color: #f4f4f5;
-  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--yuan-text-primary);
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
 .tab-btn.active {
-  background-color: #ffffff;
-  color: #0071e3;
+  background-color: var(--yuan-bg);
+  color: var(--yuan-primary);
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 1px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .dark .tab-btn.active {
-  background-color: #27272a;
-  color: #2997ff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.1);
+  background-color: var(--yuan-border-light);
+  color: var(--yuan-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .tab-icon {
@@ -973,7 +970,7 @@ body {
   transform: translateY(-0.5px);
 }
 
-/* 场景选择器 - 极简药丸切换设计 */
+/* 场景选择器 - 字节 Arco 极简药丸切换设计 */
 .scenario-selector {
   display: flex;
   align-items: center;
@@ -983,23 +980,23 @@ body {
 .selector-label {
   font-size: 0.72rem;
   font-weight: 500;
-  color: #86868b;
+  color: var(--yuan-text-secondary);
 }
 
 .dark .selector-label {
-  color: #71717a;
+  color: var(--yuan-text-secondary);
 }
 
 .selector-options {
   display: flex;
-  background-color: #f1f5f9;
+  background-color: var(--yuan-border-light);
   padding: 2px;
-  border-radius: 6px;
+  border-radius: var(--yuan-radius);
   gap: 1px;
 }
 
 .dark .selector-options {
-  background-color: #1c1917;
+  background-color: var(--yuan-border-light);
 }
 
 .selector-opt-btn {
@@ -1008,37 +1005,37 @@ body {
   font-weight: 500;
   border: none;
   background: transparent;
-  color: #64748b;
-  border-radius: 4px;
+  color: var(--yuan-text-secondary);
+  border-radius: var(--yuan-radius-sm);
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
   outline: none;
 }
 
 .dark .selector-opt-btn {
-  color: #a1a1aa;
+  color: var(--yuan-text-secondary);
 }
 
 .selector-opt-btn.active {
-  background-color: #ffffff;
-  color: #0071e3;
+  background-color: var(--yuan-bg);
+  color: var(--yuan-primary);
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .dark .selector-opt-btn.active {
-  background-color: #27272a;
-  color: #2997ff;
+  background-color: var(--yuan-bg);
+  color: var(--yuan-primary);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .selector-opt-btn:hover:not(.active):not(:disabled) {
-  color: #1d1d1f;
+  color: var(--yuan-text-primary);
   background-color: rgba(0, 0, 0, 0.02);
 }
 
 .dark .selector-opt-btn:hover:not(.active):not(:disabled) {
-  color: #f4f4f5;
+  color: var(--yuan-text-primary);
   background-color: rgba(255, 255, 255, 0.02);
 }
 
@@ -1067,44 +1064,45 @@ button {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #0071e3 0%, #1d82f6 100%);
+  background-color: var(--yuan-primary);
   color: #fff;
   border: none;
-  box-shadow: 0 1px 2px rgba(0, 113, 227, 0.2);
+  border-radius: var(--yuan-radius);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0077ed 0%, #2f8ff7 100%);
-  box-shadow: 0 2px 4px rgba(0, 113, 227, 0.3);
+  background-color: var(--yuan-primary-hover);
 }
 
 .btn-primary:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
   box-shadow: none;
 }
 
 .btn-secondary {
-  background: transparent;
-  color: #64748b;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background-color: var(--yuan-bg);
+  color: var(--yuan-text-secondary);
+  border: 1px solid var(--yuan-border);
+  border-radius: var(--yuan-radius);
 }
 
 .dark .btn-secondary {
-  color: #a1a1aa;
-  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--yuan-text-secondary);
+  border-color: var(--yuan-border);
+  background-color: var(--yuan-bg);
 }
 
 .btn-secondary:hover {
-  background: rgba(0, 0, 0, 0.02);
-  color: #1d1d1f;
-  border-color: rgba(0, 0, 0, 0.15);
+  background-color: var(--yuan-border-light);
+  color: var(--yuan-text-primary);
+  border-color: var(--yuan-border);
 }
 
 .dark .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.02);
-  color: #f4f4f5;
-  border-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--yuan-border-light);
+  color: var(--yuan-text-primary);
+  border-color: var(--yuan-border);
 }
 
 .btn-icon {
