@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, nextTick, computed, onMounted, onActivated } from 'vue'
 import {
   AsThoughtChain,
   AsThoughtChainTrigger,
@@ -67,6 +67,27 @@ watch(traceOpen, (newVal) => {
       traceParser.handleTraceEvent({ type: 'collapse-all-groups' })
     }
   }
+})
+
+let hasMounted = false
+
+onMounted(() => {
+  hasMounted = true
+  nextTick(() => {
+    // 延迟 150ms 等待 Tab Transition 渐变完成并稳定，保障吸底计算高度正确
+    setTimeout(() => {
+      startSimulation(currentScenario.value)
+    }, 150)
+  })
+})
+
+onActivated(() => {
+  if (!hasMounted) return
+  nextTick(() => {
+    setTimeout(() => {
+      startSimulation(currentScenario.value)
+    }, 150)
+  })
 })
 
 const activeFileName = computed(() => {

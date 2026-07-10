@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ShieldCheck, Terminal } from '@lucide/vue'
+import { FileText, Brain } from '@lucide/vue'
 import TraceDemo from './components/TraceDemo.vue'
 import RendererDemo from './components/RendererDemo.vue'
 
@@ -29,7 +29,7 @@ function handleTabChange(tab: 'trace' | 'streamRenderer') {
             :class="{ active: activeTab === 'streamRenderer' }"
             @click="handleTabChange('streamRenderer')"
           >
-            <Terminal class="tab-icon" />
+            <FileText class="tab-icon" />
             <span>AsMarkdown</span>
           </button>
           <!-- AsThoughtChain -->
@@ -39,7 +39,7 @@ function handleTabChange(tab: 'trace' | 'streamRenderer') {
             :class="{ active: activeTab === 'trace' }"
             @click="handleTabChange('trace')"
           >
-            <ShieldCheck class="tab-icon" />
+            <Brain class="tab-icon" />
             <span>AsThoughtChain</span>
           </button>
         </div>
