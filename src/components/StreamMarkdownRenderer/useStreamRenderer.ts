@@ -2,11 +2,12 @@ import { ref, computed } from 'vue';
 import MarkdownIt from 'markdown-it';
 import type { RendererNode, UseStreamRendererOptions } from './types';
 import { tailorStreamText } from './utils/tailor';
+import { completeMarkdownSyntax } from './utils/autocomplete';
 import { splitIntoLogicalBlocks } from './utils/block-parser';
 import { treeifyTokens } from './utils/treeify';
 
 export function useStreamRenderer(options: UseStreamRendererOptions = {}) {
-  const { enableTailoring = true } = options;
+  const { enableTailoring = true, enableCompletion = true } = options;
 
   const renderedText = ref('');
   const isInnerStreaming = ref(false);
@@ -84,12 +85,17 @@ export function useStreamRenderer(options: UseStreamRendererOptions = {}) {
     if (!renderedText.value) return [];
 
     // 【启发式尾部修剪】防止流式打字中由于残损符号引起 DOM 频繁重绘与闪烁
-    const tailoredText = enableTailoring 
+    let processedText = enableTailoring 
       ? tailorStreamText(renderedText.value, isInnerStreaming.value)
       : renderedText.value;
 
+    // 【语法自动补全】在流式过程中自动对残损格式进行闭合
+    if (isInnerStreaming.value && enableCompletion) {
+      processedText = completeMarkdownSyntax(processedText);
+    }
+
     // 将文本合理切割为逻辑段落块 (防 Multiline Blocks 解析破损)
-    const blocks = splitIntoLogicalBlocks(tailoredText);
+    const blocks = splitIntoLogicalBlocks(processedText);
     const finalTokens: any[] = [];
 
     blocks.forEach((blockText, index) => {

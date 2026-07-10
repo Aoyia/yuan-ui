@@ -49,4 +49,51 @@ describe('useStreamRenderer Composable', () => {
     expect(renderedText.value).toBe('');
     expect(nodesTree.value.length).toBe(0);
   });
+
+  it('should apply stream autocompletion when enabled and isStreaming is true', () => {
+    const { nodesTree, renderedText, updateStream } = useStreamRenderer({ enableCompletion: true });
+    
+    updateStream('Hello **bold text', true);
+
+    expect(renderedText.value).toBe('Hello **bold text'); // 原始值不变
+    
+    // nodesTree 应该渲染加粗样式
+    expect(nodesTree.value.length).toBeGreaterThan(0);
+    expect(nodesTree.value[0]).toEqual({
+      type: 'element',
+      tag: 'dxf-paragraph',
+      props: {},
+      children: [
+        { type: 'text', content: 'Hello ' },
+        {
+          type: 'element',
+          tag: 'dxf-strong',
+          props: {},
+          children: [
+            { type: 'text', content: 'bold text' }
+          ]
+        },
+        { type: 'text', content: '' }
+      ]
+    });
+  });
+
+  it('should not autocomplete when enableCompletion is false', () => {
+    const { nodesTree, renderedText, updateStream } = useStreamRenderer({ enableCompletion: false });
+    
+    updateStream('Hello **bold text', true);
+
+    expect(renderedText.value).toBe('Hello **bold text');
+    
+    // 未补全，应该直接被解析为普通的文本
+    expect(nodesTree.value.length).toBeGreaterThan(0);
+    expect(nodesTree.value[0]).toEqual({
+      type: 'element',
+      tag: 'dxf-paragraph',
+      props: {},
+      children: [
+        { type: 'text', content: 'Hello **bold text' }
+      ]
+    });
+  });
 });
