@@ -2,11 +2,11 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { nextTick } from 'vue';
-import StreamMarkdownRenderer from '../StreamMarkdownRenderer.vue';
+import AsMarkdown from '../AsMarkdown.vue';
 
-describe('StreamMarkdownRenderer Wrapper Component', () => {
+describe('AsMarkdown Wrapper Component', () => {
   it('should compile and render dynamic text', async () => {
-    const wrapper = mount(StreamMarkdownRenderer, {
+    const wrapper = mount(AsMarkdown, {
       props: {
         text: 'Initial Text',
         isStreaming: false
@@ -22,7 +22,7 @@ describe('StreamMarkdownRenderer Wrapper Component', () => {
   });
 
   it('should emit render-complete when streaming finishes', async () => {
-    const wrapper = mount(StreamMarkdownRenderer, {
+    const wrapper = mount(AsMarkdown, {
       props: {
         text: 'Streaming content...',
         isStreaming: true
@@ -44,7 +44,7 @@ describe('StreamMarkdownRenderer Wrapper Component', () => {
       scrollTop: { writable: true, value: 50 }, // scrollTop (50) + clientHeight (50) = scrollHeight (100)
     });
 
-    const wrapper = mount(StreamMarkdownRenderer, {
+    const wrapper = mount(AsMarkdown, {
       props: {
         text: 'Hello',
         isStreaming: true,
@@ -75,7 +75,7 @@ describe('StreamMarkdownRenderer Wrapper Component', () => {
       scrollTop: { writable: true, value: 10 }, // 距离底部 40px > scrollOffset (20)
     });
 
-    const wrapper = mount(StreamMarkdownRenderer, {
+    const wrapper = mount(AsMarkdown, {
       props: {
         text: 'Hello',
         isStreaming: true,
@@ -105,7 +105,7 @@ describe('StreamMarkdownRenderer Wrapper Component', () => {
       scrollTop: { writable: true, value: 50 },
     });
 
-    const wrapper = mount(StreamMarkdownRenderer, {
+    const wrapper = mount(AsMarkdown, {
       props: {
         text: 'Hello',
         isStreaming: true,

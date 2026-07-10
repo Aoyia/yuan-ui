@@ -12,7 +12,7 @@ export function useSimulator(traceParser: any) {
   const isMarkdownStreaming = ref(false)
   const notification = ref('')
   const streamSpeed = ref(25) // 默认 25ms (对应 80 tokens/s)
-  let markdownTimer = null
+  let markdownTimer: ReturnType<typeof setTimeout> | null = null
 
   function onUserApprove(nodeId: string) {
     if (pendingApproval.value && pendingApproval.value.id === nodeId) {

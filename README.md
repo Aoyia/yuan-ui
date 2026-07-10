@@ -1,31 +1,31 @@
-# Yuan UI ⚡
+# AiStream-vue ⚡
 
 <p align="center">
-  <a href="https://aoyia.github.io/yuan-ui/">
-    <img src="https://img.shields.io/badge/🚀%20Live%20Demo-aoyia.github.io%2Fyuan--ui-165dff?style=for-the-badge" alt="Live Demo">
+  <a href="https://aoyia.github.io/aistream-vue/">
+    <img src="https://img.shields.io/badge/🚀%20Live%20Demo-aoyia.github.io%2Faistream--vue-165dff?style=for-the-badge" alt="Live Demo">
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/Aoyia/yuan-ui/actions/workflows/deploy-demo.yml">
+  <a href="https://github.com/Aoyia/aistream-vue/actions/workflows/deploy-demo.yml">
     <img src="https://img.shields.io/badge/⚙️%20GitHub%20Actions-查看%20CI-24292e?style=for-the-badge&logo=github" alt="GitHub Actions">
   </a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/Aoyia/yuan-ui/actions/workflows/deploy-demo.yml">
-    <img src="https://github.com/Aoyia/yuan-ui/actions/workflows/deploy-demo.yml/badge.svg" alt="Deploy Demo CI">
+  <a href="https://github.com/Aoyia/aistream-vue/actions/workflows/deploy-demo.yml">
+    <img src="https://github.com/Aoyia/aistream-vue/actions/workflows/deploy-demo.yml/badge.svg" alt="Deploy Demo CI">
   </a>
-  <a href="https://github.com/Aoyia/yuan-ui">
-    <img src="https://img.shields.io/github/license/neoyuan/yuan-ui.svg" alt="License">
+  <a href="https://github.com/Aoyia/aistream-vue">
+    <img src="https://img.shields.io/github/license/neoyuan/aistream-vue.svg" alt="License">
   </a>
   <a href="https://vuejs.org/">
     <img src="https://img.shields.io/badge/vue-3.x-brightgreen.svg" alt="Vue 3">
   </a>
-  <a href="https://github.com/Aoyia/yuan-ui">
-    <img src="https://img.shields.io/github/stars/Aoyia/yuan-ui.svg?style=social" alt="Stars">
+  <a href="https://github.com/Aoyia/aistream-vue">
+    <img src="https://img.shields.io/github/stars/Aoyia/aistream-vue.svg?style=social" alt="Stars">
   </a>
 </p>
 
-Yuan UI 是一套完全数据驱动、面向高阶 AI Agent 场景开发的 Vue 3 思维链与执行轨迹 UI 组件库。具有多级分组（Grouping）嵌套、同级渐进式流式折叠（Progressive Collapse）、内置语义化高级渲染器（Terminal/Diff/Search/File）以及双向 Human-in-the-loop 审批确权能力。
+AiStream-vue 是一套完全数据驱动、面向高阶 AI Agent 场景开发的 Vue 3 思维链与执行轨迹 UI 组件库。具有多级分组（Grouping）嵌套、同级渐进式流式折叠（Progressive Collapse）、内置语义化高级渲染器（Terminal/Diff/Search/File）以及双向 Human-in-the-loop 审批确权能力。
 
 ---
 
@@ -60,9 +60,9 @@ Yuan UI 是一套完全数据驱动、面向高阶 AI Agent 场景开发的 Vue 
 可以使用你最喜爱的包管理器安装：
 
 ```bash
-npm install yuan-ui @lucide/vue @vueuse/core
+npm install aistream-vue @lucide/vue @vueuse/core
 # 或者
-pnpm add yuan-ui @lucide/vue @vueuse/core
+pnpm add aistream-vue @lucide/vue @vueuse/core
 ```
 
 ---
@@ -75,18 +75,18 @@ pnpm add yuan-ui @lucide/vue @vueuse/core
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  AgentTrace,
-  AgentTraceTrigger,
-  AgentTraceContent,
-  AgentTraceList,
-  useAgentTraceStream
-} from 'yuan-ui'
+  AsThoughtChain,
+  AsThoughtChainTrigger,
+  AsThoughtChainContent,
+  AsThoughtChainList,
+  useAsThoughtChainStream
+} from 'aistream-vue'
 
 // 导入主样式表 (含主题变量)
-import 'yuan-ui/dist/style.css'
+import 'aistream-vue/dist/style.css'
 
 const isOpen = ref(true)
-const trace = useAgentTraceStream()
+const trace = useAsThoughtChainStream()
 
 // 模拟事件派发
 trace.handleTraceEvent({ type: 'group-start', id: 'g-1', title: '环境初始化' })
@@ -98,16 +98,16 @@ trace.handleTraceEvent({ type: 'finish' })
 
 <template>
   <div class="assistant-message-bubble">
-    <AgentTrace
+    <AsThoughtChain
       v-model:open="isOpen"
       :is-streaming="trace.isStreaming.value"
       :duration="trace.duration.value"
     >
-      <AgentTraceTrigger />
-      <AgentTraceContent>
-        <AgentTraceList :nodes="trace.nodes.value" />
-      </AgentTraceContent>
-    </AgentTrace>
+      <AsThoughtChainTrigger />
+      <AsThoughtChainContent>
+        <AsThoughtChainList :nodes="trace.nodes.value" />
+      </AsThoughtChainContent>
+    </AsThoughtChain>
   </div>
 </template>
 ```
@@ -116,7 +116,7 @@ trace.handleTraceEvent({ type: 'finish' })
 
 ## 🛠️ 主题定制
 
-你可以在项目本地的 CSS 中覆盖 Yuan UI 暴露的 CSS 自定义变量：
+你可以在项目本地的 CSS 中覆盖 AiStream-vue 暴露的 CSS 自定义变量：
 
 ```css
 :root {
