@@ -10,6 +10,8 @@ interface Props {
   isStreaming?: boolean;
   /** 允许挂载的自定义组件白名单 */
   allowedComponents?: string[];
+  /** 自定义组件的具体实现实例映射表，避免完全依赖全局注册 */
+  customComponents?: Record<string, any>;
   /** 是否启用启发式尾部防闪烁修剪 */
   enableTailoring?: boolean;
 }
@@ -17,6 +19,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   isStreaming: false,
   allowedComponents: () => ['dxf-bar-chart'],
+  customComponents: () => ({}),
   enableTailoring: true
 });
 
@@ -60,6 +63,7 @@ onMounted(() => {
     <VNodeMarkdownRenderer
       :nodes="nodesTree"
       :allowed-components="allowedComponents"
+      :custom-components="customComponents"
       :is-streaming="isStreaming"
       @feedback="(msg: string) => emit('feedback', msg)"
     />

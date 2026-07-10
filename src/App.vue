@@ -678,6 +678,7 @@ const activeCodeTransformed = computed(() => {
                 :text="streamText"
                 :is-streaming="isMarkdownStreaming"
                 :allowed-components="allowedComponents"
+                :custom-components="{ 'dxf-bar-chart': DxfBarChart }"
                 @feedback="handleFeedback"
               />
 

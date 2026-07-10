@@ -156,6 +156,10 @@ export const VNodeMarkdownRenderer = defineComponent({
       type: Array as () => string[],
       default: () => ['dxf-bar-chart']
     },
+    customComponents: {
+      type: Object as () => Record<string, Component>,
+      default: () => ({})
+    },
     isStreaming: {
       type: Boolean,
       default: false
@@ -186,8 +190,9 @@ export const VNodeMarkdownRenderer = defineComponent({
 
           // 🛡️ VNode 级白名单安全沙箱拦截过滤
           if (props.allowedComponents.includes(tag)) {
-            // 放行：委托给 Vue 全局组件或 resolveComponent 渲染，并监听其反馈事件
-            return h(tag, {
+            // 放行：优先选用 customComponents 注入的组件，否则退回到全局 resolveComponent 解析
+            const targetComp = (props.customComponents as any)[tag] || resolveComponent(tag);
+            return h(targetComp as any, {
               ...node.props,
               onFeedback: (msg: string) => emit('feedback', msg)
             });
@@ -229,6 +234,7 @@ export const VNodeMarkdownRenderer = defineComponent({
               default: () => h(VNodeMarkdownRenderer as any, {
                 nodes: node.children,
                 allowedComponents: props.allowedComponents,
+                customComponents: props.customComponents,
                 isStreaming: props.isStreaming,
                 onFeedback: (msg: string) => emit('feedback', msg)
               })
@@ -239,6 +245,7 @@ export const VNodeMarkdownRenderer = defineComponent({
               h(VNodeMarkdownRenderer as any, {
                 nodes: node.children,
                 allowedComponents: props.allowedComponents,
+                customComponents: props.customComponents,
                 isStreaming: props.isStreaming,
                 onFeedback: (msg: string) => emit('feedback', msg)
               })
