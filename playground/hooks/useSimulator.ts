@@ -101,10 +101,22 @@ export function useSimulator(traceParser: any) {
     const fullText = TEMPLATES[selectedTemplate.value]
     let index = 0
 
+    // 第一性原理自适应打字速度渲染算法 (保障流畅视觉帧率 >= 20ms)
+    // 假设 1 token ≈ 2 字符，S 为目标 token 渲染速度 (tokens/s)
+    const S = Math.round(2000 / streamSpeed.value)
+    let chunkSize = 1
+    let interval = Math.round(500 / S)
+
+    // 若时延小于 20ms (超出浏览器流畅渲染与 Vue 调度帧率极限)，则通过增大单次输出字符量 (chunkSize) 来拉大时间间隔 (interval)
+    while (interval < 20 && chunkSize < 100) {
+      chunkSize++
+      interval = Math.round((chunkSize * 500) / S)
+    }
+
     markdownTimer = setInterval(() => {
       if (index < fullText.length) {
-        streamText.value += fullText.slice(index, index + 4)
-        index += 4
+        streamText.value += fullText.slice(index, index + chunkSize)
+        index += chunkSize
       } else {
         if (markdownTimer) {
           clearInterval(markdownTimer)
@@ -112,7 +124,7 @@ export function useSimulator(traceParser: any) {
         streamText.value = fullText
         isMarkdownStreaming.value = false
       }
-    }, streamSpeed.value)
+    }, interval)
   }
 
   function resetMarkdownStream() {
