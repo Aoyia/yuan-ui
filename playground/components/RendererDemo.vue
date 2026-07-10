@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onActivated } from 'vue'
+import { ref, computed, onActivated, onMounted } from 'vue'
 import { StreamMarkdownRenderer } from '../../src/index'
 import { Play, RotateCcw, Activity, Palette, AlertCircle, Bot, Search, Terminal } from '@lucide/vue'
 import { useSimulator } from '../hooks/useSimulator'
 import DxfBarChart from './DxfBarChart.vue'
 
-// 1. 引入模拟器 Engine 核心逻辑
+// 1. 引入模拟器 Engine 核心 logic
 const {
   selectedTemplate,
   streamText,
@@ -39,7 +39,15 @@ const parsedComponents = computed(() => {
   return list
 })
 
+let hasMounted = false
+
+onMounted(() => {
+  hasMounted = true
+  startMarkdownStream()
+})
+
 onActivated(() => {
+  if (!hasMounted) return
   startMarkdownStream()
 })
 </script>
