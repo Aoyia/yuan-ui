@@ -309,7 +309,91 @@ const activeCodeTransformed = computed(() => {
           class="tab-btn"
           :class="{ active: activeTab === 'trace' }"
           @click="activeTab = 'trace'"
-            <div class="workspace">
+          :disabled="isStreaming || isMarkdownStreaming"
+        >
+          <ShieldCheck class="tab-icon" />
+          <span>新版 AgentTrace (List)</span>
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          :class="{ active: activeTab === 'traceLinear' }"
+          @click="activeTab = 'traceLinear'"
+          :disabled="isStreaming || isMarkdownStreaming"
+        >
+          <Activity class="tab-icon" />
+          <span>扁平线性流 (办公/大厂)</span>
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          :class="{ active: activeTab === 'streamRenderer' }"
+          @click="activeTab = 'streamRenderer'"
+          :disabled="isStreaming || isMarkdownStreaming"
+        >
+          <Terminal class="tab-icon" />
+          <span>流式 VNode 渲染 (Renderer)</span>
+        </button>
+      </div>
+
+      <div class="header-actions">
+        <!-- 渐进式场景选择器 -->
+        <div v-if="activeTab === 'trace' || activeTab === 'traceLinear'" class="scenario-selector">
+          <span class="selector-label">演示场景:</span>
+          <div class="selector-options">
+            <button 
+              type="button" 
+              class="selector-opt-btn" 
+              :class="{ active: currentScenario === 'basic' }"
+              @click="currentScenario = 'basic'"
+              :disabled="isStreaming"
+            >
+              基础思维链
+            </button>
+            <button 
+              type="button" 
+              class="selector-opt-btn" 
+              :class="{ active: currentScenario === 'intermediate' }"
+              @click="currentScenario = 'intermediate'"
+              :disabled="isStreaming"
+            >
+              中阶工具调用
+            </button>
+            <button 
+              type="button" 
+              class="selector-opt-btn" 
+              :class="{ active: currentScenario === 'advanced' }"
+              @click="currentScenario = 'advanced'"
+              :disabled="isStreaming"
+            >
+              高阶智能体 (Cursor)
+            </button>
+          </div>
+        </div>
+        
+        <div v-if="activeTab === 'trace' || activeTab === 'traceLinear'" class="button-group">
+          <button 
+            type="button"
+            class="btn-primary" 
+            :disabled="isStreaming" 
+            @click="startSimulation"
+          >
+            <Play class="btn-icon" />
+            <span>运行模拟</span>
+          </button>
+          <button 
+            type="button"
+            class="btn-secondary" 
+            @click="handleReset"
+          >
+            <RotateCcw class="btn-icon" />
+            <span>重置</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="workspace">
       <!-- === A. 原有 AgentTrace / AgentTraceLinear 演示布局 === -->
       <template v-if="activeTab !== 'streamRenderer'">
         <!-- 左栏: 对应模式下的代码演示看板 -->
