@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onActivated } from 'vue'
 import { StreamMarkdownRenderer } from '../../src/index'
 import { Play, RotateCcw, Activity, Palette, AlertCircle, Bot, Search, Terminal } from '@lucide/vue'
 import { useSimulator } from '../hooks/useSimulator'
@@ -37,6 +37,10 @@ const parsedComponents = computed(() => {
   }
   return list
 })
+
+onActivated(() => {
+  startMarkdownStream()
+})
 </script>
 
 <template>
@@ -58,10 +62,10 @@ const parsedComponents = computed(() => {
           :disabled="isMarkdownStreaming" 
           @change="resetMarkdownStream"
         >
+          <option value="stress-test">⚡ 极限测试：流式打字与划选复制</option>
           <option value="normal">✅ 正常组件渲染（数据合规）</option>
           <option value="invalid-zod">⚠️ Zod 校验失败（触发错误面板与自我纠错）</option>
           <option value="malicious-inject">🚫 恶意非法标签注入（VNode 级沙箱拦截）</option>
-          <option value="stress-test">⚡ 极限测试：流式打字与划选复制</option>
         </select>
       </div>
 
