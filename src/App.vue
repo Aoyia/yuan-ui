@@ -146,8 +146,8 @@ function handleReset() {
 const traceOpen = ref(true)
 
 watch(traceOpen, (newVal) => {
-  if (newVal === true) {
-    // 仅在非流式运行时重新手动展开，才重置所有内部子组为折叠状态，提供极简的点击钻取交互
+  // 将重置子组折叠的触发时机改为合拢时（newVal === false），在后台看不见时静默完成折叠，避免展开时播放多余的收缩动画
+  if (newVal === false) {
     if (!isStreaming.value) {
       traceParser.handleTraceEvent({ type: 'collapse-all-groups' })
     }
