@@ -24,7 +24,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   isStreaming: false,
-  allowedComponents: () => ['df-bar-chart'],
+  allowedComponents: () => ['df-bar-chart', 'df-radar-chart'],
   customComponents: () => ({}),
   enableTailoring: true,
   autoScroll: true,

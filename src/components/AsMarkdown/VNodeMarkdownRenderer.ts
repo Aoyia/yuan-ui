@@ -154,7 +154,7 @@ export const VNodeMarkdownRenderer = defineComponent({
     },
     allowedComponents: {
       type: Array as () => string[],
-      default: () => ['df-bar-chart']
+      default: () => ['df-bar-chart', 'df-radar-chart']
     },
     customComponents: {
       type: Object as () => Record<string, Component>,
@@ -194,6 +194,7 @@ export const VNodeMarkdownRenderer = defineComponent({
             const targetComp = (props.customComponents as any)[tag] || resolveComponent(tag);
             return h(targetComp as any, {
               ...node.props,
+              tag: tag,
               onFeedback: (msg: string) => emit('feedback', msg)
             });
           } else {

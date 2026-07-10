@@ -1,5 +1,5 @@
 export const TEMPLATES = {
-  normal: `这是我们为您生成的本年度核心销售数据。系统已开启白名单挂载防护，安全渲染为前端原生 Vue 组件：\n\n<df-bar-chart dataset='{"title":"2026年销售趋势预测","values":[95, 140, 185, 210]}'></df-bar-chart>\n\n以上图表组件已过安全沙箱校验，可安全用于决策汇报。`,
+  normal: `这是我们为您生成的本年度核心销售数据与 AI 能力评测。系统已开启白名单挂载防护，安全渲染为前端原生 Vue 组件：\n\n<df-radar-chart dataset='{"title":"AI 智能体综合能力评测","indicators":[{"name":"逻辑推理","max":100},{"name":"代码编写","max":100},{"name":"文本创作","max":100},{"name":"知识记忆","max":100},{"name":"工具调用","max":100}],"values":[92, 85, 95, 90, 88]}'></df-radar-chart>\n\n以上图表组件已过安全沙箱校验，可安全用于决策汇报。`,
   'invalid-zod': `以下数据中的 values 字段由于我内部生成时的精度缺失，错误地输出为了字符串格式。这将会触发现端 Zod 运行时的类型校验拦截：\n\n<df-bar-chart dataset='{"title":"季度异常数据（数据错误）","values":"95, 140, 185"}'></df-bar-chart>\n\n请点击下方错误反馈按钮测试自我纠错机制。`,
   'malicious-inject': `这里是一个合法的图表：\n\n<df-bar-chart dataset='{"title":"合规图表","values":[100,200]}'></df-bar-chart>\n\n同时系统检测到我生成了一条恶意的非授权标签注入，尝试越权执行危险终端指令：\n\n<df-danger-terminal command="rm -rf /usr/local/var"></df-danger-terminal>\n\n看，前端 AST 解析时已通过白名单成功对其进行了屏蔽并降级处理。`,
   'stress-test': `# 极限级工业性能与交互沙箱测试 (Ultra Stress Test Pro Max)
@@ -52,11 +52,11 @@ export const TEMPLATES = {
 
 系统支持在单篇文档中同时挂载多个独立的白名单图表组件，每个组件的数据独立校验，互不干扰：
 
-### 第一组：Q1-Q4 研发效能指标
+### 第一组：Q1-Q4 研发效能指标 (柱状图)
 <df-bar-chart dataset='{"title":"R&D 效能指标 (Q1-Q4)","values":[85, 120, 160, 220]}'></df-bar-chart>
 
-### 第二组：Q1-Q4 线上故障降低趋势
-<df-bar-chart dataset='{"title":"线上故障降低趋势 (Q1-Q4)","values":[95, 70, 45, 15]}'></df-bar-chart>
+### 第二组：AI 综合能力多维评估 (雷达图)
+<df-radar-chart dataset='{"title":"AI 智能体综合能力评测","indicators":[{"name":"逻辑推理","max":100},{"name":"代码编写","max":100},{"name":"文本创作","max":100},{"name":"知识记忆","max":100},{"name":"工具调用","max":100}],"values":[92, 85, 95, 90, 88]}'></df-radar-chart>
 
 ### 安全拦截测试：恶意未授权组件注入
 为了测试沙箱隔离性，我们在正文深处插入了一个尝试窃取本地凭据的恶意伪造组件：

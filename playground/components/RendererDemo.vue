@@ -3,7 +3,7 @@ import { ref, computed, onActivated, onMounted, watch, nextTick } from 'vue'
 import { AsMarkdown } from '../../src/index'
 import { Play, RotateCcw, Activity, Palette, AlertCircle, Bot, Search, Terminal } from '@lucide/vue'
 import { useSimulator } from '../hooks/useSimulator'
-import DfBarChart from './DfBarChart.vue'
+import DfChart from './DfChart.vue'
 
 // 1. 引入模拟器 Engine 核心 logic
 const {
@@ -17,7 +17,7 @@ const {
   handleFeedback
 } = useSimulator(null)
 
-const allowedComponents = ref(['df-bar-chart'])
+const allowedComponents = ref(['df-bar-chart', 'df-radar-chart'])
 
 const tokensPerSecond = ref(80)
 watch(tokensPerSecond, (newVal) => {
@@ -276,7 +276,10 @@ onUnmounted(() => {
           :text="streamText"
           :is-streaming="isMarkdownStreaming"
           :allowed-components="allowedComponents"
-          :custom-components="{ 'df-bar-chart': DfBarChart }"
+          :custom-components="{
+            'df-bar-chart': DfChart,
+            'df-radar-chart': DfChart
+          }"
           scroll-container=".document-container"
           @feedback="handleFeedback"
         />
