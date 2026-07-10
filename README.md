@@ -12,6 +12,8 @@
 
 面向高阶 AI Agent 场景的 Vue 3 思维链 (`AsThoughtChain`) 与流式 Markdown (`AsMarkdown`) 渲染组件库。
 
+🔗 **在线演示 (Playground)**：[https://aoyia.github.io/aistream-vue/](https://aoyia.github.io/aistream-vue/)
+
 ---
 
 ## ✨ 核心特性
