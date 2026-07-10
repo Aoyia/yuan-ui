@@ -11,14 +11,14 @@
   `Yuan UI 智能体工作台`
   修改为：
   `Yuan UI - 思维链与 Markdown 流式渲染`
-- 将切换按钮 `streamRenderer` 的文案：
+- 将切换按钮 `streamRenderer` 的文案（对标 Ant Design X 中的 `XMarkdown` 组件）：
   `流式 VNode 渲染 (Renderer)`
   修改为：
-  `Markdown 流式渲染`
-- 将切换按钮 `trace` 的文案：
+  `XMarkdown`
+- 将切换按钮 `trace` 的文案（对标 Ant Design X 中的 `ThoughtChain` 组件）：
   `新版 AgentTrace (List)`
   修改为：
-  `思维链轨迹`
+  `ThoughtChain`
 
 ### 2. 网页标题变更
 
@@ -34,5 +34,6 @@
 - 运行本地 Vite 开发服务器，访问对应的页面（通常为 `http://localhost:5173/`）。
 - 确认浏览器标签页的 Title 显示为 `Yuan UI - 思维链与 Markdown 流式渲染`。
 - 确认页面左上角品牌标志处文字显示为 `Yuan UI - 思维链与 Markdown 流式渲染`。
-- 确认顶栏右侧的两个 Tab 按钮文案分别显示为 `Markdown 流式渲染` 和 `思维链轨迹`。
+- 确认顶栏右侧的两个 Tab 按钮文案分别显示为 `XMarkdown` 和 `ThoughtChain`。
+
 
