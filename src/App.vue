@@ -13,7 +13,7 @@ import {
 } from './components/AgentTrace'
 import { AgentTraceLinear } from './components/AgentTraceLinear'
 import { StreamMarkdownRenderer } from './components/StreamMarkdownRenderer'
-import { Play, RotateCcw, Activity, ShieldCheck, Terminal } from '@lucide/vue'
+import { Play, RotateCcw, Activity, ShieldCheck, Terminal, FileText, Bot, Palette, BarChart3, Zap, CheckCircle2, AlertTriangle, AlertCircle, Search } from '@lucide/vue'
 
 const activeTab = ref<'trace' | 'traceLinear' | 'streamRenderer'>('streamRenderer')
 const currentScenario = ref<'basic' | 'intermediate' | 'advanced'>('advanced')
@@ -280,7 +280,7 @@ function handleFeedback(errorMsg: string) {
   streamText.value = ''
 
   setTimeout(() => {
-    streamText.value = `抱歉，刚才 values 输出的参数结构存在校验问题（Zod 报错已捕获回喂）。我已经对其进行了修正，已重新输出符合 Schema 规格的数据：\n\n<dxf-bar-chart dataset='{"title":"季度已修正数据（自我纠错成功）","values":[95, 140, 185]}'></dxf-bar-chart>\n\n数据现在已经过 Zod Schema 规则的强校对，原生 Vue 组件已被安全挂载上屏。`
+    streamText.value = `抱歉，刚才 values 输出的参数 structure 存在校验问题（Zod 报错已捕获回喂）。我已经对其进行了修正，已重新输出符合 Schema 规格的数据：\n\n<dxf-bar-chart dataset='{"title":"季度已修正数据（自我纠错成功）","values":[95, 140, 185]}'></dxf-bar-chart>\n\n数据现在已经过 Zod Schema 规则的强校对，原生 Vue 组件已被安全挂载上屏。`
     isMarkdownStreaming.value = false
     notification.value = "✅ 大模型自我纠错成功！新数据已完美渲染。"
     setTimeout(() => {
@@ -457,8 +457,9 @@ const DxfBarChart = defineComponent({
     return () => {
       if (errorMsg.value) {
         return h('div', { class: 'error-panel' }, [
-          h('div', { class: 'error-header' }, [
-            h('span', {}, '⚠️ 运行时校验失败 (Zod Schema Validation Fail)')
+          h('div', { class: 'error-header', style: { display: 'flex', alignItems: 'center', gap: '6px' } }, [
+            h(AlertTriangle, { style: { width: '14px', height: '14px', color: 'var(--yuan-error)' } }),
+            h('span', {}, '运行时校验失败 (Zod Schema Validation Fail)')
           ]),
           h('div', { class: 'error-body' }, errorMsg.value),
           h('div', { class: 'error-actions' }, [
@@ -469,17 +470,24 @@ const DxfBarChart = defineComponent({
                 color: 'var(--yuan-error)',
                 padding: '6px 12px',
                 borderRadius: '6px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
               },
               onClick: () => emit('feedback', errorMsg.value!)
-            }, '🔌 结构化报错回喂（触发 AI 自我纠错）')
+            }, [
+              h(Zap, { style: { width: '12px', height: '12px' } }),
+              h('span', {}, '结构化报错回喂（触发 AI 自我纠错）')
+            ])
           ])
         ])
       }
 
       return h('div', { class: 'custom-chart-container' }, [
-        h('div', { class: 'chart-header' }, [
-          h('span', {}, '📊 ECharts AI 柱状图组件 (DxfBarChart)'),
+        h('div', { class: 'chart-header', style: { display: 'flex', alignItems: 'center', gap: '6px' } }, [
+          h(BarChart3, { style: { width: '14px', height: '14px', color: 'var(--yuan-primary)' } }),
+          h('span', {}, 'ECharts AI 柱状图组件 (DxfBarChart)'),
           h('span', {
             style: {
               fontSize: '11px',
@@ -488,9 +496,15 @@ const DxfBarChart = defineComponent({
               padding: '2px 6px',
               borderRadius: '4px',
               border: '1px solid var(--yuan-border)',
-              marginLeft: '8px'
+              marginLeft: '8px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
             }
-          }, 'Zod & ECharts 渲染就绪')
+          }, [
+            h(CheckCircle2, { style: { width: '10px', height: '10px', color: 'var(--yuan-success)' } }),
+            h('span', {}, 'Zod & ECharts 渲染就绪')
+          ])
         ]),
         h('div', {
           ref: chartRef,
@@ -639,8 +653,8 @@ const activeCodeTransformed = computed(() => {
         <!-- 左栏: 对应模式下的代码演示看板 -->
         <aside class="code-panel">
           <div class="code-tab-header">
-            <div class="code-tab-active">
-              <span class="file-icon">📄</span>
+            <div class="code-tab-active" style="display: flex; align-items: center; gap: 6px;">
+              <FileText class="file-icon" style="width: 14px; height: 14px; color: #60a5fa;" />
               <span class="file-name">{{ activeFileName }}</span>
             </div>
           </div>
@@ -701,8 +715,8 @@ const activeCodeTransformed = computed(() => {
         <!-- 左栏: 大模型模拟输出控制板 -->
         <aside class="code-panel spec-md-controls">
           <div class="code-tab-header">
-            <div class="code-tab-active">
-              <span class="file-icon">🤖</span>
+            <div class="code-tab-active" style="display: flex; align-items: center; gap: 6px;">
+              <Bot class="file-icon" style="width: 14px; height: 14px; color: #a855f7;" />
               <span class="file-name">大模型流式输出模拟器</span>
             </div>
           </div>
@@ -744,9 +758,12 @@ const activeCodeTransformed = computed(() => {
               </button>
             </div>
 
-            <!-- 流式原始字符缓冲区监密 -->
+            <!-- 流式原始字符缓冲区监视 -->
             <div class="raw-buffer-container">
-              <div class="buffer-header-title">📜 大模型 Raw Stream 字符缓冲区</div>
+              <div class="buffer-header-title" style="display: flex; align-items: center; gap: 6px;">
+                <Terminal style="width: 12px; height: 12px; color: #64748b;" />
+                <span>大模型 Raw Stream 字符缓冲区</span>
+              </div>
               <div class="raw-terminal-view">
                 <div class="raw-stream-text" :class="{ blinker: isMarkdownStreaming }">
                   {{ streamText || '等待大模型流式信号输出...' }}
@@ -756,7 +773,10 @@ const activeCodeTransformed = computed(() => {
 
             <!-- AST 拦截监视器 -->
             <div class="ast-monitor-section">
-              <div class="buffer-header-title">🔍 AST Token 安全拦截监视器</div>
+              <div class="buffer-header-title" style="display: flex; align-items: center; gap: 6px;">
+                <Search style="width: 12px; height: 12px; color: #64748b;" />
+                <span>AST Token 安全拦截监视器</span>
+              </div>
               <div class="ast-list-box">
                 <div v-if="parsedComponents.length === 0" class="ast-empty-msg">
                   暂未解析到以 &lt;dxf- 开头的 HTML 标签 Token
@@ -780,7 +800,10 @@ const activeCodeTransformed = computed(() => {
         <main class="preview-panel" ref="documentViewportRef">
           <div class="document-container">
             <div class="document-rendering-title-bar">
-              <span>🎨 前端运行时渲染视图 (Vue 3 VNode 递归映射)</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <Palette style="width: 14px; height: 14px; color: var(--yuan-primary);" />
+                <span>前端运行时渲染视图 (Vue 3 VNode 递归映射)</span>
+              </div>
               <span class="badge-vnode-tag">已启用：纯 VNode 映射（零 v-html）</span>
             </div>
 
@@ -795,7 +818,7 @@ const activeCodeTransformed = computed(() => {
 
               <!-- 自我纠错提示通知 -->
               <div v-if="notification" class="notification-correction-alert">
-                <div class="alert-icon">!</div>
+                <AlertCircle class="alert-icon" style="width: 16px; height: 16px; color: #6366f1;" />
                 <div class="alert-text">{{ notification }}</div>
               </div>
 
