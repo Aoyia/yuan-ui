@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onActivated, onMounted, watch } from 'vue'
+import { ref, computed, onActivated, onMounted, watch, nextTick } from 'vue'
 import { StreamMarkdownRenderer } from '../../src/index'
 import { Play, RotateCcw, Activity, Palette, AlertCircle, Bot, Search, Terminal } from '@lucide/vue'
 import { useSimulator } from '../hooks/useSimulator'
@@ -55,12 +55,21 @@ let hasMounted = false
 
 onMounted(() => {
   hasMounted = true
-  startMarkdownStream()
+  nextTick(() => {
+    // 延迟 150ms 等待 Transition 过渡和 DOM 稳定，防止高度计算为 0 导致吸底失效
+    setTimeout(() => {
+      startMarkdownStream()
+    }, 150)
+  })
 })
 
 onActivated(() => {
   if (!hasMounted) return
-  startMarkdownStream()
+  nextTick(() => {
+    setTimeout(() => {
+      startMarkdownStream()
+    }, 150)
+  })
 })
 </script>
 
