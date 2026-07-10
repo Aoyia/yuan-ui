@@ -30,10 +30,12 @@
   "dependencies": {
     "@lucide/vue": "^1.21.0",
     "@vueuse/core": "^10.9.0",
+    "echarts": "^6.1.0",
     "markdown-it": "^14.3.0",
     "markstream-vue": "^1.0.0",
     "nanoid": "^5.0.6",
-    "vue": "^3.4.0"
+    "vue": "^3.4.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
