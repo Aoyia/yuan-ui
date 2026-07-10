@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, nextTick, computed, getCurrentInstance, defineComponent, h } from 'vue'
+import { z } from 'zod'
 import { mockBasicFlow, mockIntermediateFlow, mockAdvancedFlow } from './mockData'
 import { staticSnippets } from './constants/snippets'
 import {
@@ -16,6 +17,138 @@ import { Play, RotateCcw, Activity, ShieldCheck, Terminal } from '@lucide/vue'
 const activeTab = ref<'trace' | 'traceLinear' | 'streamRenderer'>('streamRenderer')
 const currentScenario = ref<'basic' | 'intermediate' | 'advanced'>('advanced')
 const isStreaming = ref(false)
+
+// 2. 初始化新版 AgentTrace 解析器
+const traceParser = useAgentTraceStream()
+
+const chatViewportRef = ref<HTMLElement | null>(null)
+const documentViewportRef = ref<HTMLElement | null>(null)
+
+function handleNodeClick(id: string) {
+  console.log('Node clicked:', id)
+}
+
+// 智能自动滚动锚底：仅在滚动条本来就在底部、或处于流式运行状态时，才追加自动滚动，防止打断浏览器原生 Scroll Anchoring
+function scrollToBottom() {
+  nextTick(() => {
+    if (chatViewportRef.value) {
+      const el = chatViewportRef.value
+      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 15
+      if (isAtBottom || isStreaming.value) {
+        el.scrollTop = el.scrollHeight
+      }
+    }
+    if (documentViewportRef.value) {
+      const el = documentViewportRef.value
+      const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 15
+      if (isAtBottom || isStreaming.value) {
+        el.scrollTop = el.scrollHeight
+      }
+    }
+  })
+}
+
+watch(() => traceParser.content.value, () => scrollToBottom())
+watch(() => traceParser.nodes.value.length, () => scrollToBottom())
+watch(() => {
+  const lastNode = traceParser.nodes.value[traceParser.nodes.value.length - 1]
+  if (lastNode?.kind === 'reasoning') return lastNode.summary
+  if (lastNode?.kind === 'tool') return String(lastNode.output ?? lastNode.input ?? '')
+  return ''
+}, () => scrollToBottom())
+
+// 阻塞并等待用户审批的 Promise 控制器
+const pendingApproval = ref<{ resolve: (approved: boolean) => void; id: string } | null>(null)
+
+function onUserApprove(nodeId: string) {
+  if (pendingApproval.value && pendingApproval.value.id === nodeId) {
+    traceParser.handleTraceEvent({ type: 'tool-approval-response', id: nodeId, approved: true })
+    pendingApproval.value.resolve(true)
+    pendingApproval.value = null
+  }
+}
+
+function onUserReject(payload: { nodeId: string; reason?: string }) {
+  if (pendingApproval.value && pendingApproval.value.id === payload.nodeId) {
+    traceParser.handleTraceEvent({ type: 'tool-approval-response', id: payload.nodeId, approved: false, reason: payload.reason })
+    pendingApproval.value.resolve(false)
+    pendingApproval.value = null
+  }
+}
+
+function onUserToggleCollapse(nodeId: string) {
+  traceParser.handleTraceEvent({ type: 'toggle-collapse', id: nodeId })
+}
+
+async function startSimulation() {
+  if (isStreaming.value) return
+  isStreaming.value = true
+  pendingApproval.value = null
+
+  traceParser.reset()
+  
+  // 根据渐进式场景选择对应的数据流
+  let targetFlow = mockAdvancedFlow
+  if (currentScenario.value === 'basic') {
+    targetFlow = mockBasicFlow
+  } else if (currentScenario.value === 'intermediate') {
+    targetFlow = mockIntermediateFlow
+  }
+
+  for (let i = 0; i < targetFlow.length; i++) {
+    if (!isStreaming.value) break // 支持中途打断
+    
+    const chunk = targetFlow[i]
+    
+    if (chunk.type === 'tool-approval-request') {
+      traceParser.handleTraceEvent(chunk)
+      
+      // 阻塞循环：等待用户审批
+      const approved = await new Promise<boolean>((resolve) => {
+        pendingApproval.value = { resolve, id: chunk.id }
+      })
+      
+      if (!approved) {
+        // 如果被用户拒绝：我们跳过下一个 chunk (代表工具执行成功的输出)，模拟拒绝分支
+        i++
+        await new Promise(resolve => setTimeout(resolve, 500))
+        continue
+      }
+      await new Promise(resolve => setTimeout(resolve, 500))
+      continue
+    }
+    
+    traceParser.handleTraceEvent(chunk)
+    
+    // 模拟流式事件输出延迟
+    if (chunk.type === 'reasoning-delta' || chunk.type === 'text-delta') {
+      await new Promise(resolve => setTimeout(resolve, 15))
+    } else if (chunk.type === 'tool-input-start' || chunk.type === 'group-start') {
+      await new Promise(resolve => setTimeout(resolve, 600))
+    } else if (chunk.type === 'tool-output' || chunk.type === 'group-end') {
+      await new Promise(resolve => setTimeout(resolve, 800))
+    } else if (chunk.type === 'artifact') {
+      await new Promise(resolve => setTimeout(resolve, 500))
+    }
+  }
+  isStreaming.value = false
+}
+
+function handleReset() {
+  isStreaming.value = false
+  pendingApproval.value = null
+  traceParser.reset()
+}
+
+const traceOpen = ref(true)
+
+watch(traceOpen, (newVal) => {
+  if (newVal === true) {
+    if (!isStreaming.value) {
+      traceParser.handleTraceEvent({ type: 'collapse-all-groups' })
+    }
+  }
+})
 
 // --- 流式 Markdown 渲染器测试专属响应式状态 ---
 const selectedTemplate = ref<'normal' | 'invalid-zod' | 'malicious-inject' | 'stress-test'>('normal')
@@ -36,7 +169,7 @@ const TEMPLATES = {
 ## 1. 复杂行内标签与嵌套测试 (Nested Inline Styles)
 
 这里包含行内代码 \`const dxfRuntime = Vue.createApp(config)\` 校验，以及多重样式混合：
-*   **粗体高亮样式**：系统已拦截全部危险指令，仅放行经过 Zod 强校对的白名单自定义标签。
+*   **粗体高亮样式**：系统已拦截全部危险指令，仅放行经过 Zod 强校对 of 白名单自定义标签。
 *   *斜体与粗体混合*：**这是我们的 *核心资源哲学*，旨在提供大厂级的 AI 体验**。
 *   \`行内代码加粗\`：\`DxfText\` 仅更新 TextNode \`nodeValue\` 的底层机制是保障划选不中断的关键。
 
@@ -122,7 +255,6 @@ function startMarkdownStream() {
 
   markdownTimer = setInterval(() => {
     if (index < fullText.length) {
-      // 模拟流式打字追加
       streamText.value += fullText.slice(index, index + 4)
       index += 4
     } else {
@@ -175,9 +307,6 @@ const parsedComponents = computed(() => {
   }
   return list
 })
-
-import { getCurrentInstance, defineComponent } from 'vue'
-import { z } from 'zod'
 
 const DxfBarChart = defineComponent({
   name: 'DxfBarChart',
@@ -504,7 +633,7 @@ const activeCodeTransformed = computed(() => {
               </button>
             </div>
 
-            <!-- 流式原始字符缓冲区监视 -->
+            <!-- 流式原始字符缓冲区监密 -->
             <div class="raw-buffer-container">
               <div class="buffer-header-title">📜 大模型 Raw Stream 字符缓冲区</div>
               <div class="raw-terminal-view">
@@ -571,87 +700,6 @@ const activeCodeTransformed = computed(() => {
           </div>
         </main>
       </template>
-    </div>="isStreaming" 
-            @click="startSimulation"
-          >
-            <Play class="btn-icon" />
-            <span>运行模拟</span>
-          </button>
-          <button 
-            type="button"
-            class="btn-secondary" 
-            @click="handleReset"
-          >
-            <RotateCcw class="btn-icon" />
-            <span>重置</span>
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <!-- 主体双栏 Workspace -->
-    <div class="workspace">
-      <!-- 左栏: 对应模式下的代码演示看板 -->
-      <aside class="code-panel">
-        <div class="code-tab-header">
-          <div class="code-tab-active">
-            <span class="file-icon">📄</span>
-            <span class="file-name">{{ activeFileName }}</span>
-          </div>
-        </div>
-        <div class="code-viewer-body">
-          <pre class="code-editor-pre"><code>{{ activeCodeTransformed }}</code></pre>
-        </div>
-      </aside>
-
-      <!-- 右栏: Document 预览面板，一体化承载思维链和最终正文 -->
-      <main class="preview-panel" ref="documentViewportRef">
-        <div class="document-container">
-          
-          <!-- 1. 新版 AgentTrace 演示（移至右侧大视口上方） -->
-          <template v-if="activeTab === 'trace' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
-            <AgentTrace
-              v-model:open="traceOpen"
-              :is-streaming="traceParser.isStreaming.value"
-              :duration="traceParser.duration.value"
-              @approve="onUserApprove"
-              @reject="onUserReject"
-              @toggle-collapse="onUserToggleCollapse"
-            >
-              <AgentTraceTrigger />
-              <AgentTraceContent>
-                <AgentTraceList :nodes="traceParser.nodes.value" />
-              </AgentTraceContent>
-            </AgentTrace>
-          </template>
-
-          <!-- 1.6 扁平树形线性流演示 -->
-          <template v-else-if="activeTab === 'traceLinear' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
-            <div class="linear-playground-wrapper">
-              <AgentTraceLinear
-                :nodes="traceParser.nodes.value"
-                :is-streaming="traceParser.isStreaming.value"
-              />
-            </div>
-          </template>
-
-
-          <!-- 3. 空白就绪占位（无数据且未执行时呈现） -->
-          <div v-else class="empty-preview">
-            <div class="empty-icon-box">
-              <Activity class="empty-icon" />
-            </div>
-            <p class="empty-title">等待模拟运行</p>
-            <p class="empty-desc">点击顶部的“运行模拟”按钮，即可在此查看流式思维轨迹与生成的文档正文。</p>
-          </div>
-
-          <!-- 4. Markdown 正文结果（始终呈现在思维链正下方） -->
-          <div v-if="traceParser.content.value" class="answer-content">
-            <div class="markdown-body">{{ traceParser.content.value }}</div>
-          </div>
-
-        </div>
-      </main>
     </div>
   </div>
 </template>
@@ -936,9 +984,9 @@ button {
 
 /* 左侧代码演示看板 (Code Panel) */
 .code-panel {
-  width: 420px; /* 拓宽左侧代码阅读空间 */
+  width: 420px;
   border-right: 1px solid #f1f5f9;
-  background-color: #0b0f19; /* 采用与终端一致的极客夜色暗黑底 */
+  background-color: #0b0f19;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1008,7 +1056,7 @@ button {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.72rem;
   line-height: 1.55;
-  color: #e2e8f0; /* 白亮字 */
+  color: #e2e8f0;
   white-space: pre;
   animation: code-fade-in 0.25s ease;
 }
