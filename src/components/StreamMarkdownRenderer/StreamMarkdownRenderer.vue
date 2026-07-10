@@ -122,11 +122,9 @@ watch(
   () => props.text,
   () => {
     if (!props.autoScroll || !props.isStreaming || !wasAtBottom) return;
-    nextTick(() => {
-      if (resolvedScrollContainer) {
-        resolvedScrollContainer.scrollTop = resolvedScrollContainer.scrollHeight;
-      }
-    });
+    if (resolvedScrollContainer) {
+      resolvedScrollContainer.scrollTop = resolvedScrollContainer.scrollHeight;
+    }
   },
   { flush: 'post' }
 );
