@@ -5,7 +5,7 @@ import {
   ShieldAlert, Check, X, Terminal, FileCode, Globe, File 
 } from '@lucide/vue'
 import type { TraceStatus, ToolTraceState } from '../types'
-import { useAgentTraceContext } from '../context'
+import { useAsThoughtChainContext } from '../context'
 
 // 导入四大内置渲染器
 import TerminalRenderer from './TerminalRenderer.vue'
@@ -35,7 +35,7 @@ const props = withDefaults(defineProps<Props>(), {
 const isInputCollapsed = ref(true)
 const isOutputCollapsed = ref(false)
 
-const { onApprove, onReject } = useAgentTraceContext()
+const { onApprove, onReject } = useAsThoughtChainContext()
 
 const statusClass = computed(() => {
   return {

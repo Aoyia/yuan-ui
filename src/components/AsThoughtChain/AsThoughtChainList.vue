@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { AgentTraceNode } from './types'
+import type { AsThoughtChainNode } from './types'
 import ReasoningTraceNode from './renderers/ReasoningTraceNode.vue'
 import ToolTraceNode from './renderers/ToolTraceNode.vue'
 import ArtifactTraceNode from './renderers/ArtifactTraceNode.vue'
@@ -8,7 +8,7 @@ import TextTraceNode from './renderers/TextTraceNode.vue'
 import GroupTraceNodeComponent from './renderers/GroupTraceNode.vue'
 
 interface Props {
-  nodes: AgentTraceNode[]
+  nodes: AsThoughtChainNode[]
   maxOutputLength?: number
   parentId?: string // 当前列表的父节点ID，用于级联过滤层级
 }
@@ -38,7 +38,7 @@ const currentLevelNodes = computed(() => {
         v-bind="node" 
         :all-nodes="props.nodes" 
       >
-        <AgentTraceList 
+        <AsThoughtChainList 
           :nodes="props.nodes" 
           :parent-id="node.id" 
           :max-output-length="maxOutputLength"

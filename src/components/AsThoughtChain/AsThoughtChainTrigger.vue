@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ChevronDown } from '@lucide/vue'
-import { useAgentTraceContext } from './context'
+import { useAsThoughtChainContext } from './context'
 
-const { isOpen, isStreaming, duration, setIsOpen } = useAgentTraceContext()
+const { isOpen, isStreaming, duration, setIsOpen } = useAsThoughtChainContext()
 
 function toggleOpen() {
   setIsOpen(!isOpen.value)
@@ -27,7 +27,7 @@ function toggleOpen() {
         <slot>
           <template v-if="isStreaming">Thinking...</template>
           <template v-else-if="duration !== undefined">Completed in {{ duration }}s</template>
-          <template v-else>Agent Trace</template>
+          <template v-else>AsThoughtChain</template>
         </slot>
       </span>
     </div>

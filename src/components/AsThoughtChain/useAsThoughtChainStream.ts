@@ -1,21 +1,21 @@
 import { computed, ref } from 'vue'
-import type { AgentTraceEvent } from './types'
-import { createAgentTraceState, reduceAgentTraceEvent } from './reducer'
+import type { AsThoughtChainEvent } from './types'
+import { createAsThoughtChainState, reduceAsThoughtChainEvent } from './reducer'
 
-export function useAgentTraceStream() {
-  const state = ref(createAgentTraceState())
+export function useAsThoughtChainStream() {
+  const state = ref(createAsThoughtChainState())
 
   const nodes = computed(() => state.value.nodes)
   const content = computed(() => state.value.content)
   const isStreaming = computed(() => state.value.isStreaming)
   const duration = computed(() => state.value.duration)
 
-  function handleTraceEvent(event: AgentTraceEvent) {
-    state.value = reduceAgentTraceEvent(state.value, event)
+  function handleTraceEvent(event: AsThoughtChainEvent) {
+    state.value = reduceAsThoughtChainEvent(state.value, event)
   }
 
   function reset() {
-    state.value = reduceAgentTraceEvent(state.value, { type: 'reset' })
+    state.value = reduceAsThoughtChainEvent(state.value, { type: 'reset' })
   }
 
   return {

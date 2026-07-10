@@ -1,7 +1,7 @@
 import type { InjectionKey, Ref } from 'vue'
 import { inject } from 'vue'
 
-export interface AgentTraceContextValue {
+export interface AsThoughtChainContextValue {
   isOpen: Ref<boolean>
   isStreaming: Ref<boolean>
   duration: Ref<number | undefined>
@@ -11,12 +11,12 @@ export interface AgentTraceContextValue {
   toggleCollapse?: (nodeId: string) => void
 }
 
-export const AgentTraceKey: InjectionKey<AgentTraceContextValue> = Symbol('AgentTraceContext')
+export const AsThoughtChainKey: InjectionKey<AsThoughtChainContextValue> = Symbol('AsThoughtChainContext')
 
-export function useAgentTraceContext() {
-  const context = inject(AgentTraceKey)
+export function useAsThoughtChainContext() {
+  const context = inject(AsThoughtChainKey)
   if (!context) {
-    throw new Error('AgentTrace components must be used within <AgentTrace>')
+    throw new Error('AsThoughtChain components must be used within <AsThoughtChain>')
   }
   return context
 }

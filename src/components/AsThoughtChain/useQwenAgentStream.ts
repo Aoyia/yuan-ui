@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue'
-import { useAgentTraceStream } from './useAgentTraceStream'
+import { useAsThoughtChainStream } from './useAsThoughtChainStream'
 
 export interface QwenChunkDelta {
   choices?: Array<{
@@ -27,7 +27,7 @@ export interface QwenChunkDelta {
 export function useQwenAgentStream(options?: {
   sensitiveTools?: string[]
 }) {
-  const traceStream = useAgentTraceStream()
+  const traceStream = useAsThoughtChainStream()
   const sensitiveTools = options?.sensitiveTools || ['execute_command']
 
   // 内部追踪当前流式输入中的工具状态

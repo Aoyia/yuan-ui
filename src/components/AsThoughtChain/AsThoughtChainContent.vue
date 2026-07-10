@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useAgentTraceContext } from './context'
+import { useAsThoughtChainContext } from './context'
 
-const { isOpen } = useAgentTraceContext()
+const { isOpen } = useAsThoughtChainContext()
 </script>
 
 <template>

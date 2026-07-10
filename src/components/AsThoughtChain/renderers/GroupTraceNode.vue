@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ChevronDown, ChevronRight, Loader2, Folder, FolderOpen } from '@lucide/vue'
-import type { AgentTraceNode, TraceStatus } from '../types'
-import { useAgentTraceContext } from '../context'
+import type { AsThoughtChainNode, TraceStatus } from '../types'
+import { useAsThoughtChainContext } from '../context'
 
 interface Props {
   id: string
@@ -10,7 +10,7 @@ interface Props {
   status?: TraceStatus
   duration?: number
   isCollapsed?: boolean
-  allNodes?: AgentTraceNode[]
+  allNodes?: AsThoughtChainNode[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -44,7 +44,7 @@ const childStepsCount = computed(() => {
   return props.allNodes.filter(n => n.parentId === props.id).length
 })
 
-const { toggleCollapse } = useAgentTraceContext()
+const { toggleCollapse } = useAsThoughtChainContext()
 
 function handleToggle() {
   if (toggleCollapse && props.id) {

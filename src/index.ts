@@ -1,9 +1,9 @@
-// yuan-ui 开源组件库最终入口
+// aistream-vue 开源组件库最终入口
 import './styles/theme.css'
 
-export * from './components/AgentTrace'
-export * from './components/AgentTrace/context'
-export * from './components/AgentTrace/types'
+export * from './components/AsThoughtChain'
+export * from './components/AsThoughtChain/context'
+export * from './components/AsThoughtChain/types'
 export * from './components/Loading'
-export * from './components/StreamMarkdownRenderer'
+export * from './components/AsMarkdown'
 

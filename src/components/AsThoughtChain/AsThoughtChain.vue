@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useVModel } from '@vueuse/core'
+import { useVModel, useTimeoutFn } from '@vueuse/core'
 import { provide, watch, toRef } from 'vue'
-import { AgentTraceKey } from './context'
+import { AsThoughtChainKey } from './context'
 
 interface Props {
   open?: boolean
@@ -31,18 +31,21 @@ const isOpen = useVModel(props, 'open', emit, {
   passive: true,
 })
 
+const { start: startAutoClose, stop: stopAutoClose } = useTimeoutFn(() => {
+  isOpen.value = false
+}, () => props.autoCloseDelay, { immediate: false })
+
 // 监听 streaming 状态，流式开始时自动展开，结束后如果开启了自动折叠，则延迟折叠
 watch(() => props.isStreaming, (newVal, oldVal) => {
   if (newVal === true) {
+    stopAutoClose()
     isOpen.value = true
   } else if (props.autoClose && oldVal === true && newVal === false && isOpen.value) {
-    setTimeout(() => {
-      isOpen.value = false
-    }, props.autoCloseDelay)
+    startAutoClose()
   }
 }, { immediate: true })
 
-provide(AgentTraceKey, {
+provide(AsThoughtChainKey, {
   isOpen,
   isStreaming: toRef(props, 'isStreaming'),
   duration: toRef(props, 'duration'),

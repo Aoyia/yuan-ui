@@ -1,14 +1,14 @@
-import type { AgentTraceEvent, AgentTraceNode, ToolTraceNode, GroupTraceNode } from './types'
+import type { AsThoughtChainEvent, AsThoughtChainNode, ToolTraceNode, GroupTraceNode } from './types'
 
-export interface AgentTraceState {
-  nodes: AgentTraceNode[]
+export interface AsThoughtChainState {
+  nodes: AsThoughtChainNode[]
   content: string
   isStreaming: boolean
   duration?: number
   startedAt?: number
 }
 
-export function createAgentTraceState(): AgentTraceState {
+export function createAsThoughtChainState(): AsThoughtChainState {
   return {
     nodes: [],
     content: '',
@@ -20,7 +20,7 @@ function secondsBetween(startedAt: number, endedAt: number) {
   return Math.ceil((endedAt - startedAt) / 1000)
 }
 
-function closeActiveNodes(nodes: AgentTraceNode[], now: number): AgentTraceNode[] {
+function closeActiveNodes(nodes: AsThoughtChainNode[], now: number): AsThoughtChainNode[] {
   return nodes.map((node) => {
     if (node.status !== 'active') {
       return node
@@ -36,7 +36,7 @@ function closeActiveNodes(nodes: AgentTraceNode[], now: number): AgentTraceNode[
 }
 
 // 渐进式收缩：把指定 parentId 下的、已完成的同级 Group 设为折叠状态
-function collapseFinishedSiblings(nodes: AgentTraceNode[], parentId: string | undefined, activeId: string): AgentTraceNode[] {
+function collapseFinishedSiblings(nodes: AsThoughtChainNode[], parentId: string | undefined, activeId: string): AsThoughtChainNode[] {
   return nodes.map((node) => {
     if (node.kind === 'group' && node.parentId === parentId && node.id !== activeId) {
       if (node.status === 'complete' || node.status === 'error' || node.status === 'cancelled') {
@@ -48,7 +48,7 @@ function collapseFinishedSiblings(nodes: AgentTraceNode[], parentId: string | un
 }
 
 // 展开链条：确保当前活跃节点的所有祖先 Group 均处于展开状态，不被隐藏
-function expandAncestors(nodes: AgentTraceNode[], parentId: string | undefined): AgentTraceNode[] {
+function expandAncestors(nodes: AsThoughtChainNode[], parentId: string | undefined): AsThoughtChainNode[] {
   if (!parentId) return nodes
   let currentParentId: string | undefined = parentId
   let nextNodes = [...nodes]
@@ -73,13 +73,13 @@ function expandAncestors(nodes: AgentTraceNode[], parentId: string | undefined):
   return nextNodes
 }
 
-export function reduceAgentTraceEvent(
-  state: AgentTraceState,
-  event: AgentTraceEvent,
+export function reduceAsThoughtChainEvent(
+  state: AsThoughtChainState,
+  event: AsThoughtChainEvent,
   now = Date.now(),
-): AgentTraceState {
+): AsThoughtChainState {
   if (event.type === 'reset') {
-    return createAgentTraceState()
+    return createAsThoughtChainState()
   }
 
   const startedAt = state.startedAt ?? now
@@ -114,7 +114,7 @@ export function reduceAgentTraceEvent(
     }
 
     const newId = event.id ?? `reasoning-${state.nodes.length + 1}`
-    let nextNodes: AgentTraceNode[] = [
+    let nextNodes: AsThoughtChainNode[] = [
       ...closeActiveNodes(state.nodes, now),
       {
         id: newId,
@@ -260,7 +260,7 @@ export function reduceAgentTraceEvent(
 
   // 6. 产物生成
   if (event.type === 'artifact') {
-    let nextNodes: AgentTraceNode[] = [
+    let nextNodes: AsThoughtChainNode[] = [
       ...closeActiveNodes(state.nodes, now),
       {
         id: event.id ?? `artifact-${state.nodes.length + 1}`,

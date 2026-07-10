@@ -11,7 +11,7 @@ export type ToolTraceState =
 
 export type AgentTraceVisibility = 'summary' | 'details' | 'redacted'
 
-export interface AgentTraceBaseNode {
+export interface AsThoughtChainBaseNode {
   id: string
   kind: 'reasoning' | 'tool' | 'artifact' | 'text' | 'group'
   title: string
@@ -22,13 +22,13 @@ export interface AgentTraceBaseNode {
   parentId?: string // 父节点/组的 id，用于层级归属
 }
 
-export interface ReasoningTraceNode extends AgentTraceBaseNode {
+export interface ReasoningTraceNode extends AsThoughtChainBaseNode {
   kind: 'reasoning'
   summary: string
   visibility: AgentTraceVisibility
 }
 
-export interface ToolTraceNode extends AgentTraceBaseNode {
+export interface ToolTraceNode extends AsThoughtChainBaseNode {
   kind: 'tool'
   toolName: string
   state: ToolTraceState
@@ -38,31 +38,31 @@ export interface ToolTraceNode extends AgentTraceBaseNode {
   metadata?: Record<string, unknown>
 }
 
-export interface ArtifactTraceNode extends AgentTraceBaseNode {
+export interface ArtifactTraceNode extends AsThoughtChainBaseNode {
   kind: 'artifact'
   artifactType: 'image' | 'file' | 'link'
   url?: string
   caption?: string
 }
 
-export interface TextTraceNode extends AgentTraceBaseNode {
+export interface TextTraceNode extends AsThoughtChainBaseNode {
   kind: 'text'
   content: string
 }
 
-export interface GroupTraceNode extends AgentTraceBaseNode {
+export interface GroupTraceNode extends AsThoughtChainBaseNode {
   kind: 'group'
   isCollapsed: boolean // 控制在 UI 上的展开折叠状态
 }
 
-export type AgentTraceNode =
+export type AsThoughtChainNode =
   | ReasoningTraceNode
   | ToolTraceNode
   | ArtifactTraceNode
   | TextTraceNode
   | GroupTraceNode
 
-export type AgentTraceEvent =
+export type AsThoughtChainEvent =
   | { type: 'reasoning-delta'; id?: string; delta: string; title?: string; parentId?: string }
   | { type: 'tool-input-start'; id: string; toolName: string; input?: unknown; title?: string; parentId?: string }
   | { type: 'tool-input-delta'; id: string; inputDelta: unknown }
