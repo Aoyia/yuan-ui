@@ -2,7 +2,7 @@
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { z } from 'zod'
 import * as echarts from 'echarts'
-import { BarChart3, CheckCircle2, AlertTriangle, Zap } from '@lucide/vue'
+import { AlertTriangle, Zap } from '@lucide/vue'
 
 const props = defineProps<{
   dataset: string
@@ -180,33 +180,11 @@ const handleResize = () => {
   </div>
 
   <div v-else class="custom-chart-container">
-    <div class="chart-header" style="display: flex; align-items: center; gap: 6px;">
-      <BarChart3 style="width: 14px; height: 14px; color: var(--yuan-primary);" />
-      <span>ECharts AI 柱状图组件 (DfBarChart)</span>
-      <span
-        style="
-          font-size: 11px;
-          color: var(--yuan-success);
-          background: var(--yuan-success-light);
-          padding: 2px 6px;
-          border-radius: 4px;
-          border: 1px solid var(--yuan-border);
-          margin-left: 8px;
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-        "
-      >
-        <CheckCircle2 style="width: 10px; height: 10px; color: var(--yuan-success);" />
-        <span>Zod & ECharts 渲染就绪</span>
-      </span>
-    </div>
     <div
       ref="chartRef"
       style="
         width: 100%;
         height: 240px;
-        margin-top: 12px;
       "
     />
   </div>
