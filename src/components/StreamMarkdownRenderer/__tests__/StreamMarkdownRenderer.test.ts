@@ -58,6 +58,9 @@ describe('StreamMarkdownRenderer Wrapper Component', () => {
     container.scrollTop = 100;
     
     await wrapper.setProps({ text: 'Hello World' });
+    
+    // 等待 RAF 执行更新并等待 Vue tick
+    await new Promise(resolve => window.requestAnimationFrame(resolve));
     await nextTick();
 
     // 验证是否已自动滚动到最新的 scrollHeight
@@ -86,6 +89,9 @@ describe('StreamMarkdownRenderer Wrapper Component', () => {
     container.scrollTop = 50;
 
     await wrapper.setProps({ text: 'Hello World' });
+    
+    // 等待 RAF 执行更新并等待 Vue tick
+    await new Promise(resolve => window.requestAnimationFrame(resolve));
     await nextTick();
 
     expect(container.scrollTop).toBe(50);
@@ -112,6 +118,9 @@ describe('StreamMarkdownRenderer Wrapper Component', () => {
     container.scrollTop = 100;
 
     await wrapper.setProps({ text: 'Hello World' });
+    
+    // 等待 RAF 执行更新并等待 Vue tick
+    await new Promise(resolve => window.requestAnimationFrame(resolve));
     await nextTick();
 
     expect(container.scrollTop).toBe(100);

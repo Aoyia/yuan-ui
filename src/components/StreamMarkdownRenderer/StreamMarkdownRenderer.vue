@@ -99,7 +99,7 @@ watch(
 // 4. 滚动判定逻辑：在 DOM 更新前检查是否处于底部 (flush: 'pre')
 let wasAtBottom = false;
 watch(
-  () => props.text,
+  () => nodesTree.value,
   () => {
     if (!props.autoScroll || !props.isStreaming) {
       wasAtBottom = false;
@@ -119,7 +119,7 @@ watch(
 
 // 5. 滚动执行逻辑：在 DOM 更新后若之前处于底部则执行滚动 (flush: 'post')
 watch(
-  () => props.text,
+  () => nodesTree.value,
   () => {
     if (!props.autoScroll || !props.isStreaming || !wasAtBottom) return;
     if (resolvedScrollContainer) {
