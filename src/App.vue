@@ -1570,5 +1570,4 @@ button {
   padding: 0.5rem;
   border-radius: 4px;
 }
->>>>>>> master
 </style>
