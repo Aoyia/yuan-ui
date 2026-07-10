@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch, onMounted } from 'vue';
+import { watch, onMounted, ref, nextTick } from 'vue';
 import { useStreamRenderer } from './useStreamRenderer';
 import { VNodeMarkdownRenderer } from './VNodeMarkdownRenderer';
 
@@ -14,19 +14,62 @@ interface Props {
   customComponents?: Record<string, any>;
   /** 是否启用启发式尾部防闪烁修剪 */
   enableTailoring?: boolean;
+  /** 是否启用流式输出自动吸底跟随滚动 */
+  autoScroll?: boolean;
+  /** 滚动容器，未指定则自动寻找最近的滚动祖先 */
+  scrollContainer?: HTMLElement | string | null;
+  /** 距离底部多少像素内判定为“在底部”的容差，默认 20px */
+  scrollOffset?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isStreaming: false,
   allowedComponents: () => ['dxf-bar-chart'],
   customComponents: () => ({}),
-  enableTailoring: true
+  enableTailoring: true,
+  autoScroll: true,
+  scrollContainer: null,
+  scrollOffset: 20
 });
 
 const emit = defineEmits<{
   (e: 'feedback', errorMessage: string): void;
   (e: 'render-complete'): void;
 }>();
+
+const containerRef = ref<HTMLElement | null>(null);
+let resolvedScrollContainer: HTMLElement | null = null;
+
+// 寻找最近的滚动父级容器
+function getScrollParent(el: HTMLElement): HTMLElement {
+  let parent = el.parentElement;
+  while (parent) {
+    const style = window.getComputedStyle(parent);
+    const overflowY = style.overflowY;
+    if (overflowY === 'auto' || overflowY === 'scroll') {
+      return parent;
+    }
+    parent = parent.parentElement;
+  }
+  return document.documentElement;
+}
+
+const resolveScrollContainer = () => {
+  if (!containerRef.value) return;
+  if (props.scrollContainer instanceof HTMLElement) {
+    resolvedScrollContainer = props.scrollContainer;
+  } else if (typeof props.scrollContainer === 'string') {
+    resolvedScrollContainer = document.querySelector(props.scrollContainer) as HTMLElement;
+  }
+  
+  if (!resolvedScrollContainer) {
+    resolvedScrollContainer = getScrollParent(containerRef.value);
+  }
+};
+
+watch(() => props.scrollContainer, () => {
+  resolvedScrollContainer = null;
+});
 
 // 1. 初始化 Composable 管线
 const { nodesTree, updateStream, reset } = useStreamRenderer({
@@ -53,13 +96,48 @@ watch(
   }
 );
 
+// 4. 滚动判定逻辑：在 DOM 更新前检查是否处于底部 (flush: 'pre')
+let wasAtBottom = false;
+watch(
+  () => props.text,
+  () => {
+    if (!props.autoScroll || !props.isStreaming) {
+      wasAtBottom = false;
+      return;
+    }
+    if (!resolvedScrollContainer) {
+      resolveScrollContainer();
+    }
+    if (resolvedScrollContainer) {
+      const el = resolvedScrollContainer;
+      const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      wasAtBottom = distanceToBottom <= props.scrollOffset;
+    }
+  },
+  { flush: 'pre' }
+);
+
+// 5. 滚动执行逻辑：在 DOM 更新后若之前处于底部则执行滚动 (flush: 'post')
+watch(
+  () => props.text,
+  () => {
+    if (!props.autoScroll || !props.isStreaming || !wasAtBottom) return;
+    nextTick(() => {
+      if (resolvedScrollContainer) {
+        resolvedScrollContainer.scrollTop = resolvedScrollContainer.scrollHeight;
+      }
+    });
+  },
+  { flush: 'post' }
+);
+
 onMounted(() => {
   updateStream(props.text, props.isStreaming);
 });
 </script>
 
 <template>
-  <div class="yuan-stream-renderer">
+  <div ref="containerRef" class="yuan-stream-renderer">
     <VNodeMarkdownRenderer
       :nodes="nodesTree"
       :allowed-components="allowedComponents"
