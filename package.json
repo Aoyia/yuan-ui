@@ -1,17 +1,17 @@
 {
-  "name": "yuan-ui",
+  "name": "aistream-vue",
   "version": "0.1.0",
   "type": "module",
   "description": "面向高阶 AI Agent 场景的 Vue 3 思维链与执行轨迹 UI 组件库",
-  "main": "./dist/yuan-ui.umd.js",
-  "module": "./dist/yuan-ui.es.js",
+  "main": "./dist/aistream-vue.umd.js",
+  "module": "./dist/aistream-vue.es.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/yuan-ui.es.js",
-      "require": "./dist/yuan-ui.umd.js",
-      "default": "./dist/yuan-ui.es.js"
+      "import": "./dist/aistream-vue.es.js",
+      "require": "./dist/aistream-vue.umd.js",
+      "default": "./dist/aistream-vue.es.js"
     },
     "./style.css": "./dist/style.css",
     "./package.json": "./package.json"

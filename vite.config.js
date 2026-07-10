@@ -17,9 +17,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'YuanUI',
+      name: 'AiStreamVue',
       formats: ['es', 'umd'],
-      fileName: (format) => `yuan-ui.${format}.js`,
+      fileName: (format) => `aistream-vue.${format}.js`,
     },
     rollupOptions: {
       // 将 Vue 3 及其主要外部组件排除在打包产物之外

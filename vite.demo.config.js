@@ -7,7 +7,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [vue()],
   // 对应 GitHub Pages 的仓库路径：https://<user>.github.io/<repo>/
-  base: '/yuan-ui/',
+  base: '/aistream-vue/',
   optimizeDeps: {
     exclude: ['fsevents'],
   },
