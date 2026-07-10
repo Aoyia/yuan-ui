@@ -1,14 +1,17 @@
 # Yuan UI ⚡
 
 <p align="center">
-  <a href="https://github.com/neoyuan/yuan-ui">
+  <a href="https://github.com/Aoyia/yuan-ui/actions/workflows/deploy-demo.yml">
+    <img src="https://github.com/Aoyia/yuan-ui/actions/workflows/deploy-demo.yml/badge.svg" alt="Deploy Demo CI">
+  </a>
+  <a href="https://github.com/Aoyia/yuan-ui">
     <img src="https://img.shields.io/github/license/neoyuan/yuan-ui.svg" alt="License">
   </a>
   <a href="https://vuejs.org/">
     <img src="https://img.shields.io/badge/vue-3.x-brightgreen.svg" alt="Vue 3">
   </a>
-  <a href="https://github.com/neoyuan/yuan-ui">
-    <img src="https://img.shields.io/github/stars/neoyuan/yuan-ui.svg?style=social" alt="Stars">
+  <a href="https://github.com/Aoyia/yuan-ui">
+    <img src="https://img.shields.io/github/stars/Aoyia/yuan-ui.svg?style=social" alt="Stars">
   </a>
 </p>
 
@@ -39,6 +42,15 @@ Yuan UI 是一套完全数据驱动、面向高阶 AI Agent 场景开发的 Vue 
 **中阶场景** — 工具调用 + JSON 自动 Fallback 折叠渲染
 
 ![中阶场景预览：工具调用与 JSON Fallback 折叠渲染](.github/assets/preview-intermediate.png)
+
+---
+
+## 🔗 在线 Demo & CI
+
+| | 链接 |
+|---|---|
+| 🚀 **Live Demo** | [aoyia.github.io/yuan-ui](https://aoyia.github.io/yuan-ui/) |
+| ⚙️ **GitHub Actions** | [github.com/Aoyia/yuan-ui/actions](https://github.com/Aoyia/yuan-ui/actions/workflows/deploy-demo.yml) |
 
 ---
 
