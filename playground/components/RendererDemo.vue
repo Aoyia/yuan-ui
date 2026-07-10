@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onActivated, onMounted } from 'vue'
+import { ref, computed, onActivated, onMounted, watch } from 'vue'
 import { StreamMarkdownRenderer } from '../../src/index'
 import { Play, RotateCcw, Activity, Palette, AlertCircle, Bot, Search, Terminal } from '@lucide/vue'
 import { useSimulator } from '../hooks/useSimulator'
@@ -18,6 +18,18 @@ const {
 } = useSimulator(null)
 
 const allowedComponents = ref(['dxf-bar-chart'])
+
+const tokensPerSecond = ref(100)
+watch(tokensPerSecond, (newVal) => {
+  streamSpeed.value = Math.round(2000 / newVal)
+}, { immediate: true })
+
+watch(streamSpeed, (newVal) => {
+  const calculated = Math.round(2000 / newVal)
+  if (tokensPerSecond.value !== calculated) {
+    tokensPerSecond.value = calculated
+  }
+})
 
 // 提取当前文本中被识别到的组件标签，供监视器显示
 const parsedComponents = computed(() => {
@@ -81,24 +93,24 @@ onActivated(() => {
       <!-- Token 速度调节面板 -->
       <div class="control-group-item">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-          <label class="control-label-text">Token 渲染时延:</label>
-          <span class="speed-value-display">{{ streamSpeed }}ms/chunk</span>
+          <label class="control-label-text">Token 渲染速度:</label>
+          <span class="speed-value-display">{{ tokensPerSecond }} tokens/s</span>
         </div>
         <div class="speed-slider-container">
           <input 
             type="range" 
-            min="2" 
-            max="150" 
-            step="1"
-            v-model.number="streamSpeed"
+            min="10" 
+            max="500" 
+            step="5"
+            v-model.number="tokensPerSecond"
             :disabled="isMarkdownStreaming"
             class="speed-slider-bar"
           />
           <div class="speed-presets-labels">
-            <span @click="!isMarkdownStreaming && (streamSpeed = 5)" :class="{ active: streamSpeed <= 10 }">极速</span>
-            <span @click="!isMarkdownStreaming && (streamSpeed = 20)" :class="{ active: streamSpeed > 10 && streamSpeed <= 35 }">飞快</span>
-            <span @click="!isMarkdownStreaming && (streamSpeed = 50)" :class="{ active: streamSpeed > 35 && streamSpeed <= 75 }">正常</span>
-            <span @click="!isMarkdownStreaming && (streamSpeed = 120)" :class="{ active: streamSpeed > 75 }">较慢</span>
+            <span @click="!isMarkdownStreaming && (tokensPerSecond = 400)" :class="{ active: tokensPerSecond >= 300 }">极速</span>
+            <span @click="!isMarkdownStreaming && (tokensPerSecond = 100)" :class="{ active: tokensPerSecond >= 80 && tokensPerSecond < 300 }">飞快</span>
+            <span @click="!isMarkdownStreaming && (tokensPerSecond = 40)" :class="{ active: tokensPerSecond >= 30 && tokensPerSecond < 80 }">正常</span>
+            <span @click="!isMarkdownStreaming && (tokensPerSecond = 16)" :class="{ active: tokensPerSecond < 30 }">较慢</span>
           </div>
         </div>
       </div>
