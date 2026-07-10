@@ -315,8 +315,8 @@ button {
 /* 左侧代码演示看板 (Code Panel) */
 .code-panel {
   width: 420px;
-  border-right: 1px solid #f1f5f9;
-  background-color: #0b0f19;
+  border-right: 1px solid var(--yuan-border);
+  background-color: #ffffff;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -331,13 +331,18 @@ button {
 /* 页签栏 */
 .code-tab-header {
   height: 34px;
-  background-color: #070a12;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--yuan-border-light);
   display: flex;
   align-items: center;
   padding: 0 1rem;
   flex-shrink: 0;
   user-select: none;
+}
+
+.dark .code-tab-header {
+  background-color: #070a12;
+  border-bottom-color: rgba(255, 255, 255, 0.03);
 }
 
 .code-tab-active {
@@ -356,8 +361,12 @@ button {
 .file-name {
   font-size: 0.72rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--yuan-text-primary);
   font-family: ui-monospace, monospace;
+}
+
+.dark .file-name {
+  color: #e2e8f0;
 }
 
 /* 代码主体区域 */
@@ -586,25 +595,40 @@ button {
 
 .control-label-text {
   font-size: 0.72rem;
-  font-weight: 600;
-  color: #94a3b8;
+  font-weight: 500;
+  color: var(--yuan-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
+.dark .control-label-text {
+  color: #94a3b8;
+}
+
 .control-select-box {
-  background: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+  background: #ffffff;
+  border: 1px solid var(--yuan-border);
+  color: var(--yuan-text-primary);
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
   font-size: 0.78rem;
   outline: none;
   cursor: pointer;
   width: 100%;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.control-select-box:hover {
+.control-select-box:hover, .control-select-box:focus {
+  border-color: var(--yuan-primary);
+}
+
+.dark .control-select-box {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.dark .control-select-box:hover {
   border-color: var(--yuan-primary);
 }
 
@@ -628,27 +652,41 @@ button {
 }
 
 .raw-terminal-view {
-  background: #070a12;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: var(--yuan-bg-muted);
+  border: 1px solid var(--yuan-border-light);
   border-radius: 8px;
   padding: 0.75rem;
   min-height: 120px;
   max-height: 180px;
   overflow-y: auto;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.dark .raw-terminal-view {
+  background: #070a12;
+  border-color: rgba(255, 255, 255, 0.04);
 }
 
 .raw-stream-text {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
   font-size: 0.72rem;
   line-height: 1.5;
-  color: #60a5fa;
+  color: #334155;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+.dark .raw-stream-text {
+  color: #60a5fa;
 }
 
 .raw-stream-text.blinker::after {
   content: '▋';
   animation: raw-blink 1s infinite;
+  color: var(--yuan-primary);
+}
+
+.dark .raw-stream-text.blinker::after {
   color: #60a5fa;
 }
 
@@ -684,11 +722,17 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 0.6rem 0.75rem;
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #ffffff;
+  border: 1px solid var(--yuan-border);
   border-radius: 6px;
   font-size: 0.72rem;
   gap: 0.75rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.dark .ast-item-card {
+  background: rgba(30, 41, 59, 0.4);
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .ast-item-info {
@@ -700,15 +744,23 @@ button {
 
 .ast-item-tag {
   font-weight: 600;
+  color: var(--yuan-text-primary);
+}
+
+.dark .ast-item-tag {
   color: #f1f5f9;
 }
 
 .ast-item-content {
-  color: #64748b;
+  color: var(--yuan-text-secondary);
   font-family: ui-monospace, monospace;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+}
+
+.dark .ast-item-content {
+  color: #64748b;
 }
 
 .ast-badge-status {
@@ -857,7 +909,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  background: rgba(15, 23, 42, 0.2);
+  background: var(--yuan-bg-muted);
   border: 1px solid var(--yuan-border-light);
   border-radius: 8px;
   padding: 0.65rem 0.75rem;
@@ -920,11 +972,11 @@ button {
 
 .speed-presets-labels span:hover:not(.active) {
   color: var(--yuan-text-primary);
-  background: rgba(139, 92, 246, 0.05);
+  background: rgba(22, 93, 255, 0.05);
 }
 
 .speed-presets-labels span.active {
   color: var(--yuan-primary);
   font-weight: 600;
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(22, 93, 255, 0.1);
 }
