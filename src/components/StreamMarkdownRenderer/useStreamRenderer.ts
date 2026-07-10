@@ -132,6 +132,9 @@ export function useStreamRenderer(options: UseStreamRendererOptions = {}) {
     const nodes = treeifyTokens(finalTokens);
     if (isInnerStreaming.value && nodes.length > 0) {
       const lastNode = nodes[nodes.length - 1];
+      // 标记最后一个节点为 isActive，VNodeMarkdownRenderer 会据此追加 dxf-block-enter 动画 class。
+      // Vue 3 diff：同位置、同组件类型的 VNode 在 computed 重算后执行 props patch，而非重新挂载 DOM，
+      // 所以已在播放中的 animation 不会被中断或重播。只有当新 block 首次出现（位置 +1）时动画才真正触发。
       nodes[nodes.length - 1] = { ...lastNode, isActive: true };
     }
     return nodes;

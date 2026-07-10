@@ -440,4 +440,11 @@ onMounted(() => {
 .yuan-stream-renderer .dxf-block-enter {
   animation: dxf-block-enter 0.18s ease-out both;
 }
+
+/* 尊重用户系统级无动画偏好设置 */
+@media (prefers-reduced-motion: reduce) {
+  .yuan-stream-renderer .dxf-block-enter {
+    animation: none;
+  }
+}
 </style>

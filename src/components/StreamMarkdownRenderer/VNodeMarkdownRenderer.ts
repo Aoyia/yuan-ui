@@ -230,10 +230,11 @@ export const VNodeMarkdownRenderer = defineComponent({
 
           if (componentClass) {
             // 递归渲染子节点
+            // 用 Vue class 数组语法合并，避免覆盖 node.props 中已有的 class
             return h(componentClass, 
               {
                 ...(node.props || {}),
-                class: node.isActive ? 'dxf-block-enter' : undefined
+                class: [node.props?.class, node.isActive && 'dxf-block-enter']
               },
               {
                 default: () => h(VNodeMarkdownRenderer as any, {
@@ -247,10 +248,11 @@ export const VNodeMarkdownRenderer = defineComponent({
             );
           } else {
             // 降级为原生 HTML 标签
+            // 用 Vue class 数组语法合并，避免覆盖 node.props 中已有的 class
             return h(node.tag, 
               {
                 ...(node.props || {}),
-                class: node.isActive ? 'dxf-block-enter' : undefined
+                class: [node.props?.class, node.isActive && 'dxf-block-enter']
               },
               [
                 h(VNodeMarkdownRenderer as any, {
