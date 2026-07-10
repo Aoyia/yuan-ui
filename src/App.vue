@@ -184,32 +184,9 @@ const activeCodeTransformed = computed(() => {
         <span class="brand-text">Yuan UI 智能体工作台</span>
       </div>
       
-      <div class="nav-tabs">
-        <button
-          type="button"
-          class="tab-btn"
-          :class="{ active: activeTab === 'trace' }"
-          @click="activeTab = 'trace'"
-          :disabled="isStreaming"
-        >
-          <ShieldCheck class="tab-icon" />
-          <span>新版 AgentTrace (List)</span>
-        </button>
-        <button
-          type="button"
-          class="tab-btn"
-          :class="{ active: activeTab === 'traceLinear' }"
-          @click="activeTab = 'traceLinear'"
-          :disabled="isStreaming"
-        >
-          <Activity class="tab-icon" />
-          <span>扁平线性流 (办公/大厂)</span>
-        </button>
-      </div>
-
       <div class="header-actions">
         <!-- 渐进式场景选择器 -->
-        <div v-if="activeTab === 'trace' || activeTab === 'traceLinear'" class="scenario-selector">
+        <div class="scenario-selector">
           <span class="selector-label">演示场景:</span>
           <div class="selector-options">
             <button 
@@ -284,7 +261,7 @@ const activeCodeTransformed = computed(() => {
         <div class="document-container">
           
           <!-- 1. 新版 AgentTrace 演示（移至右侧大视口上方） -->
-          <template v-if="activeTab === 'trace' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
+          <template v-if="traceParser.nodes.value.length > 0 || traceParser.isStreaming.value">
             <AgentTrace
               v-model:open="traceOpen"
               :is-streaming="traceParser.isStreaming.value"
@@ -298,16 +275,6 @@ const activeCodeTransformed = computed(() => {
                 <AgentTraceList :nodes="traceParser.nodes.value" />
               </AgentTraceContent>
             </AgentTrace>
-          </template>
-
-          <!-- 1.6 扁平树形线性流演示 -->
-          <template v-else-if="activeTab === 'traceLinear' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
-            <div class="linear-playground-wrapper">
-              <AgentTraceLinear
-                :nodes="traceParser.nodes.value"
-                :is-streaming="traceParser.isStreaming.value"
-              />
-            </div>
           </template>
 
 
@@ -412,63 +379,6 @@ body {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-}
-
-/* 纯文字滑动 Tab */
-.nav-tabs {
-  display: flex;
-  background-color: transparent;
-  padding: 0;
-  border-radius: 0;
-  gap: 1.5rem;
-  height: 100%;
-  align-items: center;
-}
-
-.tab-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  height: 100%;
-  border: none;
-  background: transparent;
-  border-radius: 0;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: #86868b;
-  cursor: pointer;
-  transition: color 0.15s ease;
-  position: relative;
-}
-
-.dark .tab-btn {
-  color: #a1a1aa;
-}
-
-.tab-btn.active {
-  background: transparent;
-  color: #1d1d1f;
-  box-shadow: none;
-  font-weight: 600;
-}
-
-.dark .tab-btn.active {
-  color: #f4f4f5;
-}
-
-.tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: #0071e3;
-}
-
-.tab-icon {
-  width: 0.8rem;
-  height: 0.8rem;
 }
 
 /* 场景选择器 */
@@ -822,15 +732,4 @@ button {
   border-color: #27272a;
 }
 
-.linear-playground-wrapper {
-  width: 100%;
-  background: transparent;
-  border-bottom: 1px solid #f1f1f4;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.25rem;
-}
-
-.dark .linear-playground-wrapper {
-  border-bottom-color: #27272a;
-}
 </style>
