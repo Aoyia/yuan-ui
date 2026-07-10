@@ -85,29 +85,23 @@ body {
 .github-link-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
+  width: 32px;
   height: 32px;
-  padding: 0 0.85rem;
-  border-radius: var(--yuan-radius);
-  font-size: 0.75rem;
-  font-weight: 500;
   color: var(--yuan-text-secondary);
-  text-decoration: none;
-  background-color: var(--yuan-bg-muted);
-  border: 1px solid var(--yuan-border);
   transition: all 0.15s ease;
-  box-sizing: border-box;
+  opacity: 0.65;
+  cursor: pointer;
 }
 
 .github-link-btn:hover {
   color: var(--yuan-text-primary);
-  background-color: var(--yuan-border-light);
-  border-color: var(--yuan-text-tertiary);
+  opacity: 1;
 }
 
 .github-icon {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
 }
 
 /* 顶栏 Tab 导航：字节 Arco 极简分段控制器 */
