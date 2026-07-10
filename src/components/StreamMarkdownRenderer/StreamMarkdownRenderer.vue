@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch, onMounted, onUnmounted, ref, nextTick } from 'vue';
+import { watch, onMounted, ref, nextTick } from 'vue';
 import { useStreamRenderer } from './useStreamRenderer';
 import { VNodeMarkdownRenderer } from './VNodeMarkdownRenderer';
 
@@ -29,7 +29,7 @@ const props = withDefaults(defineProps<Props>(), {
   enableTailoring: true,
   autoScroll: true,
   scrollContainer: null,
-  scrollOffset: 20
+  scrollOffset: 64
 });
 
 const emit = defineEmits<{
@@ -129,30 +129,8 @@ watch(
   { flush: 'post' }
 );
 
-let resizeObserver: ResizeObserver | null = null;
-
 onMounted(() => {
   updateStream(props.text, props.isStreaming);
-  
-  if (typeof ResizeObserver !== 'undefined' && containerRef.value) {
-    resizeObserver = new ResizeObserver(() => {
-      if (!props.autoScroll || !props.isStreaming || !wasAtBottom) return;
-      if (!resolvedScrollContainer) {
-        resolveScrollContainer();
-      }
-      if (resolvedScrollContainer) {
-        resolvedScrollContainer.scrollTop = resolvedScrollContainer.scrollHeight;
-      }
-    });
-    resizeObserver.observe(containerRef.value);
-  }
-});
-
-onUnmounted(() => {
-  if (resizeObserver) {
-    resizeObserver.disconnect();
-    resizeObserver = null;
-  }
 });
 </script>
 
