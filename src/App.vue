@@ -579,61 +579,6 @@ const activeCodeTransformed = computed(() => {
           <span>流式 VNode 渲染 (Renderer)</span>
         </button>
       </div>
-      <div class="header-actions">
-        <!-- 渐进式场景选择器 -->
-        <div v-if="activeTab === 'trace'" class="scenario-selector">
-          <span class="selector-label">演示场景:</span>
-          <div class="selector-options">
-            <button 
-              type="button" 
-              class="selector-opt-btn" 
-              :class="{ active: currentScenario === 'basic' }"
-              @click="currentScenario = 'basic'"
-              :disabled="isStreaming"
-            >
-              基础思维链
-            </button>
-            <button 
-              type="button" 
-              class="selector-opt-btn" 
-              :class="{ active: currentScenario === 'intermediate' }"
-              @click="currentScenario = 'intermediate'"
-              :disabled="isStreaming"
-            >
-              中阶工具调用
-            </button>
-            <button 
-              type="button" 
-              class="selector-opt-btn" 
-              :class="{ active: currentScenario === 'advanced' }"
-              @click="currentScenario = 'advanced'"
-              :disabled="isStreaming"
-            >
-              高阶智能体 (Cursor)
-            </button>
-          </div>
-        </div>
-        
-        <div v-if="activeTab === 'trace'" class="button-group">
-          <button 
-            type="button"
-            class="btn-primary" 
-            :disabled="isStreaming" 
-            @click="startSimulation"
-          >
-            <Play class="btn-icon" />
-            <span>运行模拟</span>
-          </button>
-          <button 
-            type="button"
-            class="btn-secondary" 
-            @click="handleReset"
-          >
-            <RotateCcw class="btn-icon" />
-            <span>重置</span>
-          </button>
-        </div>
-      </div>
     </header>
 
     <div class="workspace">
@@ -654,6 +599,62 @@ const activeCodeTransformed = computed(() => {
 
         <!-- 右栏: Document 预览面板 -->
         <main class="preview-panel" ref="documentViewportRef">
+          <!-- 局部模拟控制条：仅在 activeTab === 'trace' 时展示 -->
+          <div v-if="activeTab === 'trace'" class="preview-header-bar">
+            <div class="scenario-selector">
+              <span class="selector-label">演示场景:</span>
+              <div class="selector-options">
+                <button 
+                  type="button" 
+                  class="selector-opt-btn" 
+                  :class="{ active: currentScenario === 'basic' }"
+                  @click="currentScenario = 'basic'"
+                  :disabled="isStreaming"
+                >
+                  基础思维链
+                </button>
+                <button 
+                  type="button" 
+                  class="selector-opt-btn" 
+                  :class="{ active: currentScenario === 'intermediate' }"
+                  @click="currentScenario = 'intermediate'"
+                  :disabled="isStreaming"
+                >
+                  中阶工具调用
+                </button>
+                <button 
+                  type="button" 
+                  class="selector-opt-btn" 
+                  :class="{ active: currentScenario === 'advanced' }"
+                  @click="currentScenario = 'advanced'"
+                  :disabled="isStreaming"
+                >
+                  高阶智能体 (Cursor)
+                </button>
+              </div>
+            </div>
+            
+            <div class="button-group">
+              <button 
+                type="button"
+                class="btn-primary" 
+                :disabled="isStreaming" 
+                @click="startSimulation"
+              >
+                <Play class="btn-icon" />
+                <span>运行模拟</span>
+              </button>
+              <button 
+                type="button"
+                class="btn-secondary" 
+                @click="handleReset"
+              >
+                <RotateCcw class="btn-icon" />
+                <span>重置</span>
+              </button>
+            </div>
+          </div>
+
           <div class="document-container">
             <!-- 1. 新版 AgentTrace 演示 -->
             <template v-if="activeTab === 'trace' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
@@ -672,23 +673,13 @@ const activeCodeTransformed = computed(() => {
               </AgentTrace>
             </template>
 
-            <!-- 1.6 扁平树形线性流演示 -->
-            <template v-else-if="activeTab === 'traceLinear' && (traceParser.nodes.value.length > 0 || traceParser.isStreaming.value)">
-              <div class="linear-playground-wrapper">
-                <AgentTraceLinear
-                  :nodes="traceParser.nodes.value"
-                  :is-streaming="traceParser.isStreaming.value"
-                />
-              </div>
-            </template>
-
             <!-- 3. 空白就绪占位 -->
             <div v-else class="empty-preview">
               <div class="empty-icon-box">
                 <Activity class="empty-icon" />
               </div>
               <p class="empty-title">等待模拟运行</p>
-              <p class="empty-desc">点击顶部的“运行模拟”按钮，即可在此查看流式思维轨迹与生成的文档正文。</p>
+              <p class="empty-desc">点击上方的“运行模拟”按钮，即可在此查看流式思维轨迹与生成的文档正文。</p>
             </div>
 
             <!-- 4. Markdown 正文结果 -->
@@ -915,9 +906,6 @@ body {
 
 /* 顶栏 Tab 导航：苹果风胶囊设计 (Segmented Control) */
 .nav-tabs {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   background-color: #f1f5f9;
   padding: 3px;
@@ -1220,35 +1208,60 @@ button {
 .preview-panel {
   flex: 1;
   background-color: #fafafa;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.04) transparent;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .dark .preview-panel {
   background-color: #09090b;
 }
 
-.preview-panel::-webkit-scrollbar {
+/* 局部模拟控制条 - 扁平极简 */
+.preview-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  background-color: #ffffff;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.dark .preview-header-bar {
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+  background-color: #09090b;
+}
+
+.document-container {
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.04) transparent;
+  padding: 2rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.document-container > * {
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.document-container::-webkit-scrollbar {
   width: 4px;
 }
 
-.preview-panel::-webkit-scrollbar-thumb {
+.document-container::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.04);
   border-radius: 99px;
 }
 
-.dark .preview-panel::-webkit-scrollbar-thumb {
+.dark .document-container::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.04);
-}
-
-.document-container {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
 /* 空白占位 */
