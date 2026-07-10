@@ -63,10 +63,10 @@ onActivated(() => {
           :disabled="isMarkdownStreaming" 
           @change="resetMarkdownStream"
         >
-          <option value="stress-test">⚡ 极限测试：流式打字与划选复制</option>
-          <option value="normal">✅ 正常组件渲染（数据合规）</option>
-          <option value="invalid-zod">⚠️ Zod 校验失败（触发错误面板与自我纠错）</option>
-          <option value="malicious-inject">🚫 恶意非法标签注入（VNode 级沙箱拦截）</option>
+          <option value="stress-test">极限测试：流式打字与划选复制</option>
+          <option value="normal">正常组件渲染（数据合规）</option>
+          <option value="invalid-zod">Zod 校验失败（触发错误面板与自我纠错）</option>
+          <option value="malicious-inject">恶意非法标签注入（VNode 级沙箱拦截）</option>
         </select>
       </div>
 
@@ -87,10 +87,10 @@ onActivated(() => {
             class="speed-slider-bar"
           />
           <div class="speed-presets-labels">
-            <span @click="!isMarkdownStreaming && (streamSpeed = 5)" :class="{ active: streamSpeed <= 10 }">🚀 极速</span>
-            <span @click="!isMarkdownStreaming && (streamSpeed = 20)" :class="{ active: streamSpeed > 10 && streamSpeed <= 35 }">⚡ 飞快</span>
-            <span @click="!isMarkdownStreaming && (streamSpeed = 50)" :class="{ active: streamSpeed > 35 && streamSpeed <= 75 }">🚶 正常</span>
-            <span @click="!isMarkdownStreaming && (streamSpeed = 120)" :class="{ active: streamSpeed > 75 }">🐌 较慢</span>
+            <span @click="!isMarkdownStreaming && (streamSpeed = 5)" :class="{ active: streamSpeed <= 10 }">极速</span>
+            <span @click="!isMarkdownStreaming && (streamSpeed = 20)" :class="{ active: streamSpeed > 10 && streamSpeed <= 35 }">飞快</span>
+            <span @click="!isMarkdownStreaming && (streamSpeed = 50)" :class="{ active: streamSpeed > 35 && streamSpeed <= 75 }">正常</span>
+            <span @click="!isMarkdownStreaming && (streamSpeed = 120)" :class="{ active: streamSpeed > 75 }">较慢</span>
           </div>
         </div>
       </div>
